@@ -105,8 +105,19 @@ export class ProjekatDetailComponent implements OnInit {
   }
 
   saveProjekat(): void {
+    // Remove nested objects before sending
+    const projekatToSave = {
+      id: this.projekat.id,
+      brojProjekta: this.projekat.brojProjekta,
+      datum: this.projekat.datum,
+      naziv: this.projekat.naziv,
+      aktivan: this.projekat.aktivan,
+      status: this.projekat.status,
+      klijentId: this.projekat.klijentId
+    };
+
     if (this.isNewMode) {
-      this.projekatService.create(this.projekat).subscribe({
+      this.projekatService.create(projekatToSave).subscribe({
         next: (data) => {
           this.router.navigate(['/projekti']);
         },
@@ -115,7 +126,7 @@ export class ProjekatDetailComponent implements OnInit {
         }
       });
     } else {
-      this.projekatService.update(this.projekat.id, this.projekat).subscribe({
+      this.projekatService.update(this.projekat.id, projekatToSave).subscribe({
         next: () => {
           this.isEditMode = false;
           this.loadProjekat(this.projekat.id);
