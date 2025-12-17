@@ -6,10 +6,12 @@ import { ProjekatService } from '../../services/projekat.service';
 import { KlijentService } from '../../services/klijent.service';
 import { AktivnostService } from '../../services/aktivnost.service';
 import { DokumentService } from '../../services/dokument.service';
+import { NoteService } from '../../services/note.service';
 import { Projekat } from '../../models/projekat.model';
 import { Klijent } from '../../models/klijent.model';
 import { Aktivnost } from '../../models/aktivnost.model';
 import { Dokument } from '../../models/dokument.model';
+import { Note } from '../../models/note.model';
 import { AktivnostModalComponent } from '../aktivnost-modal/aktivnost-modal.component';
 
 @Component({
@@ -33,6 +35,7 @@ export class ProjekatDetailComponent implements OnInit {
   klijenti: Klijent[] = [];
   aktivnosti: Aktivnost[] = [];
   dokumenti: Dokument[] = [];
+  notes: Note[] = [];
   isEditMode = false;
   isNewMode = false;
   loading = true;
@@ -50,9 +53,13 @@ export class ProjekatDetailComponent implements OnInit {
   showAktivnostModal = false;
   openDropdownId: number | null = null;
   showDokumentiSidebar = false;
+  showNotesSidebar = false;
+  currentNote: string = '';
+  editingNoteId: number | null = null;
 
   constructor(
     private projekatService: ProjekatService,
+    private noteService: NoteService,
     private dokumentService: DokumentService,
     private klijentService: KlijentService,
     private aktivnostService: AktivnostService,
@@ -69,6 +76,7 @@ export class ProjekatDetailComponent implements OnInit {
       this.isNewMode = true;
       this.isEditMode = true;
       this.loading = false;
+      this.loadNotes(+id);
     } else if (id) {
       this.loadProjekat(+id);
       this.loadAktivnosti(+id);
@@ -334,5 +342,107 @@ export class ProjekatDetailComponent implements OnInit {
 
   toggleDokumentiSidebar(): void {
     this.showDokumentiSidebar = !this.showDokumentiSidebar;
+    if (this.showDokumentiSidebar) {
+      this.showNotesSidebar = false;
+    }
+  }
+
+  toggleNotesSidebar(): void {
+    this.showNotesSidebar = !this.showNotesSidebar;
+    if (this.showNotesSidebar) {
+      this.showDokumentiSidebar = false;
+    }
+  }
+
+  // Note methods
+  loadNotes(projekatId: number): void {
+    this.noteService.getByProjekatId(projekatId).subscribe({
+      next: (data) => {
+        this.notes = data;
+      },
+      error: (error) => {
+        console.error('Error loading notes:', error);
+      }
+    });
+  }
+
+  saveNote(): void {
+    if (!this.currentNote.trim()) return;
+
+    if (this.editingNoteId) {
+      // Update existing note
+      const noteToUpdate = {
+        id: this.editingNoteId,
+        projekatId: this.projekat.id,
+        opis: this.currentNote,
+        createdAt: '',
+        updatedAt: ''
+      };
+      
+      this.noteService.update(this.editingNoteId, noteToUpdate).subscribe({
+        next: () => {
+          this.loadNotes(this.projekat.id);
+          this.currentNote = '';
+          this.editingNoteId = null;
+        },
+        error: (error) => {
+          console.error('Error updating note:', error);
+          alert('Greška pri ažuriranju beleške');
+        }
+      });
+    } else {
+      // Create new note
+      const newNote = {
+        id: 0,
+        projekatId: this.projekat.id,
+        opis: this.currentNote,
+        createdAt: '',
+        updatedAt: ''
+      };
+      
+      this.noteService.create(newNote).subscribe({
+        next: () => {
+          this.loadNotes(this.projekat.id);
+          this.currentNote = '';
+        },
+        error: (error) => {
+          console.error('Error creating note:', error);
+          alert('Greška pri kreiranju beleške');
+        }
+      });
+    }
+  }
+
+  editNote(note: Note): void {
+    this.currentNote = note.opis;
+    this.editingNoteId = note.id;
+  }
+
+  cancelEditNote(): void {
+    this.currentNote = '';
+    this.editingNoteId = null;
+  }
+
+  deleteNote(id: number): void {
+    if (confirm('Da li ste sigurni da želite da obrišete ovu belešku?')) {
+      this.noteService.delete(id).subscribe({
+        next: () => {
+          this.loadNotes(this.projekat.id);
+          if (this.editingNoteId === id) {
+            this.currentNote = '';
+            this.editingNoteId = null;
+          }
+        },
+        error: (error) => {
+          console.error('Error deleting note:', error);
+          alert('Greška pri brisanju beleške');
+        }
+      });
+    }
+  }
+
+  truncateText(text: string, maxLength: number = 30): string {
+    if (text.length <= maxLength) return text;
+    return text.substring(0, maxLength) + '...';
   }
 }

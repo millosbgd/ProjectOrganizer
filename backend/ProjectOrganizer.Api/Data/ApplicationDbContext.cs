@@ -15,6 +15,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<Aktivnost> Aktivnosti { get; set; }
     public DbSet<DocumentNumbering> DocumentNumbering { get; set; }
     public DbSet<Dokument> Dokumenti { get; set; }
+    public DbSet<Note> Notes { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -136,6 +136,11 @@
     📎 Dokumenti ({{ dokumenti.length }})
   </button>
 
+  <!-- Notes Sidebar Toggle Button -->
+  <button *ngIf="!isNewMode" class="notes-toggle-btn" (click)="toggleNotesSidebar()" [class.sidebar-open]="showNotesSidebar">
+    📝 Beleške ({{ notes.length }})
+  </button>
+
   <!-- Dokumenti Sidebar -->
   <div class="dokumenti-sidebar" *ngIf="!isNewMode" [class.open]="showDokumentiSidebar">
     <div class="sidebar-header">
@@ -179,7 +184,57 @@
   </div>
 
   <!-- Overlay -->
-  <div class="sidebar-overlay" *ngIf="showDokumentiSidebar" (click)="toggleDokumentiSidebar()"></div>
+  <div class="sidebar-overlay" *ngIf="showDokumentiSidebar || showNotesSidebar" (click)="showDokumentiSidebar = false; showNotesSidebar = false"></div>
+
+  <!-- Notes Sidebar -->
+  <div class="notes-sidebar" *ngIf="!isNewMode" [class.open]="showNotesSidebar">
+    <div class="sidebar-header">
+      <h3>📝 Beleške</h3>
+      <button class="btn-close" (click)="toggleNotesSidebar()">✕</button>
+    </div>
+    
+    <div class="sidebar-content">
+      <!-- Note Form -->
+      <div class="note-form">
+        <textarea 
+          [(ngModel)]="currentNote" 
+          placeholder="Unesite belešku..." 
+          rows="4"
+          class="note-textarea">
+        </textarea>
+        <div class="note-form-actions">
+          <button class="btn-primary-small" (click)="saveNote()" [disabled]="!currentNote.trim()">
+            {{ editingNoteId ? 'Ažuriraj' : 'Sačuvaj' }}
+          </button>
+          <button *ngIf="editingNoteId" class="btn-secondary-small" (click)="cancelEditNote()">
+            Otkaži
+          </button>
+        </div>
+      </div>
+
+      <!-- Notes List -->
+      <div class="notes-list" *ngIf="notes.length > 0">
+        <div class="note-item" *ngFor="let note of notes" [class.editing]="editingNoteId === note.id">
+          <div class="note-content">
+            <div class="note-text">{{ truncateText(note.opis, 30) }}</div>
+            <div class="note-date">{{ note.createdAt | date:'dd.MM.yyyy HH:mm' }}</div>
+          </div>
+          <div class="note-actions">
+            <button class="btn-icon-small" (click)="editNote(note)" title="Izmeni">
+              ✏️
+            </button>
+            <button class="btn-icon-small danger" (click)="deleteNote(note.id)" title="Obriši">
+              🗑️
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="notes.length === 0" class="no-data-sidebar">
+        Nema beleški za ovaj projekat.
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- Aktivnost Modal -->
