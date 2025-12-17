@@ -21,7 +21,7 @@ export class AktivnostService {
   }
 
   getByProjekatId(projekatId: number): Observable<Aktivnost[]> {
-    return this.http.get<Aktivnost[]>(`${this.apiUrl}/projekat/${projekatId}`);
+    return this.http.get<Aktivnost[]>(`${this.apiUrl}?projekatId=${projekatId}`);
   }
 
   create(aktivnost: Aktivnost): Observable<Aktivnost> {
