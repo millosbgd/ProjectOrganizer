@@ -124,7 +124,10 @@ export class ProjekatDetailComponent implements OnInit {
         error: (error) => {
           console.error('Error creating projekat:', error);
           console.error('Error details:', error.error);
-          alert('Greška pri kreiranju projekta: ' + (error.error || error.message));
+          const errorMsg = typeof error.error === 'string' 
+            ? error.error 
+            : JSON.stringify(error.error);
+          alert('Greška pri kreiranju projekta: ' + errorMsg);
         }
       });
     } else {
