@@ -49,6 +49,7 @@ export class ProjekatDetailComponent implements OnInit {
   
   showAktivnostModal = false;
   openDropdownId: number | null = null;
+  showDokumentiSidebar = false;
 
   constructor(
     private projekatService: ProjekatService,
@@ -329,5 +330,9 @@ export class ProjekatDetailComponent implements OnInit {
       'txt': '📝'
     };
     return icons[tipFajla.toLowerCase()] || '📎';
+  }
+
+  toggleDokumentiSidebar(): void {
+    this.showDokumentiSidebar = !this.showDokumentiSidebar;
   }
 }
