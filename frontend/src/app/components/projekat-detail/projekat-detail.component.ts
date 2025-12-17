@@ -106,7 +106,7 @@ export class ProjekatDetailComponent implements OnInit {
     if (this.isNewMode) {
       this.projekatService.create(this.projekat).subscribe({
         next: (data) => {
-          this.router.navigate(['/projekti', data.id]);
+          this.router.navigate(['/projekti']);
         },
         error: (error) => {
           console.error('Error creating projekat:', error);
