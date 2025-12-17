@@ -106,9 +106,10 @@ export class ProjekatDetailComponent implements OnInit {
 
   saveProjekat(): void {
     if (this.isNewMode) {
-      // For new projects, don't send brojProjekta (backend will generate it)
+      // For new projects, send empty brojProjekta (backend will generate it)
       const projekatToSave = {
         id: 0,
+        brojProjekta: '',
         naziv: this.projekat.naziv,
         datum: this.projekat.datum,
         aktivan: this.projekat.aktivan,
