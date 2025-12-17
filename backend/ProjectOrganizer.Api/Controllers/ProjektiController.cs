@@ -91,7 +91,7 @@ public class ProjektiController : ControllerBase
         // Check if BrojProjekta is being changed and if it conflicts
         if (existingProjekat.BrojProjekta != projekat.BrojProjekta)
         {
-            if (await _context.Projekti.AnyAsync(p => p.BrojProjekta == projekat.BrojProjekta))
+            if (await _context.Projekti.AnyAsync(p => p.BrojProjekta == projekat.BrojProjekta && p.Id != id))
                 return BadRequest("Projekat sa ovim brojem već postoji.");
         }
 
