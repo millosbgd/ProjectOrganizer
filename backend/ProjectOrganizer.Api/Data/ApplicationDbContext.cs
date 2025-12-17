@@ -13,6 +13,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<Klijent> Klijenti { get; set; }
     public DbSet<Projekat> Projekti { get; set; }
     public DbSet<Aktivnost> Aktivnosti { get; set; }
+    public DbSet<DocumentNumbering> DocumentNumbering { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

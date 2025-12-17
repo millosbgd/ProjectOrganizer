@@ -15,9 +15,9 @@
       <h3>Podaci o projektu</h3>
       
       <form *ngIf="isEditMode" class="form">
-        <div class="form-group">
+        <div class="form-group" *ngIf="!isNewMode">
           <label>Broj projekta:</label>
-          <input type="text" [(ngModel)]="projekat.brojProjekta" name="brojProjekta" required />
+          <input type="text" [(ngModel)]="projekat.brojProjekta" name="brojProjekta" readonly />
         </div>
 
         <div class="form-group">

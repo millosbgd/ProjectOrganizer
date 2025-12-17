@@ -60,14 +60,12 @@ public class ProjektiController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<Projekat>> CreateProjekat(Projekat projekat)
     {
-        // Check if BrojProjekta already exists
-        if (await _context.Projekti.AnyAsync(p => p.BrojProjekta == projekat.BrojProjekta))
-            return BadRequest("Projekat sa ovim brojem već postoji.");
-
         // Check if Klijent exists
         if (!await _context.Klijenti.AnyAsync(k => k.Id == projekat.KlijentId))
             return BadRequest("Klijent ne postoji.");
 
+        // Auto-generate BrojProjekta
+        projekat.BrojProjekta = await GenerateDocumentNumber("Projekat");
         projekat.CreatedAt = DateTime.UtcNow;
         projekat.UpdatedAt = DateTime.UtcNow;
 
@@ -75,6 +73,35 @@ public class ProjektiController : ControllerBase
         await _context.SaveChangesAsync();
 
         return CreatedAtAction(nameof(GetProjekat), new { id = projekat.Id }, projekat);
+    }
+
+    private async Task<string> GenerateDocumentNumber(string documentType)
+    {
+        var currentYear = DateTime.UtcNow.Year;
+
+        // Get or create numbering record for this year and type
+        var numbering = await _context.DocumentNumbering
+            .FirstOrDefaultAsync(d => d.Year == currentYear && d.DocumentType == documentType);
+
+        if (numbering == null)
+        {
+            numbering = new DocumentNumbering
+            {
+                Year = currentYear,
+                DocumentType = documentType,
+                LastNumber = 0
+            };
+            _context.DocumentNumbering.Add(numbering);
+        }
+
+        // Increment number
+        numbering.LastNumber++;
+        numbering.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+
+        // Format: YYYY-NNN
+        return $"{currentYear}-{numbering.LastNumber:D3}";
     }
 
     // PUT: api/Projekti/5
