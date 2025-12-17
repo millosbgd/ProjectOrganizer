@@ -374,12 +374,10 @@ export class ProjekatDetailComponent implements OnInit {
       const noteToUpdate = {
         id: this.editingNoteId,
         projekatId: this.projekat.id,
-        opis: this.currentNote,
-        createdAt: '',
-        updatedAt: ''
+        opis: this.currentNote
       };
       
-      this.noteService.update(this.editingNoteId, noteToUpdate).subscribe({
+      this.noteService.update(this.editingNoteId, noteToUpdate as Note).subscribe({
         next: () => {
           this.loadNotes(this.projekat.id);
           this.currentNote = '';
@@ -393,14 +391,11 @@ export class ProjekatDetailComponent implements OnInit {
     } else {
       // Create new note
       const newNote = {
-        id: 0,
         projekatId: this.projekat.id,
-        opis: this.currentNote,
-        createdAt: '',
-        updatedAt: ''
+        opis: this.currentNote
       };
       
-      this.noteService.create(newNote).subscribe({
+      this.noteService.create(newNote as Note).subscribe({
         next: () => {
           this.loadNotes(this.projekat.id);
           this.currentNote = '';
