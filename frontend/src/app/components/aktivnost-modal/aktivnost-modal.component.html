@@ -1,0 +1,47 @@
+<div class="modal-backdrop" *ngIf="isOpen" (click)="onBackdropClick($event)">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>{{ aktivnost.id ? 'Izmeni aktivnost' : 'Nova aktivnost' }}</h3>
+      <button class="close-btn" (click)="onClose()">&times;</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Opis:</label>
+        <textarea [(ngModel)]="aktivnost.opis" name="opis" rows="4" required></textarea>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Datum:</label>
+          <input type="date" [(ngModel)]="aktivnost.datum" name="datum" required />
+        </div>
+
+        <div class="form-group">
+          <label>Status:</label>
+          <select [(ngModel)]="aktivnost.status" name="status">
+            <option value="Planirana">Planirana</option>
+            <option value="U toku">U toku</option>
+            <option value="Završena">Završena</option>
+            <option value="Odložena">Odložena</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Vrsta:</label>
+          <select [(ngModel)]="aktivnost.vrsta" name="vrsta">
+            <option value="Razvoj">Razvoj</option>
+            <option value="Testiranje">Testiranje</option>
+            <option value="Sastanak">Sastanak</option>
+            <option value="Dokumentacija">Dokumentacija</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button type="button" class="btn-primary" (click)="onSave()">Sačuvaj</button>
+      <button type="button" class="btn-secondary" (click)="onClose()">Otkaži</button>
+    </div>
+  </div>
+</div>

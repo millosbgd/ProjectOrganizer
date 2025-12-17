@@ -216,7 +216,7 @@
 .vrsta-dokumentacija { background: #e7fff0; color: #006622; }
 
 /* Buttons */
-.btn-primary, .btn-secondary, .btn-danger, .btn-danger-small {
+.btn-primary, .btn-secondary, .btn-danger, .btn-danger-small, .btn-secondary-small {
   border: none;
   padding: 10px 20px;
   border-radius: 5px;
@@ -241,6 +241,17 @@
 }
 
 .btn-secondary:hover {
+  background-color: #d5dbdb;
+}
+
+.btn-secondary-small {
+  padding: 5px 12px;
+  font-size: 12px;
+  background-color: #ecf0f1;
+  color: #2c3e50;
+}
+
+.btn-secondary-small:hover {
   background-color: #d5dbdb;
 }
 

@@ -95,51 +95,9 @@
     <div class="card" *ngIf="!isNewMode">
       <div class="card-header-with-action">
         <h3>Aktivnosti</h3>
-        <button class="btn-primary" (click)="showAktivnostForm = !showAktivnostForm">
+        <button class="btn-primary" (click)="openNewAktivnostModal()">
           + Nova aktivnost
         </button>
-      </div>
-
-      <!-- Add Aktivnost Form -->
-      <div *ngIf="showAktivnostForm" class="form aktivnost-form">
-        <div class="form-group">
-          <label>Opis:</label>
-          <textarea [(ngModel)]="newAktivnost.opis" name="opis" rows="3" required></textarea>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label>Datum:</label>
-            <input type="date" [(ngModel)]="newAktivnost.datum" name="datum" required />
-          </div>
-
-          <div class="form-group">
-            <label>Status:</label>
-            <select [(ngModel)]="newAktivnost.status" name="status">
-              <option value="Planirana">Planirana</option>
-              <option value="U toku">U toku</option>
-              <option value="Završena">Završena</option>
-              <option value="Odložena">Odložena</option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label>Vrsta:</label>
-            <select [(ngModel)]="newAktivnost.vrsta" name="vrsta">
-              <option value="Razvoj">Razvoj</option>
-              <option value="Testiranje">Testiranje</option>
-              <option value="Sastanak">Sastanak</option>
-              <option value="Dokumentacija">Dokumentacija</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="form-actions">
-          <button type="button" class="btn-primary" (click)="addAktivnost()">Dodaj</button>
-          <button type="button" class="btn-secondary" (click)="showAktivnostForm = false; resetAktivnostForm()">
-            Otkaži
-          </button>
-        </div>
       </div>
 
       <!-- Aktivnosti List -->
@@ -154,6 +112,7 @@
             <p>{{ aktivnost.opis }}</p>
           </div>
           <div class="aktivnost-footer">
+            <button class="btn-secondary-small" (click)="openEditAktivnostModal(aktivnost)">Izmeni</button>
             <button class="btn-danger-small" (click)="deleteAktivnost(aktivnost.id)">Obriši</button>
           </div>
         </div>
@@ -165,3 +124,11 @@
     </div>
   </div>
 </div>
+
+<!-- Aktivnost Modal -->
+<app-aktivnost-modal 
+  [isOpen]="showAktivnostModal" 
+  [aktivnost]="currentAktivnost"
+  (save)="saveAktivnost($event)"
+  (close)="closeAktivnostModal()">
+</app-aktivnost-modal>

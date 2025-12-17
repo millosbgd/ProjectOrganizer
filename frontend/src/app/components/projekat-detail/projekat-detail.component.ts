@@ -8,11 +8,12 @@ import { AktivnostService } from '../../services/aktivnost.service';
 import { Projekat } from '../../models/projekat.model';
 import { Klijent } from '../../models/klijent.model';
 import { Aktivnost } from '../../models/aktivnost.model';
+import { AktivnostModalComponent } from '../aktivnost-modal/aktivnost-modal.component';
 
 @Component({
   selector: 'app-projekat-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, AktivnostModalComponent],
   templateUrl: './projekat-detail.component.html',
   styleUrls: ['./projekat-detail.component.css']
 })
@@ -33,7 +34,7 @@ export class ProjekatDetailComponent implements OnInit {
   isNewMode = false;
   loading = true;
   
-  newAktivnost: Aktivnost = {
+  currentAktivnost: Aktivnost = {
     id: 0,
     opis: '',
     datum: new Date(),
@@ -42,7 +43,7 @@ export class ProjekatDetailComponent implements OnInit {
     projekatId: 0
   };
   
-  showAktivnostForm = false;
+  showAktivnostModal = false;
 
   constructor(
     private projekatService: ProjekatService,
@@ -135,17 +136,65 @@ export class ProjekatDetailComponent implements OnInit {
   }
 
   addAktivnost(): void {
-    this.newAktivnost.projekatId = this.projekat.id;
-    this.aktivnostService.create(this.newAktivnost).subscribe({
+    this.currentAktivnost.projekatId = this.projekat.id;
+    this.aktivnostService.create(this.currentAktivnost).subscribe({
       next: () => {
         this.loadAktivnosti(this.projekat.id);
-        this.showAktivnostForm = false;
-        this.resetAktivnostForm();
+        this.closeAktivnostModal();
       },
       error: (error) => {
         console.error('Error creating aktivnost:', error);
       }
     });
+  }
+
+  openNewAktivnostModal(): void {
+    this.currentAktivnost = {
+      id: 0,
+      opis: '',
+      datum: new Date(),
+      status: 'Planirana',
+      vrsta: 'Razvoj',
+      projekatId: this.projekat.id
+    };
+    this.showAktivnostModal = true;
+  }
+
+  openEditAktivnostModal(aktivnost: Aktivnost): void {
+    this.currentAktivnost = { ...aktivnost };
+    this.showAktivnostModal = true;
+  }
+
+  saveAktivnost(aktivnost: Aktivnost): void {
+    aktivnost.projekatId = this.projekat.id;
+    
+    if (aktivnost.id) {
+      // Update existing
+      this.aktivnostService.update(aktivnost.id, aktivnost).subscribe({
+        next: () => {
+          this.loadAktivnosti(this.projekat.id);
+          this.closeAktivnostModal();
+        },
+        error: (error) => {
+          console.error('Error updating aktivnost:', error);
+        }
+      });
+    } else {
+      // Create new
+      this.aktivnostService.create(aktivnost).subscribe({
+        next: () => {
+          this.loadAktivnosti(this.projekat.id);
+          this.closeAktivnostModal();
+        },
+        error: (error) => {
+          console.error('Error creating aktivnost:', error);
+        }
+      });
+    }
+  }
+
+  closeAktivnostModal(): void {
+    this.showAktivnostModal = false;
   }
 
   deleteAktivnost(id: number): void {
@@ -159,16 +208,5 @@ export class ProjekatDetailComponent implements OnInit {
         }
       });
     }
-  }
-
-  resetAktivnostForm(): void {
-    this.newAktivnost = {
-      id: 0,
-      opis: '',
-      datum: new Date(),
-      status: 'Planirana',
-      vrsta: 'Razvoj',
-      projekatId: this.projekat.id
-    };
   }
 }
