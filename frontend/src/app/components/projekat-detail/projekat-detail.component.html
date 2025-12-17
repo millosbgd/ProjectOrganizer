@@ -127,6 +127,44 @@
         Nema aktivnosti za ovaj projekat.
       </div>
     </div>
+
+    <!-- Dokumenti Section -->
+    <div class="card" *ngIf="!isNewMode">
+      <div class="card-header-with-action">
+        <h3>Dokumenti</h3>
+        <label class="btn-primary" [class.disabled]="uploadingFile">
+          <input type="file" (change)="onFileSelected($event)" style="display: none;" [disabled]="uploadingFile" />
+          {{ uploadingFile ? 'Upload u toku...' : '+ Upload dokument' }}
+        </label>
+      </div>
+
+      <!-- Dokumenti List -->
+      <div class="dokumenti-list" *ngIf="dokumenti.length > 0">
+        <div class="dokument-item" *ngFor="let dokument of dokumenti">
+          <div class="dokument-icon">
+            {{ getFileIcon(dokument.tipFajla) }}
+          </div>
+          <div class="dokument-info">
+            <div class="dokument-naziv">{{ dokument.nazivFajla }}</div>
+            <div class="dokument-meta">
+              {{ formatFileSize(dokument.velicina) }} • {{ dokument.createdAt | date:'dd.MM.yyyy HH:mm' }}
+            </div>
+          </div>
+          <div class="dokument-actions">
+            <button class="btn-icon" (click)="downloadDokument(dokument)" title="Preuzmi">
+              ⬇️
+            </button>
+            <button class="btn-icon danger" (click)="deleteDokument(dokument.id)" title="Obriši">
+              🗑️
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="dokumenti.length === 0" class="no-data">
+        Nema dokumenata za ovaj projekat.
+      </div>
+    </div>
   </div>
 </div>
 

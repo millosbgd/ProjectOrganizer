@@ -5,9 +5,11 @@ import { FormsModule } from '@angular/forms';
 import { ProjekatService } from '../../services/projekat.service';
 import { KlijentService } from '../../services/klijent.service';
 import { AktivnostService } from '../../services/aktivnost.service';
+import { DokumentService } from '../../services/dokument.service';
 import { Projekat } from '../../models/projekat.model';
 import { Klijent } from '../../models/klijent.model';
 import { Aktivnost } from '../../models/aktivnost.model';
+import { Dokument } from '../../models/dokument.model';
 import { AktivnostModalComponent } from '../aktivnost-modal/aktivnost-modal.component';
 
 @Component({
@@ -30,9 +32,11 @@ export class ProjekatDetailComponent implements OnInit {
   
   klijenti: Klijent[] = [];
   aktivnosti: Aktivnost[] = [];
+  dokumenti: Dokument[] = [];
   isEditMode = false;
   isNewMode = false;
   loading = true;
+  uploadingFile = false;
   
   currentAktivnost: Aktivnost = {
     id: 0,
@@ -48,6 +52,7 @@ export class ProjekatDetailComponent implements OnInit {
 
   constructor(
     private projekatService: ProjekatService,
+    private dokumentService: DokumentService,
     private klijentService: KlijentService,
     private aktivnostService: AktivnostService,
     private route: ActivatedRoute,
@@ -66,6 +71,7 @@ export class ProjekatDetailComponent implements OnInit {
     } else if (id) {
       this.loadProjekat(+id);
       this.loadAktivnosti(+id);
+      this.loadDokumenti(+id);
     }
   }
 
@@ -237,8 +243,91 @@ export class ProjekatDetailComponent implements OnInit {
         },
         error: (error) => {
           console.error('Error deleting aktivnost:', error);
+          alert('Greška pri brisanju aktivnosti');
         }
       });
     }
+  }
+
+  // Dokument methods
+  loadDokumenti(projekatId: number): void {
+    this.dokumentService.getByProjekatId(projekatId).subscribe({
+      next: (data) => {
+        this.dokumenti = data;
+      },
+      error: (error) => {
+        console.error('Error loading dokumenti:', error);
+      }
+    });
+  }
+
+  onFileSelected(event: any): void {
+    const file: File = event.target.files[0];
+    if (file && !this.isNewMode) {
+      this.uploadFile(file);
+    }
+  }
+
+  uploadFile(file: File): void {
+    this.uploadingFile = true;
+    this.dokumentService.uploadDokument(this.projekat.id, file).subscribe({
+      next: () => {
+        this.loadDokumenti(this.projekat.id);
+        this.uploadingFile = false;
+      },
+      error: (error) => {
+        console.error('Error uploading file:', error);
+        alert('Greška pri upload-u fajla');
+        this.uploadingFile = false;
+      }
+    });
+  }
+
+  downloadDokument(dokument: Dokument): void {
+    this.dokumentService.downloadDokument(dokument.id).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = dokument.nazivFajla;
+        link.click();
+        window.URL.revokeObjectURL(url);
+      },
+      error: (error) => {
+        console.error('Error downloading file:', error);
+        alert('Greška pri preuzimanju fajla');
+      }
+    });
+  }
+
+  deleteDokument(id: number): void {
+    if (confirm('Da li ste sigurni da želite da obrišete ovaj dokument?')) {
+      this.dokumentService.deleteDokument(id).subscribe({
+        next: () => {
+          this.loadDokumenti(this.projekat.id);
+        },
+        error: (error) => {
+          console.error('Error deleting dokument:', error);
+          alert('Greška pri brisanju dokumenta');
+        }
+      });
+    }
+  }
+
+  formatFileSize(bytes: number): string {
+    return this.dokumentService.formatFileSize(bytes);
+  }
+
+  getFileIcon(tipFajla: string): string {
+    const icons: { [key: string]: string } = {
+      'pdf': '📄',
+      'xls': '📊',
+      'xlsx': '📊',
+      'eml': '✉️',
+      'doc': '📝',
+      'docx': '📝',
+      'txt': '📝'
+    };
+    return icons[tipFajla.toLowerCase()] || '📎';
   }
 }
