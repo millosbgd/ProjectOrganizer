@@ -133,6 +133,8 @@ export class ProjekatDetailComponent implements OnInit {
         },
         error: (error) => {
           console.error('Error updating projekat:', error);
+          console.error('Error details:', error.error);
+          alert('Greška pri ažuriranju projekta: ' + (error.error || error.message));
         }
       });
     }
