@@ -10,24 +10,33 @@
     Nema klijenata. Kreirajte novog klijenta.
   </div>
 
-  <div class="klijenti-grid" *ngIf="!loading && klijenti.length > 0">
-    <div class="klijent-card" *ngFor="let klijent of klijenti">
-      <div class="card-header">
-        <h3>{{ klijent.naziv }}</h3>
-      </div>
-      <div class="card-body">
-        <p><strong>Adresa:</strong> {{ klijent.adresa }}</p>
-        <p><strong>Grad:</strong> {{ klijent.grad }}</p>
-        <p><strong>Zemlja:</strong> {{ klijent.zemlja }}</p>
-      </div>
-      <div class="card-footer">
-        <button class="btn-secondary" [routerLink]="['/klijenti', klijent.id]">
-          Izmeni
-        </button>
-        <button class="btn-danger" (click)="deleteKlijent(klijent.id)">
-          Obriši
-        </button>
-      </div>
-    </div>
+  <div class="table-container" *ngIf="!loading && klijenti.length > 0">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Naziv</th>
+          <th>Adresa</th>
+          <th>Grad</th>
+          <th>Zemlja</th>
+          <th>Akcije</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let klijent of klijenti">
+          <td><strong>{{ klijent.naziv }}</strong></td>
+          <td>{{ klijent.adresa }}</td>
+          <td>{{ klijent.grad }}</td>
+          <td>{{ klijent.zemlja }}</td>
+          <td class="actions">
+            <button class="btn-secondary" [routerLink]="['/klijenti', klijent.id]">
+              Izmeni
+            </button>
+            <button class="btn-danger" (click)="deleteKlijent(klijent.id)">
+              Obriši
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
   </div>
 </div>
