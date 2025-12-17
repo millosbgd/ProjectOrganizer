@@ -106,10 +106,8 @@ export class ProjekatDetailComponent implements OnInit {
 
   saveProjekat(): void {
     if (this.isNewMode) {
-      // For new projects, send empty brojProjekta (backend will generate it)
+      // For new projects, don't send brojProjekta at all
       const projekatToSave = {
-        id: 0,
-        brojProjekta: '',
         naziv: this.projekat.naziv,
         datum: this.projekat.datum,
         aktivan: this.projekat.aktivan,
@@ -117,7 +115,7 @@ export class ProjekatDetailComponent implements OnInit {
         klijentId: this.projekat.klijentId
       };
 
-      this.projekatService.create(projekatToSave).subscribe({
+      this.projekatService.create(projekatToSave as any).subscribe({
         next: (data) => {
           this.router.navigate(['/projekti']);
         },

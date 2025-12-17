@@ -58,16 +58,24 @@ public class ProjektiController : ControllerBase
 
     // POST: api/Projekti
     [HttpPost]
-    public async Task<ActionResult<Projekat>> CreateProjekat(Projekat projekat)
+    public async Task<ActionResult<Projekat>> CreateProjekat(CreateProjekatDto dto)
     {
         // Check if Klijent exists
-        if (!await _context.Klijenti.AnyAsync(k => k.Id == projekat.KlijentId))
+        if (!await _context.Klijenti.AnyAsync(k => k.Id == dto.KlijentId))
             return BadRequest("Klijent ne postoji.");
 
-        // Auto-generate BrojProjekta
-        projekat.BrojProjekta = await GenerateDocumentNumber("Projekat");
-        projekat.CreatedAt = DateTime.UtcNow;
-        projekat.UpdatedAt = DateTime.UtcNow;
+        // Create projekat with auto-generated BrojProjekta
+        var projekat = new Projekat
+        {
+            BrojProjekta = await GenerateDocumentNumber("Projekat"),
+            Datum = dto.Datum,
+            Naziv = dto.Naziv,
+            Aktivan = dto.Aktivan,
+            Status = dto.Status,
+            KlijentId = dto.KlijentId,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
 
         _context.Projekti.Add(projekat);
         await _context.SaveChangesAsync();
