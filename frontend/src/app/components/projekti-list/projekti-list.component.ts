@@ -14,6 +14,7 @@ import { Projekat } from '../../models/projekat.model';
 export class ProjektiListComponent implements OnInit {
   projekti: Projekat[] = [];
   loading = true;
+  openDropdownId: number | null = null;
 
   constructor(private projekatService: ProjekatService) { }
 
@@ -45,5 +46,10 @@ export class ProjektiListComponent implements OnInit {
         }
       });
     }
+  }
+
+  toggleDropdown(event: Event, projektId: number): void {
+    event.stopPropagation();
+    this.openDropdownId = this.openDropdownId === projektId ? null : projektId;
   }
 }

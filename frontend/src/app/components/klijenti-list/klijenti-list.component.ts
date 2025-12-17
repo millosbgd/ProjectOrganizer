@@ -14,6 +14,7 @@ import { Klijent } from '../../models/klijent.model';
 export class KlijentiListComponent implements OnInit {
   klijenti: Klijent[] = [];
   loading = true;
+  openDropdownId: number | null = null;
 
   constructor(private klijentService: KlijentService) { }
 
@@ -45,5 +46,10 @@ export class KlijentiListComponent implements OnInit {
         }
       });
     }
+  }
+
+  toggleDropdown(event: Event, klijentId: number): void {
+    event.stopPropagation();
+    this.openDropdownId = this.openDropdownId === klijentId ? null : klijentId;
   }
 }

@@ -25,12 +25,13 @@
         <p *ngIf="projekat.klijent"><strong>Klijent:</strong> {{ projekat.klijent.naziv }}</p>
       </div>
       <div class="card-footer">
-        <button class="btn-secondary" [routerLink]="['/projekti', projekat.id]" (click)="$event.stopPropagation()">
-          Detalji
-        </button>
-        <button class="btn-danger" (click)="deleteProjekt(projekat.id); $event.stopPropagation()">
-          Obriši
-        </button>
+        <div class="dropdown">
+          <button class="btn-dropdown" (click)="toggleDropdown($event, projekat.id)">⋮</button>
+          <div class="dropdown-menu" *ngIf="openDropdownId === projekat.id">
+            <button class="dropdown-item" [routerLink]="['/projekti', projekat.id]">Detalji</button>
+            <button class="dropdown-item danger" (click)="deleteProjekt(projekat.id); toggleDropdown($event, projekat.id)">Obriši</button>
+          </div>
+        </div>
       </div>
     </div>
   </div>

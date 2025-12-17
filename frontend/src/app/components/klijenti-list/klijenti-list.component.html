@@ -28,12 +28,13 @@
           <td>{{ klijent.grad }}</td>
           <td>{{ klijent.zemlja }}</td>
           <td class="actions">
-            <button class="btn-secondary" [routerLink]="['/klijenti', klijent.id]">
-              Izmeni
-            </button>
-            <button class="btn-danger" (click)="deleteKlijent(klijent.id)">
-              Obriši
-            </button>
+            <div class="dropdown">
+              <button class="btn-dropdown" (click)="toggleDropdown($event, klijent.id)">⋮</button>
+              <div class="dropdown-menu" *ngIf="openDropdownId === klijent.id">
+                <button class="dropdown-item" [routerLink]="['/klijenti', klijent.id]">Izmeni</button>
+                <button class="dropdown-item danger" (click)="deleteKlijent(klijent.id); toggleDropdown($event, klijent.id)">Obriši</button>
+              </div>
+            </div>
           </td>
         </tr>
       </tbody>
