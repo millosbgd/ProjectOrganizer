@@ -1,0 +1,33 @@
+<div class="klijenti-container">
+  <div class="header">
+    <h2>Klijenti</h2>
+    <button class="btn-primary" routerLink="/klijenti/new">+ Novi Klijent</button>
+  </div>
+
+  <div *ngIf="loading" class="loading">Učitavanje...</div>
+
+  <div *ngIf="!loading && klijenti.length === 0" class="no-data">
+    Nema klijenata. Kreirajte novog klijenta.
+  </div>
+
+  <div class="klijenti-grid" *ngIf="!loading && klijenti.length > 0">
+    <div class="klijent-card" *ngFor="let klijent of klijenti">
+      <div class="card-header">
+        <h3>{{ klijent.naziv }}</h3>
+      </div>
+      <div class="card-body">
+        <p><strong>Adresa:</strong> {{ klijent.adresa }}</p>
+        <p><strong>Grad:</strong> {{ klijent.grad }}</p>
+        <p><strong>Zemlja:</strong> {{ klijent.zemlja }}</p>
+      </div>
+      <div class="card-footer">
+        <button class="btn-secondary" [routerLink]="['/klijenti', klijent.id]">
+          Izmeni
+        </button>
+        <button class="btn-danger" (click)="deleteKlijent(klijent.id)">
+          Obriši
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

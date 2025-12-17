@@ -1,0 +1,167 @@
+<div class="detail-container">
+  <div class="header">
+    <h2>{{ isNewMode ? 'Novi Projekat' : projekat.naziv }}</h2>
+    <div class="header-actions">
+      <button class="btn-secondary" routerLink="/projekti">Nazad</button>
+      <button *ngIf="!isEditMode && !isNewMode" class="btn-primary" (click)="isEditMode = true">Izmeni</button>
+    </div>
+  </div>
+
+  <div *ngIf="loading" class="loading">Učitavanje...</div>
+
+  <div *ngIf="!loading" class="content">
+    <!-- Projekat Details -->
+    <div class="card">
+      <h3>Podaci o projektu</h3>
+      
+      <form *ngIf="isEditMode" class="form">
+        <div class="form-group">
+          <label>Broj projekta:</label>
+          <input type="text" [(ngModel)]="projekat.brojProjekta" name="brojProjekta" required />
+        </div>
+
+        <div class="form-group">
+          <label>Naziv:</label>
+          <input type="text" [(ngModel)]="projekat.naziv" name="naziv" required />
+        </div>
+
+        <div class="form-group">
+          <label>Datum:</label>
+          <input type="date" [(ngModel)]="projekat.datum" name="datum" required />
+        </div>
+
+        <div class="form-group">
+          <label>Status:</label>
+          <select [(ngModel)]="projekat.status" name="status">
+            <option value="U pripremi">U pripremi</option>
+            <option value="Aktivan">Aktivan</option>
+            <option value="Na čekanju">Na čekanju</option>
+            <option value="Završen">Završen</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Klijent:</label>
+          <select [(ngModel)]="projekat.klijentId" name="klijentId" required>
+            <option [ngValue]="0" disabled>Izaberite klijenta</option>
+            <option *ngFor="let klijent of klijenti" [ngValue]="klijent.id">
+              {{ klijent.naziv }}
+            </option>
+          </select>
+        </div>
+
+        <div class="form-group checkbox">
+          <label>
+            <input type="checkbox" [(ngModel)]="projekat.aktivan" name="aktivan" />
+            Aktivan
+          </label>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn-primary" (click)="saveProjekat()">Sačuvaj</button>
+          <button type="button" class="btn-secondary" (click)="cancel()">Otkaži</button>
+        </div>
+      </form>
+
+      <div *ngIf="!isEditMode" class="details">
+        <div class="detail-row">
+          <span class="label">Broj projekta:</span>
+          <span class="value">{{ projekat.brojProjekta }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="label">Datum:</span>
+          <span class="value">{{ projekat.datum | date:'dd.MM.yyyy' }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="label">Status:</span>
+          <span class="value">{{ projekat.status }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="label">Klijent:</span>
+          <span class="value">{{ projekat.klijent?.naziv || 'N/A' }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="label">Aktivan:</span>
+          <span class="value">
+            <span class="badge" [class.active]="projekat.aktivan" [class.inactive]="!projekat.aktivan">
+              {{ projekat.aktivan ? 'Da' : 'Ne' }}
+            </span>
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Aktivnosti Section -->
+    <div class="card" *ngIf="!isNewMode">
+      <div class="card-header-with-action">
+        <h3>Aktivnosti</h3>
+        <button class="btn-primary" (click)="showAktivnostForm = !showAktivnostForm">
+          + Nova aktivnost
+        </button>
+      </div>
+
+      <!-- Add Aktivnost Form -->
+      <div *ngIf="showAktivnostForm" class="form aktivnost-form">
+        <div class="form-group">
+          <label>Opis:</label>
+          <textarea [(ngModel)]="newAktivnost.opis" name="opis" rows="3" required></textarea>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Datum:</label>
+            <input type="date" [(ngModel)]="newAktivnost.datum" name="datum" required />
+          </div>
+
+          <div class="form-group">
+            <label>Status:</label>
+            <select [(ngModel)]="newAktivnost.status" name="status">
+              <option value="Planirana">Planirana</option>
+              <option value="U toku">U toku</option>
+              <option value="Završena">Završena</option>
+              <option value="Odložena">Odložena</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Vrsta:</label>
+            <select [(ngModel)]="newAktivnost.vrsta" name="vrsta">
+              <option value="Razvoj">Razvoj</option>
+              <option value="Testiranje">Testiranje</option>
+              <option value="Sastanak">Sastanak</option>
+              <option value="Dokumentacija">Dokumentacija</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn-primary" (click)="addAktivnost()">Dodaj</button>
+          <button type="button" class="btn-secondary" (click)="showAktivnostForm = false; resetAktivnostForm()">
+            Otkaži
+          </button>
+        </div>
+      </div>
+
+      <!-- Aktivnosti List -->
+      <div class="aktivnosti-list" *ngIf="aktivnosti.length > 0">
+        <div class="aktivnost-item" *ngFor="let aktivnost of aktivnosti">
+          <div class="aktivnost-header">
+            <span class="aktivnost-datum">{{ aktivnost.datum | date:'dd.MM.yyyy' }}</span>
+            <span class="badge-small status-{{ aktivnost.status.toLowerCase() }}">{{ aktivnost.status }}</span>
+            <span class="badge-small vrsta-{{ aktivnost.vrsta.toLowerCase() }}">{{ aktivnost.vrsta }}</span>
+          </div>
+          <div class="aktivnost-body">
+            <p>{{ aktivnost.opis }}</p>
+          </div>
+          <div class="aktivnost-footer">
+            <button class="btn-danger-small" (click)="deleteAktivnost(aktivnost.id)">Obriši</button>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="aktivnosti.length === 0" class="no-data">
+        Nema aktivnosti za ovaj projekat.
+      </div>
+    </div>
+  </div>
+</div>

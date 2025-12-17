@@ -1,0 +1,21 @@
+<header class="header">
+  <div class="header-container">
+    <div class="header-left">
+      <h1 routerLink="/">Project Organizer</h1>
+      <nav *ngIf="auth.isAuthenticated$ | async">
+        <a routerLink="/projekti" routerLinkActive="active">Projekti</a>
+        <a routerLink="/klijenti" routerLinkActive="active">Klijenti</a>
+      </nav>
+    </div>
+    
+    <div class="header-right">
+      <div *ngIf="auth.isAuthenticated$ | async; else loggedOut">
+        <span class="user-name">{{ (auth.user$ | async)?.name }}</span>
+        <button class="btn-logout" (click)="logout()">Odjavi se</button>
+      </div>
+      <ng-template #loggedOut>
+        <button class="btn-login" (click)="login()">Prijavi se</button>
+      </ng-template>
+    </div>
+  </div>
+</header>

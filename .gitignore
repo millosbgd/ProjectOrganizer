@@ -1,0 +1,35 @@
+# Frontend (Angular)
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
+frontend/.vscode/
+frontend/*.log
+
+# Backend (.NET)
+backend/**/*.user
+backend/**/bin/
+backend/**/obj/
+backend/**/*.suo
+backend/**/*.cache
+backend/.vs/
+
+# Environment files (ne commituj sa pravim kredencijalima)
+**/appsettings.Development.json
+frontend/src/environments/environment.ts
+frontend/src/environments/environment.prod.ts
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

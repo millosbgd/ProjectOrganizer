@@ -1,0 +1,38 @@
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
+import { Aktivnost } from '../models/aktivnost.model';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class AktivnostService {
+  private apiUrl = `${environment.apiUrl}/aktivnosti`;
+
+  constructor(private http: HttpClient) { }
+
+  getAll(): Observable<Aktivnost[]> {
+    return this.http.get<Aktivnost[]>(this.apiUrl);
+  }
+
+  getById(id: number): Observable<Aktivnost> {
+    return this.http.get<Aktivnost>(`${this.apiUrl}/${id}`);
+  }
+
+  getByProjekatId(projekatId: number): Observable<Aktivnost[]> {
+    return this.http.get<Aktivnost[]>(`${this.apiUrl}/projekat/${projekatId}`);
+  }
+
+  create(aktivnost: Aktivnost): Observable<Aktivnost> {
+    return this.http.post<Aktivnost>(this.apiUrl, aktivnost);
+  }
+
+  update(id: number, aktivnost: Aktivnost): Observable<void> {
+    return this.http.put<void>(`${this.apiUrl}/${id}`, aktivnost);
+  }
+
+  delete(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  }
+}

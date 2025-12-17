@@ -1,0 +1,43 @@
+<div class="detail-container">
+  <div class="header">
+    <h2>{{ isNewMode ? 'Novi Klijent' : klijent.naziv }}</h2>
+    <div class="header-actions">
+      <button class="btn-secondary" routerLink="/klijenti">Nazad</button>
+    </div>
+  </div>
+
+  <div *ngIf="loading" class="loading">Učitavanje...</div>
+
+  <div *ngIf="!loading" class="content">
+    <div class="card">
+      <h3>Podaci o klijentu</h3>
+      
+      <form class="form">
+        <div class="form-group">
+          <label>Naziv:</label>
+          <input type="text" [(ngModel)]="klijent.naziv" name="naziv" required />
+        </div>
+
+        <div class="form-group">
+          <label>Adresa:</label>
+          <input type="text" [(ngModel)]="klijent.adresa" name="adresa" required />
+        </div>
+
+        <div class="form-group">
+          <label>Grad:</label>
+          <input type="text" [(ngModel)]="klijent.grad" name="grad" required />
+        </div>
+
+        <div class="form-group">
+          <label>Zemlja:</label>
+          <input type="text" [(ngModel)]="klijent.zemlja" name="zemlja" required />
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn-primary" (click)="saveKlijent()">Sačuvaj</button>
+          <button type="button" class="btn-secondary" (click)="cancel()">Otkaži</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
