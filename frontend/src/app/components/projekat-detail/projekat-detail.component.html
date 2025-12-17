@@ -112,8 +112,13 @@
             <p>{{ aktivnost.opis }}</p>
           </div>
           <div class="aktivnost-footer">
-            <button class="btn-secondary-small" (click)="openEditAktivnostModal(aktivnost)">Izmeni</button>
-            <button class="btn-danger-small" (click)="deleteAktivnost(aktivnost.id)">Obriši</button>
+            <div class="dropdown">
+              <button class="btn-dropdown" (click)="toggleDropdown(aktivnost.id)">⋮</button>
+              <div class="dropdown-menu" *ngIf="openDropdownId === aktivnost.id">
+                <button class="dropdown-item" (click)="openEditAktivnostModal(aktivnost); toggleDropdown(aktivnost.id)">Izmeni</button>
+                <button class="dropdown-item danger" (click)="deleteAktivnost(aktivnost.id); toggleDropdown(aktivnost.id)">Obriši</button>
+              </div>
+            </div>
           </div>
         </div>
       </div>

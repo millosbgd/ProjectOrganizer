@@ -44,6 +44,7 @@ export class ProjekatDetailComponent implements OnInit {
   };
   
   showAktivnostModal = false;
+  openDropdownId: number | null = null;
 
   constructor(
     private projekatService: ProjekatService,
@@ -195,6 +196,10 @@ export class ProjekatDetailComponent implements OnInit {
 
   closeAktivnostModal(): void {
     this.showAktivnostModal = false;
+  }
+
+  toggleDropdown(aktivnostId: number): void {
+    this.openDropdownId = this.openDropdownId === aktivnostId ? null : aktivnostId;
   }
 
   deleteAktivnost(id: number): void {
