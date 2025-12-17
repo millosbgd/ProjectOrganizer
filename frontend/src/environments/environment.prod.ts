@@ -2,11 +2,11 @@ export const environment = {
   production: true,
   apiUrl: 'https://projectorganizer-api.azurewebsites.net/api',
   auth0: {
-    domain: '[TVOJ_AUTH0_DOMAIN]',
-    clientId: '[TVOJ_AUTH0_CLIENT_ID]',
+    domain: 'dev-gp57sox40kt34si8.us.auth0.com',
+    clientId: 'rOVVRDGgscn6oAqvO0vu09kA61JUKmPp',
     authorizationParams: {
       redirect_uri: window.location.origin,
-      audience: '[TVOJ_AUTH0_AUDIENCE]'
+      audience: 'https://projectorganizer.api'
     }
   }
 };
