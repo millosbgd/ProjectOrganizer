@@ -4,11 +4,12 @@ import { FormsModule } from '@angular/forms';
 import { Aktivnost } from '../../models/aktivnost.model';
 import { AktivnostService } from '../../services/aktivnost.service';
 import { ZapisnikModalComponent } from '../zapisnik-modal/zapisnik-modal.component';
+import { DevOpsTasksModalComponent } from '../devops-tasks-modal/devops-tasks-modal.component';
 
 @Component({
   selector: 'app-aktivnost-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule, ZapisnikModalComponent],
+  imports: [CommonModule, FormsModule, ZapisnikModalComponent, DevOpsTasksModalComponent],
   templateUrl: './aktivnost-modal.component.html',
   styleUrl: './aktivnost-modal.component.css'
 })
@@ -30,6 +31,7 @@ export class AktivnostModalComponent {
   isGeneratingZapisnik: boolean = false;
   showZapisnikModal: boolean = false;
   zapisnikModalTitle: string = '';
+  showDevOpsTasksModal: boolean = false;
 
   constructor(private aktivnostService: AktivnostService) {}
 
@@ -88,6 +90,14 @@ export class AktivnostModalComponent {
   closeZapisnikModal(): void {
     this.showZapisnikModal = false;
     this.zapisnik = '';
+  }
+
+  openDevOpsTasksModal(): void {
+    this.showDevOpsTasksModal = true;
+  }
+
+  closeDevOpsTasksModal(): void {
+    this.showDevOpsTasksModal = false;
   }
 
   generateDevOpsTasks(): void {

@@ -1,0 +1,78 @@
+<div class="modal-overlay" (click)="closeModal()">
+  <div class="modal-content-large" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>📋 Sačuvani DevOps Taskovi</h3>
+      <button class="close-btn" (click)="closeModal()">&times;</button>
+    </div>
+    
+    <div class="modal-body">
+      <div *ngIf="loading" class="loading">
+        <div class="spinner"></div>
+        <p>Učitavanje taskova...</p>
+      </div>
+
+      <div *ngIf="!loading && tasks.length === 0" class="no-tasks">
+        <p>Nema sačuvanih taskova za ovu aktivnost.</p>
+      </div>
+
+      <div *ngIf="!loading && tasks.length > 0" class="tasks-grid">
+        <div class="task-card" *ngFor="let task of tasks" [class.selected]="isTaskSelected(task.id)">
+          <div class="task-header">
+            <div class="task-title-row">
+              <span class="task-order">{{ '#' }}{{ task.orderIndex }}</span>
+              <h4 class="task-title">{{ task.title }}</h4>
+            </div>
+            <div class="task-badges">
+              <span class="badge" [ngClass]="getPriorityBadgeClass(task.priority)">
+                {{ task.priority || 'Medium' }}
+              </span>
+              <span class="badge" [ngClass]="getStatusBadgeClass(task.status)">
+                {{ task.status }}
+              </span>
+            </div>
+          </div>
+
+          <div class="task-body">
+            <div class="task-section" *ngIf="task.description">
+              <label>Opis:</label>
+              <p>{{ task.description }}</p>
+            </div>
+
+            <div class="task-section" *ngIf="task.acceptanceCriteria">
+              <label>Acceptance Criteria:</label>
+              <pre>{{ task.acceptanceCriteria }}</pre>
+            </div>
+
+            <div class="task-meta">
+              <div class="meta-item" *ngIf="task.estimation">
+                <span class="meta-label">Procena:</span>
+                <span class="meta-value">{{ task.estimation }}</span>
+              </div>
+              <div class="meta-item">
+                <span class="meta-label">Kreirao:</span>
+                <span class="meta-value">{{ task.user?.name || task.user?.email }}</span>
+              </div>
+              <div class="meta-item">
+                <span class="meta-label">Datum:</span>
+                <span class="meta-value">{{ task.createdAt | date: 'dd.MM.yyyy HH:mm' }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="task-actions">
+            <button class="btn-icon btn-delete" (click)="deleteTask(task.id)" title="Obriši task">
+              🗑️
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="modal-footer" *ngIf="!loading && tasks.length > 0">
+      <div class="footer-info">
+        <span>Ukupno taskova: <strong>{{ tasks.length }}</strong></span>
+      </div>
+      <button class="btn-secondary" (click)="closeModal()">Zatvori</button>
+    </div>
+  </div>
+</div>

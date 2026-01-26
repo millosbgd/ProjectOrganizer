@@ -47,6 +47,9 @@
             <button type="button" class="btn-ai-small btn-ai-devops" (click)="generateDevOpsTasks()" *ngIf="aktivnost.id">
               📋 DevOps Taskovi
             </button>
+            <button type="button" class="btn-ai-small btn-ai-view" (click)="openDevOpsTasksModal()" *ngIf="aktivnost.id" title="Pogledaj sačuvane taskove">
+              👁️ Pregledaj
+            </button>
           </div>
         </div>
         <textarea
@@ -75,3 +78,9 @@
   [isGenerating]="isGeneratingZapisnik"
   (close)="closeZapisnikModal()"
 ></app-zapisnik-modal>
+
+<app-devops-tasks-modal
+  *ngIf="showDevOpsTasksModal"
+  [aktivnostId]="aktivnost.id"
+  (close)="closeDevOpsTasksModal()"
+></app-devops-tasks-modal>
