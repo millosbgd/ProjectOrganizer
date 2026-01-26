@@ -44,6 +44,7 @@ export class ProjekatDetailComponent implements OnInit {
   currentAktivnost: Aktivnost = {
     id: 0,
     opis: '',
+    detalji: '',
     datum: new Date(),
     status: 'Planirana',
     vrsta: 'Razvoj',
@@ -195,6 +196,7 @@ export class ProjekatDetailComponent implements OnInit {
     this.currentAktivnost = {
       id: 0,
       opis: '',
+      detalji: '',
       datum: new Date(),
       status: 'Planirana',
       vrsta: 'Razvoj',

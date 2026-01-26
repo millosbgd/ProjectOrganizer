@@ -79,6 +79,7 @@ public class AktivnostiController : ControllerBase
             return NotFound();
 
         existingAktivnost.Opis = aktivnost.Opis;
+        existingAktivnost.Detalji = aktivnost.Detalji;
         existingAktivnost.Datum = aktivnost.Datum;
         existingAktivnost.Status = aktivnost.Status;
         existingAktivnost.Vrsta = aktivnost.Vrsta;

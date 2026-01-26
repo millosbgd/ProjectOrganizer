@@ -8,7 +8,20 @@
     <div class="modal-body">
       <div class="form-group">
         <label>Opis:</label>
-        <textarea [(ngModel)]="aktivnost.opis" name="opis" rows="4" required></textarea>
+        <textarea class="opis-textarea" [(ngModel)]="aktivnost.opis" name="opis" rows="2" required></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>Detalji:</label>
+        <textarea
+          class="detalji-textarea"
+          [(ngModel)]="aktivnost.detalji"
+          name="detalji"
+          rows="8"
+          maxlength="2000"
+          required
+        ></textarea>
+        <div class="char-count">{{ aktivnost.detalji?.length || 0 }}/2000</div>
       </div>
 
       <div class="form-row">

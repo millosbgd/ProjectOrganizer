@@ -11,6 +11,9 @@ public class Aktivnost
     [Required]
     public string Opis { get; set; } = string.Empty;
 
+    [MaxLength(2000)]
+    public string Detalji { get; set; } = string.Empty;
+
     [Required]
     public DateTime Datum { get; set; }
 

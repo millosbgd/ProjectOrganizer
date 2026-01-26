@@ -14,6 +14,7 @@ export class AktivnostModalComponent {
   @Input() aktivnost: Aktivnost = {
     id: 0,
     opis: '',
+    detalji: '',
     datum: new Date(),
     status: 'Planirana',
     vrsta: 'Razvoj',
