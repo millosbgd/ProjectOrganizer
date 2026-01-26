@@ -18,6 +18,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<Note> Notes { get; set; }
     public DbSet<UserSettings> UserSettings { get; set; }
     public DbSet<User> Users { get; set; }
+    public DbSet<ProjectPermission> ProjectPermissions { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ProjectOrganizer.Api.Data;
 using ProjectOrganizer.Api.Models;
+using ProjectOrganizer.Api.Services;
+using System.Security.Claims;
 
 namespace ProjectOrganizer.Api.Controllers;
 
@@ -12,11 +14,13 @@ namespace ProjectOrganizer.Api.Controllers;
 public class ProjektiController : ControllerBase
 {
     private readonly ApplicationDbContext _context;
+    private readonly UserService _userService;
     private readonly ILogger<ProjektiController> _logger;
 
-    public ProjektiController(ApplicationDbContext context, ILogger<ProjektiController> logger)
+    public ProjektiController(ApplicationDbContext context, UserService userService, ILogger<ProjektiController> logger)
     {
         _context = context;
+        _userService = userService;
         _logger = logger;
     }
 
@@ -26,10 +30,23 @@ public class ProjektiController : ControllerBase
         [FromQuery] bool? aktivan = null,
         [FromQuery] string? status = null)
     {
+        var currentUser = await _userService.EnsureUserExistsAsync(User);
+        
         var query = _context.Projekti
             .Include(p => p.Klijent)
             .Include(p => p.Aktivnosti)
             .AsQueryable();
+
+        // Filter by permissions (Admins see all)
+        if (currentUser.Role != "Admin")
+        {
+            var userProjectIds = await _context.ProjectPermissions
+                .Where(p => p.UserId == currentUser.Id)
+                .Select(p => p.ProjekatId)
+                .ToListAsync();
+            
+            query = query.Where(p => userProjectIds.Contains(p.Id));
+        }
 
         if (aktivan.HasValue)
             query = query.Where(p => p.Aktivan == aktivan.Value);
@@ -45,6 +62,20 @@ public class ProjektiController : ControllerBase
     [HttpGet("{id}")]
     public async Task<ActionResult<Projekat>> GetProjekat(int id)
     {
+        var currentUser = await _userService.EnsureUserExistsAsync(User);
+        
+        // Check permission
+        if (currentUser.Role != "Admin")
+        {
+            var hasPermission = await _context.ProjectPermissions
+                .AnyAsync(p => p.ProjekatId == id && p.UserId == currentUser.Id);
+            
+            if (!hasPermission)
+            {
+                return Forbid();
+            }
+        }
+        
         var projekat = await _context.Projekti
             .Include(p => p.Klijent)
             .Include(p => p.Aktivnosti)
