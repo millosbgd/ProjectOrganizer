@@ -206,6 +206,26 @@ public class AktivnostiController : ControllerBase
                 aktivnost.Detalji
             );
 
+            // Get current user from Users table
+            var currentUser = await _context.Users
+                .FirstOrDefaultAsync(u => u.Auth0Id == userId);
+
+            if (currentUser != null)
+            {
+                // Save to DevOpsTasksCandidates
+                var candidate = new DevOpsTasksCandidate
+                {
+                    AktivnostId = id,
+                    GeneratedContent = tasks,
+                    UserId = currentUser.Id,
+                    Status = "Draft",
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                _context.DevOpsTasksCandidates.Add(candidate);
+                await _context.SaveChangesAsync();
+            }
+
             return Ok(tasks);
         }
         catch (Exception ex)
