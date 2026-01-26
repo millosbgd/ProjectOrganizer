@@ -8,7 +8,8 @@
     <div class="modal-body">
       <div *ngIf="isGenerating" class="loading">
         <div class="spinner"></div>
-        <p>AI generiše zapisnik...</p>
+        <p *ngIf="title.includes('Zapisnik')">AI generiše zapisnik...</p>
+        <p *ngIf="title.includes('DevOps')">AI generiše taskove...</p>
       </div>
 
       <div *ngIf="!isGenerating && zapisnik" class="zapisnik-content">
