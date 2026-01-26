@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using ProjectOrganizer.Api.Data;
+using ProjectOrganizer.Api.Services;
 using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -47,6 +48,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 
 builder.Services.AddAuthorization();
+
+// Register OpenAI service
+builder.Services.AddScoped<OpenAIService>();
 
 builder.Services.AddControllers()
     .AddJsonOptions(options =>

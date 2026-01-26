@@ -2,11 +2,13 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Aktivnost } from '../../models/aktivnost.model';
+import { AktivnostService } from '../../services/aktivnost.service';
+import { ZapisnikModalComponent } from '../zapisnik-modal/zapisnik-modal.component';
 
 @Component({
   selector: 'app-aktivnost-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ZapisnikModalComponent],
   templateUrl: './aktivnost-modal.component.html',
   styleUrl: './aktivnost-modal.component.css'
 })
@@ -23,6 +25,12 @@ export class AktivnostModalComponent {
   @Input() isOpen = false;
   @Output() save = new EventEmitter<Aktivnost>();
   @Output() close = new EventEmitter<void>();
+
+  zapisnik: string = '';
+  isGeneratingZapisnik: boolean = false;
+  showZapisnikModal: boolean = false;
+
+  constructor(private aktivnostService: AktivnostService) {}
 
   get datumString(): string {
     if (!this.aktivnost.datum) return '';
@@ -49,5 +57,34 @@ export class AktivnostModalComponent {
     if (event.target === event.currentTarget) {
       this.onClose();
     }
+  }
+
+  generateZapisnik(): void {
+    if (!this.aktivnost.id || !this.aktivnost.detalji) {
+      alert('Morate prvo sačuvati aktivnost i uneti detalje.');
+      return;
+    }
+
+    this.isGeneratingZapisnik = true;
+    this.showZapisnikModal = true;
+    this.zapisnik = '';
+
+    this.aktivnostService.generateZapisnik(this.aktivnost.id).subscribe({
+      next: (response) => {
+        this.zapisnik = response;
+        this.isGeneratingZapisnik = false;
+      },
+      error: (error) => {
+        console.error('Greška pri generisanju zapisnika:', error);
+        alert('Greška prilikom generisanja zapisnika. Pokušajte ponovo.');
+        this.isGeneratingZapisnik = false;
+        this.showZapisnikModal = false;
+      }
+    });
+  }
+
+  closeZapisnikModal(): void {
+    this.showZapisnikModal = false;
+    this.zapisnik = '';
   }
 }

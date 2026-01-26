@@ -4,6 +4,7 @@ import { ProjektiListComponent } from './components/projekti-list/projekti-list.
 import { ProjekatDetailComponent } from './components/projekat-detail/projekat-detail.component';
 import { KlijentiListComponent } from './components/klijenti-list/klijenti-list.component';
 import { KlijentDetailComponent } from './components/klijent-detail/klijent-detail.component';
+import { SettingsComponent } from './components/settings/settings.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/projekti', pathMatch: 'full' },
@@ -25,6 +26,11 @@ export const routes: Routes = [
   { 
     path: 'klijenti/:id', 
     component: KlijentDetailComponent,
+    canActivate: [AuthGuard]
+  },
+  { 
+    path: 'settings', 
+    component: SettingsComponent,
     canActivate: [AuthGuard]
   }
 ];

@@ -1,0 +1,75 @@
+<div class="settings-container">
+  <div class="settings-header">
+    <h1>⚙️ Podešavanja</h1>
+    <p class="subtitle">Konfiguriši svoj OpenAI API ključ za AI funkcionalnosti</p>
+  </div>
+
+  <div class="settings-card" *ngIf="!loading">
+    <div class="info-banner">
+      <strong>ℹ️ Informacije:</strong> Tvoj API ključ se čuva sigurno u bazi i koristi se samo za tvoje zahteve. 
+      Nećeš biti naplaćivan od strane aplikacije - direktno plaćaš OpenAI-u.
+    </div>
+
+    <form (ngSubmit)="saveSettings()">
+      <div class="form-group">
+        <label for="apiKey">OpenAI API Ključ:</label>
+        <div class="api-key-input-wrapper">
+          <input
+            [type]="showApiKey ? 'text' : 'password'"
+            id="apiKey"
+            [(ngModel)]="settings.openAiApiKey"
+            name="apiKey"
+            placeholder="sk-proj-..."
+            class="form-control"
+          />
+          <button
+            type="button"
+            class="btn-toggle-visibility"
+            (click)="toggleApiKeyVisibility()"
+          >
+            {{ showApiKey ? '🙈' : '👁️' }}
+          </button>
+        </div>
+        <small class="help-text">
+          Nabavi API ključ na <a href="https://platform.openai.com/api-keys" target="_blank">platform.openai.com/api-keys</a>
+        </small>
+      </div>
+
+      <div class="form-group">
+        <label for="model">Model:</label>
+        <select
+          id="model"
+          [(ngModel)]="settings.openAiModel"
+          name="model"
+          class="form-control"
+        >
+          <option value="gpt-4o-mini">GPT-4o Mini (preporučeno - brz i ekonomičan)</option>
+          <option value="gpt-4o">GPT-4o (moćniji, skuplji)</option>
+          <option value="gpt-4-turbo">GPT-4 Turbo (stariji model)</option>
+        </select>
+        <small class="help-text">
+          GPT-4o Mini je odličan izbor za generisanje zapisnika - 15x jeftiniji od GPT-4o
+        </small>
+      </div>
+
+      <div class="button-group">
+        <button type="submit" class="btn-primary" [disabled]="loading">
+          {{ loading ? 'Čuvanje...' : '💾 Sačuvaj podešavanja' }}
+        </button>
+      </div>
+
+      <div class="alert alert-success" *ngIf="saveSuccess">
+        ✅ Podešavanja su uspešno sačuvana!
+      </div>
+
+      <div class="alert alert-error" *ngIf="saveError">
+        ❌ Greška pri čuvanju podešavanja. Pokušaj ponovo.
+      </div>
+    </form>
+  </div>
+
+  <div class="loading" *ngIf="loading">
+    <div class="spinner"></div>
+    <p>Učitavam podešavanja...</p>
+  </div>
+</div>

@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ProjectOrganizer.Api.Data;
 using ProjectOrganizer.Api.Models;
+using ProjectOrganizer.Api.Services;
+using System.Security.Claims;
 
 namespace ProjectOrganizer.Api.Controllers;
 
@@ -13,11 +15,16 @@ public class AktivnostiController : ControllerBase
 {
     private readonly ApplicationDbContext _context;
     private readonly ILogger<AktivnostiController> _logger;
+    private readonly OpenAIService _openAIService;
 
-    public AktivnostiController(ApplicationDbContext context, ILogger<AktivnostiController> logger)
+    public AktivnostiController(
+        ApplicationDbContext context, 
+        ILogger<AktivnostiController> logger,
+        OpenAIService openAIService)
     {
         _context = context;
         _logger = logger;
+        _openAIService = openAIService;
     }
 
     // GET: api/Aktivnosti
@@ -112,5 +119,54 @@ public class AktivnostiController : ControllerBase
         await _context.SaveChangesAsync();
 
         return NoContent();
+    }
+
+    // POST: api/Aktivnosti/5/generate-zapisnik
+    [HttpPost("{id}/generate-zapisnik")]
+    public async Task<ActionResult<string>> GenerateZapisnik(int id)
+    {
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized();
+
+        // Get user settings
+        var userSettings = await _context.UserSettings
+            .FirstOrDefaultAsync(s => s.UserId == userId);
+
+        if (userSettings == null || string.IsNullOrWhiteSpace(userSettings.OpenAiApiKey))
+            return BadRequest("Morate prvo konfigurisati OpenAI API ključ u podešavanjima.");
+
+        var aktivnost = await _context.Aktivnosti
+            .Include(a => a.Projekat)
+                .ThenInclude(p => p.Klijent)
+            .FirstOrDefaultAsync(a => a.Id == id);
+
+        if (aktivnost == null)
+            return NotFound();
+
+        if (string.IsNullOrWhiteSpace(aktivnost.Detalji))
+            return BadRequest("Aktivnost nema detalje za generisanje zapisnika.");
+
+        try
+        {
+            var zapisnik = await _openAIService.GenerateZapisnikAsync(
+                userSettings.OpenAiApiKey,
+                userSettings.OpenAiModel,
+                aktivnost.Projekat.Klijent.Naziv,
+                aktivnost.Projekat.Naziv,
+                aktivnost.Datum,
+                aktivnost.Vrsta,
+                aktivnost.Status,
+                aktivnost.Opis,
+                aktivnost.Detalji
+            );
+
+            return Ok(zapisnik);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error generating zapisnik for aktivnost {AktivnostId}", id);
+            return StatusCode(500, "Greška prilikom generisanja zapisnika.");
+        }
     }
 }

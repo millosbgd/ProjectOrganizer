@@ -1,0 +1,24 @@
+<div class="modal-overlay" (click)="closeModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>📧 Generisani Zapisnik</h3>
+      <button class="close-btn" (click)="closeModal()">&times;</button>
+    </div>
+    
+    <div class="modal-body">
+      <div *ngIf="isGenerating" class="loading">
+        <div class="spinner"></div>
+        <p>AI generiše zapisnik...</p>
+      </div>
+
+      <div *ngIf="!isGenerating && zapisnik" class="zapisnik-content">
+        <pre>{{ zapisnik }}</pre>
+      </div>
+    </div>
+    
+    <div class="modal-footer" *ngIf="!isGenerating && zapisnik">
+      <button class="btn-secondary" (click)="closeModal()">Zatvori</button>
+      <button class="btn-primary" (click)="copyToClipboard()">📋 Kopiraj u Clipboard</button>
+    </div>
+  </div>
+</div>

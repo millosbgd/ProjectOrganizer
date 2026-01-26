@@ -49,6 +49,12 @@
         ></textarea>
         <div class="char-count">{{ aktivnost.detalji?.length || 0 }}/2000</div>
       </div>
+
+      <div class="form-group" *ngIf="aktivnost.id">
+        <button type="button" class="btn-ai" (click)="generateZapisnik()">
+          🤖 Generiši Zapisnik sa AI
+        </button>
+      </div>
     </div>
 
     <div class="modal-footer">
@@ -57,3 +63,10 @@
     </div>
   </div>
 </div>
+
+<app-zapisnik-modal
+  *ngIf="showZapisnikModal"
+  [zapisnik]="zapisnik"
+  [isGenerating]="isGeneratingZapisnik"
+  (close)="closeZapisnikModal()"
+></app-zapisnik-modal>

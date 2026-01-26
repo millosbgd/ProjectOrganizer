@@ -35,4 +35,8 @@ export class AktivnostService {
   delete(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
+
+  generateZapisnik(id: number): Observable<string> {
+    return this.http.post(`${this.apiUrl}/${id}/generate-zapisnik`, {}, { responseType: 'text' });
+  }
 }

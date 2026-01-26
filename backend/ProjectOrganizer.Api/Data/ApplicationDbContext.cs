@@ -16,6 +16,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<DocumentNumbering> DocumentNumbering { get; set; }
     public DbSet<Dokument> Dokumenti { get; set; }
     public DbSet<Note> Notes { get; set; }
+    public DbSet<UserSettings> UserSettings { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -69,6 +70,8 @@ public class ApplicationDbContext : DbContext
                 projekat.UpdatedAt = DateTime.UtcNow;
             else if (entry.Entity is Aktivnost aktivnost)
                 aktivnost.UpdatedAt = DateTime.UtcNow;
+            else if (entry.Entity is UserSettings userSettings)
+                userSettings.UpdatedAt = DateTime.UtcNow;
         }
 
         return base.SaveChangesAsync(cancellationToken);
