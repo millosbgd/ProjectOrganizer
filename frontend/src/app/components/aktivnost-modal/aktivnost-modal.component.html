@@ -70,6 +70,7 @@
 
 <app-zapisnik-modal
   *ngIf="showZapisnikModal"
+  [title]="zapisnikModalTitle"
   [zapisnik]="zapisnik"
   [isGenerating]="isGeneratingZapisnik"
   (close)="closeZapisnikModal()"

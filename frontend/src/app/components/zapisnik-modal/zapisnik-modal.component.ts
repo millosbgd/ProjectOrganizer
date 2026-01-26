@@ -9,6 +9,7 @@ import { CommonModule } from '@angular/common';
   styleUrl: './zapisnik-modal.component.css'
 })
 export class ZapisnikModalComponent {
+  @Input() title: string = 'Generisani Sadržaj';
   @Input() zapisnik: string = '';
   @Input() isGenerating: boolean = false;
   @Output() close = new EventEmitter<void>();

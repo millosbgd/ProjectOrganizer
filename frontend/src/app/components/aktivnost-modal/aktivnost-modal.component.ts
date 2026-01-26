@@ -29,6 +29,7 @@ export class AktivnostModalComponent {
   zapisnik: string = '';
   isGeneratingZapisnik: boolean = false;
   showZapisnikModal: boolean = false;
+  zapisnikModalTitle: string = '';
 
   constructor(private aktivnostService: AktivnostService) {}
 
@@ -65,6 +66,7 @@ export class AktivnostModalComponent {
       return;
     }
 
+    this.zapisnikModalTitle = '📧 Generisani Zapisnik';
     this.isGeneratingZapisnik = true;
     this.showZapisnikModal = true;
     this.zapisnik = '';
@@ -94,6 +96,7 @@ export class AktivnostModalComponent {
       return;
     }
 
+    this.zapisnikModalTitle = '📋 DevOps Taskovi';
     this.isGeneratingZapisnik = true;
     this.showZapisnikModal = true;
     this.zapisnik = '';
