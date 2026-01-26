@@ -24,6 +24,16 @@ export class AktivnostModalComponent {
   @Output() save = new EventEmitter<Aktivnost>();
   @Output() close = new EventEmitter<void>();
 
+  get datumString(): string {
+    if (!this.aktivnost.datum) return '';
+    const date = new Date(this.aktivnost.datum);
+    return date.toISOString().split('T')[0];
+  }
+
+  set datumString(value: string) {
+    this.aktivnost.datum = new Date(value);
+  }
+
   onSave(): void {
     this.save.emit(this.aktivnost);
   }
