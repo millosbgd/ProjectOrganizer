@@ -52,6 +52,25 @@
         </small>
       </div>
 
+      <div class="section-divider"></div>
+      <h3 class="section-title">🔗 Azure DevOps Integracija</h3>
+
+      <div class="form-group">
+        <label for="devOpsPat">Personal Access Token (PAT):</label>
+        <input
+          type="password"
+          id="devOpsPat"
+          [(ngModel)]="settings.devOpsPersonalAccessToken"
+          name="devOpsPat"
+          class="form-control"
+          placeholder="Unesi Azure DevOps PAT token"
+        />
+        <small class="help-text">
+          Token trebaš kreirati u Azure DevOps → User Settings → Personal access tokens<br>
+          Potrebne permisije: <strong>Work Items - Read, write, & manage</strong>
+        </small>
+      </div>
+
       <div class="button-group">
         <button type="submit" class="btn-primary" [disabled]="loading">
           {{ loading ? 'Čuvanje...' : '💾 Sačuvaj podešavanja' }}

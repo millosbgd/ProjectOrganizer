@@ -9,6 +9,10 @@ export interface Projekat {
   aktivan: boolean;
   status: string;
   klijentId: number;
+  devOpsOrganization?: string;
+  devOpsProject?: string;
+  devOpsAreaPath?: string;
+  devOpsIterationPath?: string;
   klijent?: Klijent;
   aktivnosti?: Aktivnost[];
 }

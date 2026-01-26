@@ -31,6 +31,19 @@ public class Projekat
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
+    // DevOps configuration
+    [MaxLength(200)]
+    public string? DevOpsOrganization { get; set; }
+
+    [MaxLength(200)]
+    public string? DevOpsProject { get; set; }
+
+    [MaxLength(500)]
+    public string? DevOpsAreaPath { get; set; }
+
+    [MaxLength(500)]
+    public string? DevOpsIterationPath { get; set; }
+
     // Navigation properties
     [ForeignKey("KlijentId")]
     public Klijent? Klijent { get; set; }

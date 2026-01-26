@@ -17,6 +17,9 @@ public class UserSettings
     [MaxLength(50)]
     public string OpenAiModel { get; set; } = "gpt-4o-mini";
 
+    [MaxLength(500)]
+    public string? DevOpsPersonalAccessToken { get; set; }
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 }

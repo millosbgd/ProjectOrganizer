@@ -3,6 +3,7 @@ export interface UserSettings {
   userId: string;
   openAiApiKey?: string;
   openAiModel: string;
+  devOpsPersonalAccessToken?: string;
   createdAt: Date;
   updatedAt: Date;
 }

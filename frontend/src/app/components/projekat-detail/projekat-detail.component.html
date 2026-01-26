@@ -57,6 +57,31 @@
           </label>
         </div>
 
+        <div class="form-section-header">
+          <h4>🔗 DevOps Integracija</h4>
+        </div>
+
+        <div class="form-group">
+          <label>DevOps Organization:</label>
+          <input type="text" [(ngModel)]="projekat.devOpsOrganization" name="devOpsOrganization" placeholder="npr. MojaTim" />
+          <small>Iz URL-a: https://dev.azure.com/<strong>MojaTim</strong></small>
+        </div>
+
+        <div class="form-group">
+          <label>DevOps Project:</label>
+          <input type="text" [(ngModel)]="projekat.devOpsProject" name="devOpsProject" placeholder="npr. MojProjekat" />
+        </div>
+
+        <div class="form-group">
+          <label>Area Path (opciono):</label>
+          <input type="text" [(ngModel)]="projekat.devOpsAreaPath" name="devOpsAreaPath" placeholder="npr. MojProjekat\Team1" />
+        </div>
+
+        <div class="form-group">
+          <label>Iteration Path (opciono):</label>
+          <input type="text" [(ngModel)]="projekat.devOpsIterationPath" name="devOpsIterationPath" placeholder="npr. MojProjekat\Sprint 1" />
+        </div>
+
         <div class="form-actions">
           <button type="button" class="btn-primary" (click)="saveProjekat()">Sačuvaj</button>
           <button type="button" class="btn-secondary" (click)="cancel()">Otkaži</button>
