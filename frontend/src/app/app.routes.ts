@@ -5,6 +5,7 @@ import { ProjekatDetailComponent } from './components/projekat-detail/projekat-d
 import { KlijentiListComponent } from './components/klijenti-list/klijenti-list.component';
 import { KlijentDetailComponent } from './components/klijent-detail/klijent-detail.component';
 import { SettingsComponent } from './components/settings/settings.component';
+import { AdminUsersComponent } from './components/admin-users/admin-users.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/projekti', pathMatch: 'full' },
@@ -31,6 +32,11 @@ export const routes: Routes = [
   { 
     path: 'settings', 
     component: SettingsComponent,
+    canActivate: [AuthGuard]
+  },
+  { 
+    path: 'admin/users', 
+    component: AdminUsersComponent,
     canActivate: [AuthGuard]
   }
 ];

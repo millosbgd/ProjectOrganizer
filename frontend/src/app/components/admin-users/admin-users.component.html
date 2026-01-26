@@ -1,0 +1,93 @@
+<div class="container">
+  <div class="header">
+    <h2>👥 Upravljanje korisnicima</h2>
+  </div>
+
+  <div *ngIf="loading" class="loading">Učitavanje...</div>
+
+  <div *ngIf="!loading && currentUser?.role !== 'Admin'" class="no-access">
+    <p>❌ Nemate pristup ovoj stranici. Potreban je Admin pristup.</p>
+  </div>
+
+  <div *ngIf="!loading && currentUser?.role === 'Admin'" class="content">
+    <div class="stats">
+      <div class="stat-card">
+        <div class="stat-number">{{ users.length }}</div>
+        <div class="stat-label">Ukupno korisnika</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">{{ activeUsersCount }}</div>
+        <div class="stat-label">Aktivnih</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">{{ adminUsersCount }}</div>
+        <div class="stat-label">Administratora</div>
+      </div>
+    </div>
+
+    <div class="users-table-container">
+      <table class="users-table">
+        <thead>
+          <tr>
+            <th>Email</th>
+            <th>Ime</th>
+            <th>Rola</th>
+            <th>Status</th>
+            <th>Poslednji login</th>
+            <th>Kreiran</th>
+            <th>Akcije</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let user of users" [class.inactive]="!user.isActive" [class.current-user]="isCurrentUser(user)">
+            <td>
+              <span class="email">{{ user.email }}</span>
+              <span *ngIf="isCurrentUser(user)" class="badge-you">Vi</span>
+            </td>
+            <td>{{ user.name || 'N/A' }}</td>
+            <td>
+              <span *ngIf="editingUser?.id !== user.id" class="badge" [class.badge-admin]="user.role === 'Admin'">
+                {{ user.role }}
+              </span>
+              <select *ngIf="editingUser?.id === user.id" [(ngModel)]="editingUser!.role" class="role-select">
+                <option value="User">User</option>
+                <option value="Admin">Admin</option>
+              </select>
+            </td>
+            <td>
+              <span *ngIf="editingUser?.id !== user.id" class="badge" [class.badge-active]="user.isActive" [class.badge-inactive]="!user.isActive">
+                {{ user.isActive ? 'Aktivan' : 'Neaktivan' }}
+              </span>
+              <label *ngIf="editingUser?.id === user.id" class="checkbox-label">
+                <input type="checkbox" [(ngModel)]="editingUser!.isActive" />
+                Aktivan
+              </label>
+            </td>
+            <td>{{ user.lastLogin ? (user.lastLogin | date:'dd.MM.yyyy HH:mm') : 'Nikad' }}</td>
+            <td>{{ user.createdAt | date:'dd.MM.yyyy' }}</td>
+            <td class="actions">
+              <button *ngIf="editingUser?.id !== user.id" class="btn-edit" (click)="editUser(user)">
+                ✏️
+              </button>
+              <button *ngIf="editingUser?.id !== user.id && !isCurrentUser(user) && user.isActive" 
+                      class="btn-delete" 
+                      (click)="deactivateUser(user)">
+                🚫
+              </button>
+              <button *ngIf="editingUser?.id === user.id" class="btn-save" (click)="saveUser()">
+                ✅ Sačuvaj
+              </button>
+              <button *ngIf="editingUser?.id === user.id" class="btn-cancel" (click)="cancelEdit()">
+                ❌ Otkaži
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div *ngIf="users.length === 0" class="no-data">
+      Nema korisnika.
+    </div>
+  </div>
+</div>

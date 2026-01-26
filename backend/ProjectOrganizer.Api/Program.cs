@@ -49,8 +49,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization();
 
-// Register OpenAI service
+// Register services
 builder.Services.AddScoped<OpenAIService>();
+builder.Services.AddScoped<UserService>();
 
 builder.Services.AddControllers()
     .AddJsonOptions(options =>

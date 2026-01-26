@@ -17,6 +17,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<Dokument> Dokumenti { get; set; }
     public DbSet<Note> Notes { get; set; }
     public DbSet<UserSettings> UserSettings { get; set; }
+    public DbSet<User> Users { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
