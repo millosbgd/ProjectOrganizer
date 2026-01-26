@@ -37,12 +37,19 @@ public class DevOpsTasksCandidatesController : ControllerBase
             var candidates = await _context.DevOpsTasksCandidates
                 .Include(c => c.User)
                 .Where(c => c.AktivnostId == aktivnostId)
-                .OrderByDescending(c => c.CreatedAt)
+                .OrderBy(c => c.OrderIndex)
+                .ThenByDescending(c => c.CreatedAt)
                 .Select(c => new
                 {
                     c.Id,
                     c.AktivnostId,
-                    c.GeneratedContent,
+                    c.UserId,
+                    c.Title,
+                    c.Description,
+                    c.AcceptanceCriteria,
+                    c.Priority,
+                    c.Estimation,
+                    c.OrderIndex,
                     c.Status,
                     c.CreatedAt,
                     User = new

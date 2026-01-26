@@ -1,7 +1,13 @@
 export interface DevOpsTasksCandidate {
   id: number;
   aktivnostId: number;
-  generatedContent: string;
+  userId: number;
+  title: string;
+  description?: string;
+  acceptanceCriteria?: string;
+  priority?: string;
+  estimation?: string;
+  orderIndex: number;
   status: string;
   createdAt: Date;
   user?: {

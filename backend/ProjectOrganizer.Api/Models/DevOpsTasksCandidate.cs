@@ -10,10 +10,24 @@ public class DevOpsTasksCandidate
     public int AktivnostId { get; set; }
     
     [Required]
-    public string GeneratedContent { get; set; } = string.Empty;
+    public int UserId { get; set; }
     
     [Required]
-    public int UserId { get; set; }
+    [MaxLength(500)]
+    public string Title { get; set; } = string.Empty;
+    
+    public string? Description { get; set; }
+    
+    public string? AcceptanceCriteria { get; set; }
+    
+    [MaxLength(50)]
+    public string? Priority { get; set; }
+    
+    [MaxLength(50)]
+    public string? Estimation { get; set; }
+    
+    [Required]
+    public int OrderIndex { get; set; }
     
     [Required]
     [MaxLength(50)]

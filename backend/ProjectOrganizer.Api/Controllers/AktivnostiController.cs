@@ -212,17 +212,10 @@ public class AktivnostiController : ControllerBase
 
             if (currentUser != null)
             {
-                // Save to DevOpsTasksCandidates
-                var candidate = new DevOpsTasksCandidate
-                {
-                    AktivnostId = id,
-                    GeneratedContent = tasks,
-                    UserId = currentUser.Id,
-                    Status = "Draft",
-                    CreatedAt = DateTime.UtcNow
-                };
-
-                _context.DevOpsTasksCandidates.Add(candidate);
+                // Parse tasks and save each as separate candidate
+                var parsedTasks = ParseDevOpsTasks(tasks, id, currentUser.Id);
+                
+                _context.DevOpsTasksCandidates.AddRange(parsedTasks);
                 await _context.SaveChangesAsync();
             }
 
@@ -233,6 +226,58 @@ public class AktivnostiController : ControllerBase
             _logger.LogError(ex, "Error generating DevOps tasks for aktivnost {AktivnostId}", id);
             return StatusCode(500, "Greška prilikom generisanja taskova.");
         }
+    }
+
+    private List<DevOpsTasksCandidate> ParseDevOpsTasks(string tasksText, int aktivnostId, int userId)
+    {
+        var candidates = new List<DevOpsTasksCandidate>();
+        var taskSections = System.Text.RegularExpressions.Regex.Split(tasksText, @"\[TASK \d+\]");
+        
+        int orderIndex = 1;
+        foreach (var section in taskSections)
+        {
+            if (string.IsNullOrWhiteSpace(section))
+                continue;
+
+            var candidate = new DevOpsTasksCandidate
+            {
+                AktivnostId = aktivnostId,
+                UserId = userId,
+                OrderIndex = orderIndex++,
+                Status = "Draft",
+                CreatedAt = DateTime.UtcNow
+            };
+
+            // Extract Title
+            var titleMatch = System.Text.RegularExpressions.Regex.Match(section, @"Naziv:\s*(.+?)(?:\r?\n|$)", System.Text.RegularExpressions.RegexOptions.Multiline);
+            if (titleMatch.Success)
+                candidate.Title = titleMatch.Groups[1].Value.Trim();
+
+            // Extract Description
+            var descMatch = System.Text.RegularExpressions.Regex.Match(section, @"Opis:\s*(.+?)(?=Acceptance Criteria:|Prioritet:|$)", System.Text.RegularExpressions.RegexOptions.Singleline);
+            if (descMatch.Success)
+                candidate.Description = descMatch.Groups[1].Value.Trim();
+
+            // Extract Acceptance Criteria
+            var criteriaMatch = System.Text.RegularExpressions.Regex.Match(section, @"Acceptance Criteria:\s*(.+?)(?=Prioritet:|Procena:|$)", System.Text.RegularExpressions.RegexOptions.Singleline);
+            if (criteriaMatch.Success)
+                candidate.AcceptanceCriteria = criteriaMatch.Groups[1].Value.Trim();
+
+            // Extract Priority
+            var priorityMatch = System.Text.RegularExpressions.Regex.Match(section, @"Prioritet:\s*(.+?)(?:\r?\n|$)", System.Text.RegularExpressions.RegexOptions.Multiline);
+            if (priorityMatch.Success)
+                candidate.Priority = priorityMatch.Groups[1].Value.Trim();
+
+            // Extract Estimation
+            var estimationMatch = System.Text.RegularExpressions.Regex.Match(section, @"Procena:\s*(.+?)(?:\r?\n|$)", System.Text.RegularExpressions.RegexOptions.Multiline);
+            if (estimationMatch.Success)
+                candidate.Estimation = estimationMatch.Groups[1].Value.Trim();
+
+            if (!string.IsNullOrWhiteSpace(candidate.Title))
+                candidates.Add(candidate);
+        }
+
+        return candidates;
     }
 }
 
