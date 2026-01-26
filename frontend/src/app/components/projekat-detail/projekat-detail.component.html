@@ -109,7 +109,11 @@
             <span class="badge-small vrsta-{{ aktivnost.vrsta.toLowerCase() }}">{{ aktivnost.vrsta }}</span>
           </div>
           <div class="aktivnost-body">
-            <p>{{ aktivnost.opis }}</p>
+            <p class="aktivnost-opis">{{ aktivnost.opis }}</p>
+            <div class="aktivnost-detalji-preview" *ngIf="aktivnost.detalji">
+              <span class="preview-label">Detalji:</span>
+              <span class="preview-text">{{ aktivnost.detalji.length > 150 ? (aktivnost.detalji.substring(0, 150) + '...') : aktivnost.detalji }}</span>
+            </div>
           </div>
           <div class="aktivnost-footer">
             <div class="dropdown">
