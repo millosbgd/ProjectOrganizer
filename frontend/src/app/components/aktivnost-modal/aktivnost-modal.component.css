@@ -134,24 +134,42 @@
   background-color: #d5dbdb;
 }
 
-.btn-ai {
-  width: 100%;
-  padding: 12px 20px;
-  border: 2px solid #4CAF50;
-  border-radius: 8px;
-  background-color: white;
-  color: #4CAF50;
-  font-size: 15px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s;
+.detalji-header {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.ai-buttons {
+  display: flex;
   gap: 8px;
 }
 
-.btn-ai:hover {
+.btn-ai-small {
+  padding: 6px 12px;
+  border: 1px solid #4CAF50;
+  border-radius: 5px;
+  background-color: white;
+  color: #4CAF50;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s;
+  white-space: nowrap;
+}
+
+.btn-ai-small:hover {
   background-color: #4CAF50;
+  color: white;
+}
+
+.btn-ai-devops {
+  border-color: #2196F3;
+  color: #2196F3;
+}
+
+.btn-ai-devops:hover {
+  background-color: #2196F3;
   color: white;
 }

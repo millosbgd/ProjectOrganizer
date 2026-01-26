@@ -87,4 +87,28 @@ export class AktivnostModalComponent {
     this.showZapisnikModal = false;
     this.zapisnik = '';
   }
+
+  generateDevOpsTasks(): void {
+    if (!this.aktivnost.id || !this.aktivnost.detalji) {
+      alert('Morate prvo sačuvati aktivnost i uneti detalje.');
+      return;
+    }
+
+    this.isGeneratingZapisnik = true;
+    this.showZapisnikModal = true;
+    this.zapisnik = '';
+
+    this.aktivnostService.generateDevOpsTasks(this.aktivnost.id).subscribe({
+      next: (response) => {
+        this.zapisnik = response;
+        this.isGeneratingZapisnik = false;
+      },
+      error: (error) => {
+        console.error('Greška pri generisanju DevOps taskova:', error);
+        alert('Greška prilikom generisanja taskova. Pokušajte ponovo.');
+        this.isGeneratingZapisnik = false;
+        this.showZapisnikModal = false;
+      }
+    });
+  }
 }

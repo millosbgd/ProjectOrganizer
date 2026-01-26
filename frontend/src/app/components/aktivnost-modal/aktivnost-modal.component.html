@@ -38,7 +38,17 @@
       </div>
 
       <div class="form-group">
-        <label>Detalji:</label>
+        <div class="detalji-header">
+          <label>Detalji:</label>
+          <div class="ai-buttons">
+            <button type="button" class="btn-ai-small" (click)="generateZapisnik()" *ngIf="aktivnost.id">
+              📧 Zapisnik
+            </button>
+            <button type="button" class="btn-ai-small btn-ai-devops" (click)="generateDevOpsTasks()" *ngIf="aktivnost.id">
+              📋 DevOps Taskovi
+            </button>
+          </div>
+        </div>
         <textarea
           class="detalji-textarea"
           [(ngModel)]="aktivnost.detalji"
@@ -48,12 +58,6 @@
           required
         ></textarea>
         <div class="char-count">{{ aktivnost.detalji?.length || 0 }}/2000</div>
-      </div>
-
-      <div class="form-group" *ngIf="aktivnost.id">
-        <button type="button" class="btn-ai" (click)="generateZapisnik()">
-          🤖 Generiši Zapisnik sa AI
-        </button>
       </div>
     </div>
 

@@ -169,4 +169,50 @@ public class AktivnostiController : ControllerBase
             return StatusCode(500, "Greška prilikom generisanja zapisnika.");
         }
     }
+
+    // POST: api/Aktivnosti/{id}/generate-devops-tasks
+    [HttpPost("{id}/generate-devops-tasks")]
+    public async Task<ActionResult<string>> GenerateDevOpsTasks(int id)
+    {
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized();
+
+        var userSettings = await _context.UserSettings
+            .FirstOrDefaultAsync(s => s.UserId == userId);
+
+        if (userSettings == null || string.IsNullOrWhiteSpace(userSettings.OpenAiApiKey))
+            return BadRequest("Morate prvo konfigurisati OpenAI API ključ u podešavanjima.");
+
+        var aktivnost = await _context.Aktivnosti
+            .Include(a => a.Projekat)
+                .ThenInclude(p => p.Klijent)
+            .FirstOrDefaultAsync(a => a.Id == id);
+
+        if (aktivnost == null)
+            return NotFound();
+
+        if (string.IsNullOrWhiteSpace(aktivnost.Detalji))
+            return BadRequest("Aktivnost nema detalje za generisanje taskova.");
+
+        try
+        {
+            var tasks = await _openAIService.GenerateDevOpsTasks(
+                userSettings.OpenAiApiKey,
+                userSettings.OpenAiModel,
+                aktivnost.Projekat.Klijent.Naziv,
+                aktivnost.Projekat.Naziv,
+                aktivnost.Opis,
+                aktivnost.Detalji
+            );
+
+            return Ok(tasks);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error generating DevOps tasks for aktivnost {AktivnostId}", id);
+            return StatusCode(500, "Greška prilikom generisanja taskova.");
+        }
+    }
 }
+

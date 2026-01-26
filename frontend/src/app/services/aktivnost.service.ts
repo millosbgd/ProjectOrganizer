@@ -39,4 +39,8 @@ export class AktivnostService {
   generateZapisnik(id: number): Observable<string> {
     return this.http.post(`${this.apiUrl}/${id}/generate-zapisnik`, {}, { responseType: 'text' });
   }
+
+  generateDevOpsTasks(id: number): Observable<string> {
+    return this.http.post(`${this.apiUrl}/${id}/generate-devops-tasks`, {}, { responseType: 'text' });
+  }
 }
