@@ -82,6 +82,7 @@ export class ProjekatDetailComponent implements OnInit {
       this.loadProjekat(+id);
       this.loadAktivnosti(+id);
       this.loadDokumenti(+id);
+      this.loadNotes(+id);
     }
   }
 
