@@ -32,34 +32,9 @@
           <label>Zemlja:</label>
           <select [(ngModel)]="klijent.zemlja" name="zemlja" required>
             <option value="">-- Izaberite zemlju --</option>
-            <option value="Srbija">Srbija</option>
-            <option value="Crna Gora">Crna Gora</option>
-            <option value="Bosna i Hercegovina">Bosna i Hercegovina</option>
-            <option value="Hrvatska">Hrvatska</option>
-            <option value="Slovenija">Slovenija</option>
-            <option value="Severna Makedonija">Severna Makedonija</option>
-            <option value="Austrija">Austrija</option>
-            <option value="Nemačka">Nemačka</option>
-            <option value="Švajcarska">Švajcarska</option>
-            <option value="Italija">Italija</option>
-            <option value="Francuska">Francuska</option>
-            <option value="Velika Britanija">Velika Britanija</option>
-            <option value="Španija">Španija</option>
-            <option value="Portugalija">Portugalija</option>
-            <option value="Grčka">Grčka</option>
-            <option value="Bugarska">Bugarska</option>
-            <option value="Rumunija">Rumunija</option>
-            <option value="Poljska">Poljska</option>
-            <option value="Češka">Češka</option>
-            <option value="Slovačka">Slovačka</option>
-            <option value="Mađarska">Mađarska</option>
-            <option value="Holandija">Holandija</option>
-            <option value="Belgija">Belgija</option>
-            <option value="Danska">Danska</option>
-            <option value="Švedska">Švedska</option>
-            <option value="Norveška">Norveška</option>
-            <option value="Finska">Finska</option>
-            <option value="Ostalo">Ostalo</option>
+            <option *ngFor="let country of countries" [value]="country.value">
+              {{ country.value }}
+            </option>
           </select>
         </div>
 

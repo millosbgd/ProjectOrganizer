@@ -20,6 +20,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<User> Users { get; set; }
     public DbSet<ProjectPermission> ProjectPermissions { get; set; }
     public DbSet<DevOpsTasksCandidate> DevOpsTasksCandidates { get; set; }
+    public DbSet<Codebook> Codebooks { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -57,6 +58,15 @@ public class ApplicationDbContext : DbContext
                 .WithMany(p => p.Aktivnosti)
                 .HasForeignKey(a => a.ProjekatId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // Codebook configuration
+        modelBuilder.Entity<Codebook>(entity =>
+        {
+            entity.ToTable("Codebooks");
+            entity.HasIndex(e => e.Type);
+            entity.HasIndex(e => new { e.Type, e.IsActive });
+            entity.HasIndex(e => new { e.Type, e.Code }).IsUnique();
         });
     }
 

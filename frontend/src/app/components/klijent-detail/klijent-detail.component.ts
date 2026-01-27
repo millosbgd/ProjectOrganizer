@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { KlijentService } from '../../services/klijent.service';
+import { CodebookService, CodebookEntry } from '../../services/codebook.service';
 import { Klijent } from '../../models/klijent.model';
 
 @Component({
@@ -21,17 +22,21 @@ export class KlijentDetailComponent implements OnInit {
     zemlja: ''
   };
   
+  countries: CodebookEntry[] = [];
   isEditMode = false;
   isNewMode = false;
   loading = true;
 
   constructor(
     private klijentService: KlijentService,
+    private codebookService: CodebookService,
     private route: ActivatedRoute,
     private router: Router
   ) {}
 
   ngOnInit(): void {
+    this.loadCountries();
+    
     const id = this.route.snapshot.paramMap.get('id');
     
     if (id === 'new') {
@@ -41,6 +46,17 @@ export class KlijentDetailComponent implements OnInit {
     } else if (id) {
       this.loadKlijent(+id);
     }
+  }
+
+  loadCountries(): void {
+    this.codebookService.getByType('Country').subscribe({
+      next: (data) => {
+        this.countries = data;
+      },
+      error: (error) => {
+        console.error('Error loading countries:', error);
+      }
+    });
   }
 
   loadKlijent(id: number): void {
