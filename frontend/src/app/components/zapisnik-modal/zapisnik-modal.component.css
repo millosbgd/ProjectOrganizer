@@ -143,13 +143,13 @@
 }
 
 .btn-preview {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #5dade2 0%, #3498db 100%);
   color: white;
   font-weight: 600;
 }
 
 .btn-preview:hover {
-  background: linear-gradient(135deg, #5568d3 0%, #65408b 100%);
+  background: linear-gradient(135deg, #4a9fd5 0%, #2980b9 100%);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 4px 12px rgba(52, 152, 219, 0.4);
 }

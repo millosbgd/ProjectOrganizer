@@ -175,11 +175,11 @@
 }
 
 .btn-ai-view {
-  border-color: #9C27B0;
-  color: #9C27B0;
+  border-color: #3498db;
+  color: #3498db;
 }
 
 .btn-ai-view:hover {
-  background-color: #9C27B0;
+  background-color: #3498db;
   color: white;
 }
