@@ -26,7 +26,7 @@
           <td><strong>{{ klijent.naziv }}</strong></td>
           <td>{{ klijent.adresa }}</td>
           <td>{{ klijent.grad }}</td>
-          <td>{{ klijent.zemlja }}</td>
+          <td>{{ getCountryName(klijent.zemlja) }}</td>
           <td class="actions">
             <div class="dropdown">
               <button class="btn-dropdown" (click)="toggleDropdown($event, klijent.id)">⋮</button>

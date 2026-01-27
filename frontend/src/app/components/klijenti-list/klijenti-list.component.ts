@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { KlijentService } from '../../services/klijent.service';
+import { CodebookService, CodebookEntry } from '../../services/codebook.service';
 import { Klijent } from '../../models/klijent.model';
 
 @Component({
@@ -13,13 +14,34 @@ import { Klijent } from '../../models/klijent.model';
 })
 export class KlijentiListComponent implements OnInit {
   klijenti: Klijent[] = [];
+  countries: CodebookEntry[] = [];
   loading = true;
   openDropdownId: number | null = null;
 
-  constructor(private klijentService: KlijentService) { }
+  constructor(
+    private klijentService: KlijentService,
+    private codebookService: CodebookService
+  ) { }
 
   ngOnInit(): void {
+    this.loadCountries();
     this.loadKlijenti();
+  }
+
+  loadCountries(): void {
+    this.codebookService.getByType('Country').subscribe({
+      next: (data) => {
+        this.countries = data;
+      },
+      error: (error) => {
+        console.error('Error loading countries:', error);
+      }
+    });
+  }
+
+  getCountryName(code: string): string {
+    const country = this.countries.find(c => c.code === code);
+    return country ? country.value : code;
   }
 
   loadKlijenti(): void {

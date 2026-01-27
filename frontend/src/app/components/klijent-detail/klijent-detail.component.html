@@ -32,7 +32,7 @@
           <label>Zemlja:</label>
           <select [(ngModel)]="klijent.zemlja" name="zemlja" required>
             <option value="">-- Izaberite zemlju --</option>
-            <option *ngFor="let country of countries" [value]="country.value">
+            <option *ngFor="let country of countries" [value]="country.code">
               {{ country.value }}
             </option>
           </select>

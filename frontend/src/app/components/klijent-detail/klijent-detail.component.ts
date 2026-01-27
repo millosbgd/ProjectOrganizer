@@ -97,4 +97,9 @@ export class KlijentDetailComponent implements OnInit {
   cancel(): void {
     this.router.navigate(['/klijenti']);
   }
+
+  getCountryName(code: string): string {
+    const country = this.countries.find(c => c.code === code);
+    return country ? country.value : code;
+  }
 }
