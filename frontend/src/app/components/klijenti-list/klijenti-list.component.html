@@ -1,7 +1,7 @@
 <div class="klijenti-container">
   <div class="header">
     <h2>Klijenti</h2>
-    <button class="btn-primary" routerLink="/klijenti/new">+ Novi Klijent</button>
+    <button class="btn-icon-primary" routerLink="/klijenti/new" title="Dodaj novog klijenta">➕</button>
   </div>
 
   <div *ngIf="loading" class="loading">Učitavanje...</div>
@@ -31,8 +31,8 @@
             <div class="dropdown">
               <button class="btn-dropdown" (click)="toggleDropdown($event, klijent.id)">⋮</button>
               <div class="dropdown-menu" *ngIf="openDropdownId === klijent.id">
-                <button class="dropdown-item" [routerLink]="['/klijenti', klijent.id]">Izmeni</button>
-                <button class="dropdown-item danger" (click)="deleteKlijent(klijent.id); toggleDropdown($event, klijent.id)">Obriši</button>
+                <button class="dropdown-item" [routerLink]="['/klijenti', klijent.id]" title="Izmeni">✏️ Izmeni</button>
+                <button class="dropdown-item danger" (click)="deleteKlijent(klijent.id); toggleDropdown($event, klijent.id)" title="Obriši">🗑️ Obriši</button>
               </div>
             </div>
           </td>

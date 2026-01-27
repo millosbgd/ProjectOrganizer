@@ -3,7 +3,7 @@
     <h2>{{ isNewMode ? 'Novi Projekat' : projekat.naziv }}</h2>
     <div class="header-actions">
       <button class="btn-secondary" routerLink="/projekti">Nazad</button>
-      <button *ngIf="!isEditMode && !isNewMode" class="btn-primary" (click)="isEditMode = true">Izmeni</button>
+      <button *ngIf="!isEditMode && !isNewMode" class="btn-icon-edit" (click)="isEditMode = true" title="Izmeni projekat">✏️</button>
     </div>
   </div>
 
