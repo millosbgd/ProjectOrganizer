@@ -206,19 +206,6 @@ public class AktivnostiController : ControllerBase
                 aktivnost.Detalji
             );
 
-            // Get current user from Users table
-            var currentUser = await _context.Users
-                .FirstOrDefaultAsync(u => u.Auth0Id == userId);
-
-            if (currentUser != null)
-            {
-                // Parse tasks and save each as separate candidate
-                var parsedTasks = ParseDevOpsTasks(tasks, id, currentUser.Id);
-                
-                _context.DevOpsTasksCandidates.AddRange(parsedTasks);
-                await _context.SaveChangesAsync();
-            }
-
             return Ok(tasks);
         }
         catch (Exception ex)
@@ -226,6 +213,110 @@ public class AktivnostiController : ControllerBase
             _logger.LogError(ex, "Error generating DevOps tasks for aktivnost {AktivnostId}", id);
             return StatusCode(500, "Greška prilikom generisanja taskova.");
         }
+    }
+
+    // POST: api/Aktivnosti/{id}/parse-devops-tasks
+    [HttpPost("{id}/parse-devops-tasks")]
+    public async Task<ActionResult<List<object>>> ParseDevOpsTasksFromText(int id, [FromBody] ParseTasksRequest request)
+    {
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized();
+
+        try
+        {
+            var parsedTasks = ParseDevOpsTasksToObjects(request.TasksText);
+            return Ok(parsedTasks);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error parsing DevOps tasks for aktivnost {AktivnostId}", id);
+            return StatusCode(500, "Greška prilikom parsiranja taskova.");
+        }
+    }
+
+    // POST: api/Aktivnosti/{id}/save-selected-tasks
+    [HttpPost("{id}/save-selected-tasks")]
+    public async Task<ActionResult> SaveSelectedTasks(int id, [FromBody] SaveTasksRequest request)
+    {
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized();
+
+        try
+        {
+            var currentUser = await _context.Users
+                .FirstOrDefaultAsync(u => u.Auth0Id == userId);
+
+            if (currentUser == null)
+                return Unauthorized();
+
+            var candidates = new List<DevOpsTasksCandidate>();
+            
+            foreach (var task in request.Tasks)
+            {
+                var candidate = new DevOpsTasksCandidate
+                {
+                    AktivnostId = id,
+                    UserId = currentUser.Id,
+                    Title = task.Title,
+                    Description = task.Description,
+                    AcceptanceCriteria = task.AcceptanceCriteria,
+                    Priority = task.Priority,
+                    Estimation = task.Estimation,
+                    OrderIndex = task.OrderIndex,
+                    Status = "Draft",
+                    CreatedAt = DateTime.UtcNow
+                };
+                
+                candidates.Add(candidate);
+            }
+
+            _context.DevOpsTasksCandidates.AddRange(candidates);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Taskovi su uspešno sačuvani.", count = candidates.Count });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error saving selected tasks for aktivnost {AktivnostId}", id);
+            return StatusCode(500, "Greška prilikom čuvanja taskova.");
+        }
+    }
+
+    private List<object> ParseDevOpsTasksToObjects(string tasksText)
+    {
+        var tasks = new List<object>();
+        var taskSections = System.Text.RegularExpressions.Regex.Split(tasksText, @"\[TASK \d+\]");
+        
+        int orderIndex = 1;
+        foreach (var section in taskSections)
+        {
+            if (string.IsNullOrWhiteSpace(section))
+                continue;
+
+            var task = new 
+            {
+                OrderIndex = orderIndex++,
+                Title = ExtractField(section, @"Naziv:\s*(.+?)(?:\r?\n|$)"),
+                Description = ExtractField(section, @"Opis:\s*(.+?)(?=Acceptance Criteria:|Prioritet:|$)", singleLine: false),
+                AcceptanceCriteria = ExtractField(section, @"Acceptance Criteria:\s*(.+?)(?=Prioritet:|Procena:|$)", singleLine: false),
+                Priority = ExtractField(section, @"Prioritet:\s*(.+?)(?:\r?\n|$)"),
+                Estimation = ExtractField(section, @"Procena:\s*(.+?)(?:\r?\n|$)")
+            };
+
+            if (!string.IsNullOrWhiteSpace(task.Title))
+                tasks.Add(task);
+        }
+
+        return tasks;
+    }
+
+    private string ExtractField(string section, string pattern, bool singleLine = true)
+    {
+        var options = singleLine ? System.Text.RegularExpressions.RegexOptions.Multiline : System.Text.RegularExpressions.RegexOptions.Singleline;
+        var match = System.Text.RegularExpressions.Regex.Match(section, pattern, options);
+        return match.Success ? match.Groups[1].Value.Trim() : string.Empty;
     }
 
     private List<DevOpsTasksCandidate> ParseDevOpsTasks(string tasksText, int aktivnostId, int userId)
@@ -281,3 +372,23 @@ public class AktivnostiController : ControllerBase
     }
 }
 
+// DTOs for new endpoints
+public class ParseTasksRequest
+{
+    public string TasksText { get; set; } = string.Empty;
+}
+
+public class SaveTasksRequest
+{
+    public List<TaskDto> Tasks { get; set; } = new();
+}
+
+public class TaskDto
+{
+    public string Title { get; set; } = string.Empty;
+    public string? Description { get; set; }
+    public string? AcceptanceCriteria { get; set; }
+    public string? Priority { get; set; }
+    public string? Estimation { get; set; }
+    public int OrderIndex { get; set; }
+}

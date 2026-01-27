@@ -77,6 +77,7 @@
   [zapisnik]="zapisnik"
   [isGenerating]="isGeneratingZapisnik"
   (close)="closeZapisnikModal()"
+  (preview)="openPreview()"
 ></app-zapisnik-modal>
 
 <app-devops-tasks-modal
@@ -84,3 +85,11 @@
   [aktivnostId]="aktivnost.id"
   (close)="closeDevOpsTasksModal()"
 ></app-devops-tasks-modal>
+
+<app-devops-tasks-preview-modal
+  *ngIf="showDevOpsTasksPreviewModal"
+  [tasks]="parsedTasks"
+  [aktivnostId]="aktivnost.id"
+  (close)="closePreviewModal()"
+  (save)="saveSelectedTasks($event)"
+></app-devops-tasks-preview-modal>

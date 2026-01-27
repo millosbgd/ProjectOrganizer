@@ -13,6 +13,7 @@ export class ZapisnikModalComponent {
   @Input() zapisnik: string = '';
   @Input() isGenerating: boolean = false;
   @Output() close = new EventEmitter<void>();
+  @Output() preview = new EventEmitter<void>();
 
   copyToClipboard() {
     navigator.clipboard.writeText(this.zapisnik).then(() => {
@@ -22,5 +23,9 @@ export class ZapisnikModalComponent {
 
   closeModal() {
     this.close.emit();
+  }
+
+  openPreview() {
+    this.preview.emit();
   }
 }

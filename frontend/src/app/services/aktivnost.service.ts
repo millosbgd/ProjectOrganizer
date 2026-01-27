@@ -43,4 +43,12 @@ export class AktivnostService {
   generateDevOpsTasks(id: number): Observable<string> {
     return this.http.post(`${this.apiUrl}/${id}/generate-devops-tasks`, {}, { responseType: 'text' });
   }
+
+  parseDevOpsTasks(id: number, tasksText: string): Observable<any[]> {
+    return this.http.post<any[]>(`${this.apiUrl}/${id}/parse-devops-tasks`, { tasksText });
+  }
+
+  saveSelectedTasks(id: number, tasks: any[]): Observable<any> {
+    return this.http.post(`${this.apiUrl}/${id}/save-selected-tasks`, { tasks });
+  }
 }

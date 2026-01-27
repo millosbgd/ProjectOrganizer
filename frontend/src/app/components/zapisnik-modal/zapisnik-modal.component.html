@@ -20,6 +20,13 @@
     <div class="modal-footer" *ngIf="!isGenerating && zapisnik">
       <button class="btn-secondary" (click)="closeModal()">Zatvori</button>
       <button class="btn-primary" (click)="copyToClipboard()">📋 Kopiraj u Clipboard</button>
+      <button 
+        *ngIf="title.includes('DevOps')" 
+        class="btn-preview" 
+        (click)="openPreview()"
+      >
+        📥 Pregledaj i sačuvaj
+      </button>
     </div>
   </div>
 </div>

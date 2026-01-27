@@ -5,11 +5,12 @@ import { Aktivnost } from '../../models/aktivnost.model';
 import { AktivnostService } from '../../services/aktivnost.service';
 import { ZapisnikModalComponent } from '../zapisnik-modal/zapisnik-modal.component';
 import { DevOpsTasksModalComponent } from '../devops-tasks-modal/devops-tasks-modal.component';
+import { DevOpsTasksPreviewModalComponent, ParsedTask } from '../devops-tasks-preview-modal/devops-tasks-preview-modal.component';
 
 @Component({
   selector: 'app-aktivnost-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule, ZapisnikModalComponent, DevOpsTasksModalComponent],
+  imports: [CommonModule, FormsModule, ZapisnikModalComponent, DevOpsTasksModalComponent, DevOpsTasksPreviewModalComponent],
   templateUrl: './aktivnost-modal.component.html',
   styleUrl: './aktivnost-modal.component.css'
 })
@@ -32,6 +33,8 @@ export class AktivnostModalComponent {
   showZapisnikModal: boolean = false;
   zapisnikModalTitle: string = '';
   showDevOpsTasksModal: boolean = false;
+  showDevOpsTasksPreviewModal: boolean = false;
+  parsedTasks: ParsedTask[] = [];
 
   constructor(private aktivnostService: AktivnostService) {}
 
@@ -121,6 +124,55 @@ export class AktivnostModalComponent {
         alert('Greška prilikom generisanja taskova. Pokušajte ponovo.');
         this.isGeneratingZapisnik = false;
         this.showZapisnikModal = false;
+      }
+    });
+  }
+
+  openPreview(): void {
+    if (!this.zapisnik || !this.aktivnost.id) return;
+
+    this.aktivnostService.parseDevOpsTasks(this.aktivnost.id, this.zapisnik).subscribe({
+      next: (tasks) => {
+        this.parsedTasks = tasks.map(t => ({
+          ...t,
+          selected: true // Svi taskovi su default selektovani
+        }));
+        this.showZapisnikModal = false;
+        this.showDevOpsTasksPreviewModal = true;
+      },
+      error: (error) => {
+        console.error('Greška pri parsiranju taskova:', error);
+        alert('Greška prilikom parsiranja taskova. Pokušajte ponovo.');
+      }
+    });
+  }
+
+  closePreviewModal(): void {
+    this.showDevOpsTasksPreviewModal = false;
+    this.parsedTasks = [];
+  }
+
+  saveSelectedTasks(tasks: ParsedTask[]): void {
+    if (!this.aktivnost.id) return;
+
+    const tasksToSave = tasks.map(t => ({
+      title: t.title,
+      description: t.description || '',
+      acceptanceCriteria: t.acceptanceCriteria || '',
+      priority: t.priority || 'Medium',
+      estimation: t.estimation || '',
+      orderIndex: t.orderIndex
+    }));
+
+    this.aktivnostService.saveSelectedTasks(this.aktivnost.id, tasksToSave).subscribe({
+      next: (response) => {
+        alert(`✅ Uspešno sačuvano ${response.count} taskova!`);
+        this.closePreviewModal();
+        this.zapisnik = '';
+      },
+      error: (error) => {
+        console.error('Greška pri čuvanju taskova:', error);
+        alert('Greška prilikom čuvanja taskova. Pokušajte ponovo.');
       }
     });
   }

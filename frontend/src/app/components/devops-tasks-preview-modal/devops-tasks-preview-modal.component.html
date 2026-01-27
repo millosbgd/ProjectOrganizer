@@ -1,0 +1,82 @@
+<div class="modal-overlay" (click)="closeModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>📋 Pregledaj i sačuvaj DevOps taskove</h2>
+      <button class="close-btn" (click)="closeModal()">&times;</button>
+    </div>
+    
+    <div class="modal-body">
+      <div class="selection-toolbar">
+        <div class="select-all-container">
+          <input 
+            type="checkbox" 
+            id="selectAll" 
+            [checked]="allSelected"
+            (change)="toggleSelectAll()"
+          />
+          <label for="selectAll">Selektuj sve</label>
+        </div>
+        <div class="selection-info">
+          Selektovano: <strong>{{ selectedCount }}</strong> / {{ tasks.length }}
+        </div>
+      </div>
+
+      <div class="tasks-grid">
+        <div 
+          *ngFor="let task of tasks; let i = index" 
+          class="task-card"
+          [class.selected]="task.selected"
+        >
+          <div class="task-header">
+            <div class="task-header-left">
+              <input 
+                type="checkbox" 
+                [id]="'task-' + i"
+                [(ngModel)]="task.selected"
+              />
+              <span class="task-order-badge">{{ task.orderIndex }}</span>
+              <h3>{{ task.title }}</h3>
+            </div>
+            <div class="task-badges">
+              <span 
+                *ngIf="task.priority" 
+                class="badge"
+                [ngClass]="getPriorityBadgeClass(task.priority)"
+              >
+                {{ task.priority }}
+              </span>
+              <span *ngIf="task.estimation" class="badge badge-estimation">
+                {{ task.estimation }}
+              </span>
+            </div>
+          </div>
+          
+          <div class="task-body">
+            <div *ngIf="task.description" class="task-section">
+              <strong>Opis:</strong>
+              <p>{{ task.description }}</p>
+            </div>
+            
+            <div *ngIf="task.acceptanceCriteria" class="task-section">
+              <strong>Acceptance Criteria:</strong>
+              <p>{{ task.acceptanceCriteria }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="modal-footer">
+      <button class="btn btn-cancel" (click)="closeModal()">
+        Odustani
+      </button>
+      <button 
+        class="btn btn-save" 
+        (click)="saveSelected()"
+        [disabled]="selectedCount === 0 || saving"
+      >
+        {{ saving ? 'Čuvanje...' : 'Sačuvaj selektovane (' + selectedCount + ')' }}
+      </button>
+    </div>
+  </div>
+</div>
