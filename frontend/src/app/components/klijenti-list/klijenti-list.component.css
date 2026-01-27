@@ -32,26 +32,24 @@
   background-color: #3498db;
 }
 
-.btn-icon-primary {
-  background-color: #5dade2;
-  color: white;
-  border: none;
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
+.btn-icon-minimal {
+  background-color: transparent;
+  color: #5dade2;
+  border: 1px solid #e0e0e0;
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
   cursor: pointer;
-  font-size: 18px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.3s;
-  box-shadow: 0 2px 6px rgba(93, 173, 226, 0.3);
+  transition: all 0.2s;
 }
 
-.btn-icon-primary:hover {
-  background-color: #3498db;
-  transform: scale(1.1);
-  box-shadow: 0 4px 12px rgba(52, 152, 219, 0.4);
+.btn-icon-minimal:hover {
+  color: #3498db;
+  border-color: #5dade2;
+  background-color: rgba(93, 173, 226, 0.05);
 }
 
 .loading, .no-data {
@@ -140,7 +138,9 @@
 }
 
 .dropdown-item {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 8px;
   width: 100%;
   padding: 10px 15px;
   border: none;
