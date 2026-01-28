@@ -16,7 +16,7 @@ export interface CompanyInfo {
   providedIn: 'root'
 })
 export class NbsService {
-  private apiUrl = `${environment.apiUrl}/api/nbs`;
+  private apiUrl = `${environment.apiUrl}/nbs`;
 
   constructor(private http: HttpClient) {}
 
