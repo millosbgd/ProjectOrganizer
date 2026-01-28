@@ -41,8 +41,8 @@
         <div class="detalji-header">
           <label>Detalji:</label>
           <div class="ai-buttons">
-            <button type="button" class="btn-ai-small btn-ai-ocr" (click)="triggerFileInput()" title="Učitaj sliku i očitaj tekst">
-              📷 Skenuj tekst
+            <button type="button" class="btn-ai-small btn-ai-minimal" (click)="triggerFileInput()" title="Učitaj sliku i očitaj tekst">
+              Skenuj tekst
             </button>
             <input 
               #fileInput 
@@ -51,14 +51,14 @@
               (change)="onImageSelected($event)" 
               style="display: none"
             />
-            <button type="button" class="btn-ai-small" (click)="generateZapisnik()" *ngIf="aktivnost.id">
-              📧 Zapisnik
+            <button type="button" class="btn-ai-small btn-ai-minimal" (click)="generateZapisnik()" *ngIf="aktivnost.id">
+              Zapisnik
             </button>
-            <button type="button" class="btn-ai-small btn-ai-devops" (click)="generateDevOpsTasks()" *ngIf="aktivnost.id">
-              📋 DevOps Taskovi
+            <button type="button" class="btn-ai-small btn-ai-minimal" (click)="generateDevOpsTasks()" *ngIf="aktivnost.id">
+              DevOps Taskovi
             </button>
-            <button type="button" class="btn-ai-small btn-ai-view" (click)="openDevOpsTasksModal()" *ngIf="aktivnost.id" title="Pogledaj sačuvane taskove">
-              👁️ Pregledaj
+            <button type="button" class="btn-ai-small btn-ai-minimal" (click)="openDevOpsTasksModal()" *ngIf="aktivnost.id" title="Pogledaj sačuvane taskove">
+              Pregledaj
             </button>
           </div>
         </div>

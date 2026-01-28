@@ -148,49 +148,29 @@
 
 .btn-ai-small {
   padding: 6px 12px;
-  border: 1px solid #4CAF50;
+  border: 1px solid #3498db;
   border-radius: 5px;
-  background-color: white;
-  color: #4CAF50;
+  background-color: transparent;
+  color: #3498db;
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 400;
   cursor: pointer;
-  transition: all 0.3s;
+  transition: all 0.2s;
   white-space: nowrap;
 }
 
 .btn-ai-small:hover {
-  background-color: #4CAF50;
-  color: white;
-}
-
-.btn-ai-devops {
-  border-color: #2196F3;
-  color: #2196F3;
-}
-
-.btn-ai-devops:hover {
-  background-color: #2196F3;
-  color: white;
-}
-
-.btn-ai-view {
-  border-color: #3498db;
-  color: #3498db;
-}
-
-.btn-ai-view:hover {
   background-color: #3498db;
   color: white;
 }
 
-.btn-ai-ocr {
-  border-color: #9b59b6;
-  color: #9b59b6;
+.btn-ai-minimal {
+  border-color: #3498db;
+  color: #3498db;
 }
 
-.btn-ai-ocr:hover {
-  background-color: #9b59b6;
+.btn-ai-minimal:hover {
+  background-color: #3498db;
   color: white;
 }
 
