@@ -59,9 +59,50 @@
   font-size: 14px;
 }
 
-.form-group input:focus {
+.form-group select {
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 14px;
+}
+
+.form-group input:focus,
+.form-group select:focus {
   outline: none;
   border-color: #5dade2;
+}
+
+.pib-input-group {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.pib-input-group input {
+  flex: 1;
+}
+
+.btn-nbs {
+  padding: 10px 16px;
+  border: 1px solid #3498db;
+  border-radius: 5px;
+  background-color: transparent;
+  color: #3498db;
+  font-size: 13px;
+  font-weight: 400;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.btn-nbs:hover:not(:disabled) {
+  background-color: #3498db;
+  color: white;
+}
+
+.btn-nbs:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .form-actions {

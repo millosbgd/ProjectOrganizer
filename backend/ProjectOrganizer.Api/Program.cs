@@ -52,6 +52,7 @@ builder.Services.AddAuthorization();
 // Register services
 builder.Services.AddScoped<OpenAIService>();
 builder.Services.AddScoped<UserService>();
+builder.Services.AddHttpClient<NbsService>();
 
 builder.Services.AddControllers()
     .AddJsonOptions(options =>

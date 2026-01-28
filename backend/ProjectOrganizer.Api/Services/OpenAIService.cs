@@ -130,11 +130,20 @@ Generiši strukturirane taskove spremne za kreiranje u Azure DevOps-u. Izdvoj sa
         var openAiClient = new OpenAIClient(apiKey);
         var chatClient = openAiClient.GetChatClient(model);
 
-        var systemPrompt = @"Ti si OCR asistent. Tvoj zadatak je da precizan očitaš sav tekst sa slike.
-Izvuci sav tekst tačno kako je napisan, očuvaj formatiranje gde je moguće.
-Ne dodavaj nikakve komentare, samo vrati čist tekst koji si pročitao.";
+        var systemPrompt = @"Ti si stručnjak za prepoznavanje teksta sa slika (OCR) sa posebnim fokusom na rukopis.
 
-        var userPrompt = "Pročitaj sav tekst sa ove slike i vrati mi ga kao čist tekst:";
+TVOJ ZADATAK:
+- Pažljivo analiziraj sliku i pročitaj SVE vidljive reči i brojeve
+- Posebnu pažnju obrati na RUKOPISNI tekst - pokušaj da prepoznaš svako slovo čak i kada je nejasno
+- Očuvaj strukturu i formatiranje (novi redovi, liste, paragrafi)
+- Ako neki deo teksta nije čitljiv, napiši [NEJASNO] ali nastavi sa ostatkom
+- VAŽNO: Ne izmišljaj tekst - piši samo ono što vidiš na slici
+
+FORMAT ODGOVORA:
+- Čist tekst bez dodatnih komentara
+- Samo prepoznat sadržaj sa slike";
+
+        var userPrompt = "Analiziraj ovu sliku i pročitaj SVE vidljive tekstualne informacije. Posebno pažljivo pročitaj bilo kakav rukopisni tekst:";
 
         // Prepare image content
         var imageBytes = Convert.FromBase64String(imageBase64);

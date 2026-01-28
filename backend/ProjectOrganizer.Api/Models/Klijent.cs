@@ -12,6 +12,12 @@ public class Klijent
     [MaxLength(200)]
     public string Naziv { get; set; } = string.Empty;
 
+    [MaxLength(20)]
+    public string? Pib { get; set; }
+
+    [MaxLength(20)]
+    public string? MaticniBroj { get; set; }
+
     [MaxLength(300)]
     public string? Adresa { get; set; }
 

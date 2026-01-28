@@ -14,6 +14,21 @@
       
       <form class="form">
         <div class="form-group">
+          <label>PIB:</label>
+          <div class="pib-input-group">
+            <input type="text" [(ngModel)]="klijent.pib" name="pib" placeholder="Unesi PIB za automatsko popunjavanje" />
+            <button type="button" class="btn-nbs" (click)="fetchCompanyInfo()" [disabled]="!klijent.pib || isFetchingNbs">
+              {{ isFetchingNbs ? '⏳ Preuzimam...' : 'Preuzmi sa NBS' }}
+            </button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Matični broj:</label>
+          <input type="text" [(ngModel)]="klijent.maticniBroj" name="maticniBroj" />
+        </div>
+
+        <div class="form-group">
           <label>Naziv:</label>
           <input type="text" [(ngModel)]="klijent.naziv" name="naziv" required />
         </div>

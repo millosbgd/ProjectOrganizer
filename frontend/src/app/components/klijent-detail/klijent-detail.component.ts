@@ -4,6 +4,7 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { KlijentService } from '../../services/klijent.service';
 import { CodebookService, CodebookEntry } from '../../services/codebook.service';
+import { NbsService } from '../../services/nbs.service';
 import { Klijent } from '../../models/klijent.model';
 
 @Component({
@@ -17,6 +18,8 @@ export class KlijentDetailComponent implements OnInit {
   klijent: Klijent = {
     id: 0,
     naziv: '',
+    pib: '',
+    maticniBroj: '',
     adresa: '',
     grad: '',
     zemlja: ''
@@ -26,10 +29,12 @@ export class KlijentDetailComponent implements OnInit {
   isEditMode = false;
   isNewMode = false;
   loading = true;
+  isFetchingNbs = false;
 
   constructor(
     private klijentService: KlijentService,
     private codebookService: CodebookService,
+    private nbsService: NbsService,
     private route: ActivatedRoute,
     private router: Router
   ) {}
@@ -96,6 +101,30 @@ export class KlijentDetailComponent implements OnInit {
 
   cancel(): void {
     this.router.navigate(['/klijenti']);
+  }
+
+  fetchCompanyInfo(): void {
+    if (!this.klijent.pib) {
+      return;
+    }
+
+    this.isFetchingNbs = true;
+    this.nbsService.getCompanyInfo(this.klijent.pib).subscribe({
+      next: (data) => {
+        this.klijent.naziv = data.naziv;
+        this.klijent.pib = data.pib;
+        this.klijent.maticniBroj = data.maticniBroj;
+        this.klijent.adresa = data.adresa;
+        this.klijent.grad = data.grad;
+        this.isFetchingNbs = false;
+        alert('Podaci uspešno preuzeti sa NBS!');
+      },
+      error: (error) => {
+        console.error('Error fetching company info:', error);
+        this.isFetchingNbs = false;
+        alert('Greška pri preuzimanju podataka sa NBS. Proverite PIB.');
+      }
+    });
   }
 
   getCountryName(code: string): string {
