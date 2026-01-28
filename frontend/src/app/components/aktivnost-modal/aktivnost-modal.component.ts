@@ -1,8 +1,9 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, Input, Output, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Aktivnost } from '../../models/aktivnost.model';
 import { AktivnostService } from '../../services/aktivnost.service';
+import { OcrService } from '../../services/ocr.service';
 import { ZapisnikModalComponent } from '../zapisnik-modal/zapisnik-modal.component';
 import { DevOpsTasksModalComponent } from '../devops-tasks-modal/devops-tasks-modal.component';
 import { DevOpsTasksPreviewModalComponent, ParsedTask } from '../devops-tasks-preview-modal/devops-tasks-preview-modal.component';
@@ -15,6 +16,8 @@ import { DevOpsTasksPreviewModalComponent, ParsedTask } from '../devops-tasks-pr
   styleUrl: './aktivnost-modal.component.css'
 })
 export class AktivnostModalComponent {
+  @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
+  
   @Input() aktivnost: Aktivnost = {
     id: 0,
     opis: '',
@@ -36,7 +39,15 @@ export class AktivnostModalComponent {
   showDevOpsTasksPreviewModal: boolean = false;
   parsedTasks: ParsedTask[] = [];
 
-  constructor(private aktivnostService: AktivnostService) {}
+  // OCR properties
+  selectedImageFile: File | null = null;
+  selectedImagePreview: string | null = null;
+  isExtractingText: boolean = false;
+
+  constructor(
+    private aktivnostService: AktivnostService,
+    private ocrService: OcrService
+  ) {}
 
   get datumString(): string {
     if (!this.aktivnost.datum) return '';
@@ -173,6 +184,79 @@ export class AktivnostModalComponent {
       error: (error) => {
         console.error('Greška pri čuvanju taskova:', error);
         alert('Greška prilikom čuvanja taskova. Pokušajte ponovo.');
+      }
+    });
+  }
+
+  // OCR Methods
+  triggerFileInput(): void {
+    this.fileInput.nativeElement.click();
+  }
+
+  onImageSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      const file = input.files[0];
+      
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        alert('Molimo izaberite sliku (PNG, JPG, itd.)');
+        return;
+      }
+
+      // Validate file size (max 10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        alert('Slika je prevelika. Maksimalna veličina je 10MB.');
+        return;
+      }
+
+      this.selectedImageFile = file;
+
+      // Create preview
+      const reader = new FileReader();
+      reader.onload = (e: ProgressEvent<FileReader>) => {
+        this.selectedImagePreview = e.target?.result as string;
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  removeImage(): void {
+    this.selectedImageFile = null;
+    this.selectedImagePreview = null;
+    if (this.fileInput) {
+      this.fileInput.nativeElement.value = '';
+    }
+  }
+
+  extractTextFromImage(): void {
+    if (!this.selectedImageFile || !this.selectedImagePreview) {
+      return;
+    }
+
+    this.isExtractingText = true;
+
+    // Extract base64 without data:image/...;base64, prefix
+    const base64Data = this.selectedImagePreview.split(',')[1];
+
+    this.ocrService.extractText(base64Data).subscribe({
+      next: (response) => {
+        // Append extracted text to existing detalji
+        if (this.aktivnost.detalji) {
+          this.aktivnost.detalji += '\n\n' + response.text;
+        } else {
+          this.aktivnost.detalji = response.text;
+        }
+        
+        this.isExtractingText = false;
+        this.removeImage(); // Clean up after successful extraction
+        
+        alert('✅ Tekst uspešno očitan i dodat u detalje!');
+      },
+      error: (error) => {
+        console.error('Greška pri očitavanju teksta:', error);
+        this.isExtractingText = false;
+        alert('Greška prilikom očitavanja teksta sa slike. Pokušajte ponovo.');
       }
     });
   }

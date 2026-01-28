@@ -115,4 +115,43 @@ Generiši strukturirane taskove spremne za kreiranje u Azure DevOps-u. Izdvoj sa
         var response = await chatClient.CompleteChatAsync(messages);
         return response.Value.Content[0].Text;
     }
+
+    public async Task<string> ExtractTextFromImageAsync(
+        string apiKey,
+        string model,
+        string imageBase64)
+    {
+        if (string.IsNullOrWhiteSpace(apiKey))
+            throw new InvalidOperationException("OpenAI API key is not configured for this user.");
+
+        if (string.IsNullOrWhiteSpace(imageBase64))
+            throw new ArgumentException("Image data is required.");
+
+        var openAiClient = new OpenAIClient(apiKey);
+        var chatClient = openAiClient.GetChatClient(model);
+
+        var systemPrompt = @"Ti si OCR asistent. Tvoj zadatak je da precizan očitaš sav tekst sa slike.
+Izvuci sav tekst tačno kako je napisan, očuvaj formatiranje gde je moguće.
+Ne dodavaj nikakve komentare, samo vrati čist tekst koji si pročitao.";
+
+        var userPrompt = "Pročitaj sav tekst sa ove slike i vrati mi ga kao čist tekst:";
+
+        // Prepare image content
+        var imageBytes = Convert.FromBase64String(imageBase64);
+        var imageContentPart = ChatMessageContentPart.CreateImagePart(
+            BinaryData.FromBytes(imageBytes),
+            "image/png"  // or detect from base64 prefix
+        );
+
+        var textContentPart = ChatMessageContentPart.CreateTextPart(userPrompt);
+
+        var messages = new List<ChatMessage>
+        {
+            new SystemChatMessage(systemPrompt),
+            new UserChatMessage(textContentPart, imageContentPart)
+        };
+
+        var response = await chatClient.CompleteChatAsync(messages);
+        return response.Value.Content[0].Text;
+    }
 }

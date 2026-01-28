@@ -41,6 +41,16 @@
         <div class="detalji-header">
           <label>Detalji:</label>
           <div class="ai-buttons">
+            <button type="button" class="btn-ai-small btn-ai-ocr" (click)="triggerFileInput()" title="Učitaj sliku i očitaj tekst">
+              📷 Skenuj tekst
+            </button>
+            <input 
+              #fileInput 
+              type="file" 
+              accept="image/*" 
+              (change)="onImageSelected($event)" 
+              style="display: none"
+            />
             <button type="button" class="btn-ai-small" (click)="generateZapisnik()" *ngIf="aktivnost.id">
               📧 Zapisnik
             </button>
@@ -51,6 +61,13 @@
               👁️ Pregledaj
             </button>
           </div>
+        </div>
+        <div class="image-preview" *ngIf="selectedImagePreview">
+          <img [src]="selectedImagePreview" alt="Preview" />
+          <button type="button" class="btn-remove-image" (click)="removeImage()" title="Ukloni sliku">×</button>
+          <button type="button" class="btn-extract-text" (click)="extractTextFromImage()" [disabled]="isExtractingText">
+            {{ isExtractingText ? '⏳ Očitavam...' : '📝 Očitaj tekst' }}
+          </button>
         </div>
         <textarea
           class="detalji-textarea"

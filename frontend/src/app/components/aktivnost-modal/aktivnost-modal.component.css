@@ -183,3 +183,79 @@
   background-color: #3498db;
   color: white;
 }
+
+.btn-ai-ocr {
+  border-color: #9b59b6;
+  color: #9b59b6;
+}
+
+.btn-ai-ocr:hover {
+  background-color: #9b59b6;
+  color: white;
+}
+
+.image-preview {
+  margin: 15px 0;
+  padding: 15px;
+  border: 2px dashed #ddd;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.image-preview img {
+  max-width: 200px;
+  max-height: 150px;
+  border-radius: 5px;
+  border: 1px solid #ddd;
+  object-fit: contain;
+}
+
+.btn-remove-image {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background-color: #e74c3c;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.3s;
+}
+
+.btn-remove-image:hover {
+  background-color: #c0392b;
+}
+
+.btn-extract-text {
+  padding: 8px 16px;
+  border: 1px solid #9b59b6;
+  border-radius: 5px;
+  background-color: white;
+  color: #9b59b6;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s;
+  white-space: nowrap;
+}
+
+.btn-extract-text:hover:not(:disabled) {
+  background-color: #9b59b6;
+  color: white;
+}
+
+.btn-extract-text:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
