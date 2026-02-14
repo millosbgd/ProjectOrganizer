@@ -12,8 +12,8 @@ export class ProjekatService {
 
   constructor(private http: HttpClient) { }
 
-  getAll(): Observable<Projekat[]> {
-    return this.http.get<Projekat[]>(this.apiUrl);
+  getAll(createdByMe: boolean = true): Observable<Projekat[]> {
+    return this.http.get<Projekat[]>(`${this.apiUrl}?createdByMe=${createdByMe}`);
   }
 
   getById(id: number): Observable<Projekat> {

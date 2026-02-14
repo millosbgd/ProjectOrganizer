@@ -16,6 +16,37 @@
   color: #333;
 }
 
+.header-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.btn-filter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: transparent;
+  color: #5dade2;
+  border: 1px solid #e0e0e0;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.btn-filter:hover {
+  color: #3498db;
+  border-color: #5dade2;
+  background-color: rgba(93, 173, 226, 0.05);
+}
+
+.btn-filter span {
+  font-weight: 500;
+}
+
 .btn-primary {
   background-color: #5dade2;
   color: white;

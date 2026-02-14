@@ -28,7 +28,8 @@ public class ProjektiController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<IEnumerable<Projekat>>> GetProjekti(
         [FromQuery] bool? aktivan = null,
-        [FromQuery] string? status = null)
+        [FromQuery] string? status = null,
+        [FromQuery] bool createdByMe = true)
     {
         var currentUser = await _userService.EnsureUserExistsAsync(User);
         
@@ -38,15 +39,23 @@ public class ProjektiController : ControllerBase
             .Include(p => p.CreatedByUser)
             .AsQueryable();
 
-        // Filter by permissions (Admins see all)
-        if (currentUser.Role != "Admin")
+        // Filter by creator if requested (default)
+        if (createdByMe)
         {
-            var userProjectIds = await _context.ProjectPermissions
-                .Where(p => p.UserId == currentUser.Id)
-                .Select(p => p.ProjekatId)
-                .ToListAsync();
-            
-            query = query.Where(p => userProjectIds.Contains(p.Id));
+            query = query.Where(p => p.CreatedBy == currentUser.Id);
+        }
+        else
+        {
+            // Filter by permissions (Admins see all)
+            if (currentUser.Role != "Admin")
+            {
+                var userProjectIds = await _context.ProjectPermissions
+                    .Where(p => p.UserId == currentUser.Id)
+                    .Select(p => p.ProjekatId)
+                    .ToListAsync();
+                
+                query = query.Where(p => userProjectIds.Contains(p.Id));
+            }
         }
 
         if (aktivan.HasValue)

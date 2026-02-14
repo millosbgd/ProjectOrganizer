@@ -15,6 +15,7 @@ export class ProjektiListComponent implements OnInit {
   projekti: Projekat[] = [];
   loading = true;
   openDropdownId: number | null = null;
+  showAllProjects = false;
 
   constructor(private projekatService: ProjekatService) { }
 
@@ -23,7 +24,7 @@ export class ProjektiListComponent implements OnInit {
   }
 
   loadProjekti(): void {
-    this.projekatService.getAll().subscribe({
+    this.projekatService.getAll(!this.showAllProjects).subscribe({
       next: (data) => {
         this.projekti = data;
         this.loading = false;
@@ -33,6 +34,12 @@ export class ProjektiListComponent implements OnInit {
         this.loading = false;
       }
     });
+  }
+
+  toggleShowAll(): void {
+    this.showAllProjects = !this.showAllProjects;
+    this.loading = true;
+    this.loadProjekti();
   }
 
   deleteProjekt(id: number): void {
