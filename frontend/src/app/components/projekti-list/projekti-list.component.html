@@ -3,6 +3,7 @@
     <h2>Projekti</h2>
     <div class="header-actions">
       <button 
+        *ngIf="currentUser?.role === 'Admin'"
         class="btn-filter" 
         (click)="toggleShowAll()" 
         [title]="showAllProjects ? 'Prikaži samo moje projekte' : 'Prikaži sve projekte'">

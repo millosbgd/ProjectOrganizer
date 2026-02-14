@@ -2,7 +2,9 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { ProjekatService } from '../../services/projekat.service';
+import { UserService } from '../../services/user.service';
 import { Projekat } from '../../models/projekat.model';
+import { User } from '../../models/user.model';
 
 @Component({
   selector: 'app-projekti-list',
@@ -16,11 +18,27 @@ export class ProjektiListComponent implements OnInit {
   loading = true;
   openDropdownId: number | null = null;
   showAllProjects = false;
+  currentUser: User | null = null;
 
-  constructor(private projekatService: ProjekatService) { }
+  constructor(
+    private projekatService: ProjekatService,
+    private userService: UserService
+  ) { }
 
   ngOnInit(): void {
+    this.loadCurrentUser();
     this.loadProjekti();
+  }
+
+  loadCurrentUser(): void {
+    this.userService.getCurrentUser().subscribe({
+      next: (user) => {
+        this.currentUser = user;
+      },
+      error: (error) => {
+        console.error('Error loading current user:', error);
+      }
+    });
   }
 
   loadProjekti(): void {

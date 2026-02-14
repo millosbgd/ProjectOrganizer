@@ -42,11 +42,14 @@ public class ProjektiController : ControllerBase
         // Filter by creator if requested (default)
         if (createdByMe)
         {
+            // Show only projects created by current user
             query = query.Where(p => p.CreatedBy == currentUser.Id);
         }
         else
         {
-            // Filter by permissions (Admins see all)
+            // Show all accessible projects
+            // Admins can see all projects when createdByMe=false
+            // Other users see projects with permissions + their own projects
             if (currentUser.Role != "Admin")
             {
                 var userProjectIds = await _context.ProjectPermissions
@@ -54,7 +57,7 @@ public class ProjektiController : ControllerBase
                     .Select(p => p.ProjekatId)
                     .ToListAsync();
                 
-                query = query.Where(p => userProjectIds.Contains(p.Id));
+                query = query.Where(p => userProjectIds.Contains(p.Id) || p.CreatedBy == currentUser.Id);
             }
         }
 
