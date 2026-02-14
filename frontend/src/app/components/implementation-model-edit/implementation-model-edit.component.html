@@ -1,0 +1,109 @@
+<div class="container">
+  <div class="header">
+    <h2>{{ isNew ? 'Novi Model Implementacije' : 'Izmena Modela Implementacije' }}</h2>
+  </div>
+
+  <div *ngIf="loading" class="loading">Učitavanje...</div>
+
+  <form *ngIf="!loading" (ngSubmit)="save()" class="edit-form">
+    <div class="form-section">
+      <h3>Osnovni podaci</h3>
+      
+      <div class="form-group">
+        <label for="naziv">Naziv *</label>
+        <input 
+          type="text" 
+          id="naziv" 
+          [(ngModel)]="model.naziv" 
+          name="naziv" 
+          class="form-control" 
+          maxlength="100"
+          required>
+      </div>
+
+      <div class="form-group">
+        <label for="opis">Opis</label>
+        <textarea 
+          id="opis" 
+          [(ngModel)]="model.opis" 
+          name="opis" 
+          class="form-control" 
+          rows="3"
+          maxlength="400"></textarea>
+      </div>
+
+      <div class="form-group checkbox-group">
+        <label>
+          <input 
+            type="checkbox" 
+            [(ngModel)]="model.aktivan" 
+            name="aktivan">
+          Aktivan
+        </label>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="section-header">
+        <h3>Stavke</h3>
+        <button type="button" class="btn-add-item" (click)="addItem()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          Dodaj stavku
+        </button>
+      </div>
+
+      <div *ngIf="model.items.length === 0" class="no-items">
+        Nema stavki. Kliknite "Dodaj stavku" da dodate prvu stavku.
+      </div>
+
+      <div class="items-list" *ngIf="model.items.length > 0">
+        <div class="item-card" *ngFor="let item of model.items; let i = index">
+          <div class="item-header">
+            <span class="item-number">Stavka #{{ i + 1 }}</span>
+            <button type="button" class="btn-remove" (click)="removeItem(i)" title="Obriši stavku">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+          
+          <div class="form-group">
+            <label [for]="'item-naziv-' + i">Naziv *</label>
+            <input 
+              type="text" 
+              [id]="'item-naziv-' + i"
+              [(ngModel)]="item.naziv" 
+              [name]="'item-naziv-' + i"
+              class="form-control" 
+              maxlength="100"
+              required>
+          </div>
+
+          <div class="form-group">
+            <label [for]="'item-detalji-' + i">Detalji</label>
+            <textarea 
+              [id]="'item-detalji-' + i"
+              [(ngModel)]="item.detalji" 
+              [name]="'item-detalji-' + i"
+              class="form-control" 
+              rows="2"
+              maxlength="500"></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button type="button" class="btn-cancel" (click)="cancel()" [disabled]="saving">
+        Otkaži
+      </button>
+      <button type="submit" class="btn-save" [disabled]="saving">
+        {{ saving ? 'Čuvanje...' : 'Sačuvaj' }}
+      </button>
+    </div>
+  </form>
+</div>

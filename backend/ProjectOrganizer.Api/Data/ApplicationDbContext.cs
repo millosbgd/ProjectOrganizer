@@ -22,6 +22,8 @@ public class ApplicationDbContext : DbContext
     public DbSet<DevOpsTasksCandidate> DevOpsTasksCandidates { get; set; }
     public DbSet<CodebookEntity> CodebookEntities { get; set; }
     public DbSet<Codebook> Codebooks { get; set; }
+    public DbSet<ImplementationModel> ImplementationModels { get; set; }
+    public DbSet<ImplementationItem> ImplementationItems { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -86,6 +88,25 @@ public class ApplicationDbContext : DbContext
                 .WithMany(et => et.Codebooks)
                 .HasForeignKey(c => c.EntityTypeId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // ImplementationModel configuration
+        modelBuilder.Entity<ImplementationModel>(entity =>
+        {
+            entity.ToTable("ImplementationModels");
+            entity.HasIndex(e => e.Aktivan);
+        });
+
+        // ImplementationItem configuration
+        modelBuilder.Entity<ImplementationItem>(entity =>
+        {
+            entity.ToTable("ImplementationItems");
+            entity.HasIndex(e => e.ImplementationModelId);
+
+            entity.HasOne(i => i.ImplementationModel)
+                .WithMany(m => m.Items)
+                .HasForeignKey(i => i.ImplementationModelId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
     }
 
