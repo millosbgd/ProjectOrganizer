@@ -22,13 +22,23 @@
               <span class="task-order">{{ '#' }}{{ task.orderIndex }}</span>
               <h4 class="task-title">{{ task.title }}</h4>
             </div>
-            <div class="task-badges">
-              <span class="badge" [ngClass]="getPriorityBadgeClass(task.priority)">
-                {{ task.priority || 'Medium' }}
-              </span>
-              <span class="badge" [ngClass]="getStatusBadgeClass(task.status)">
-                {{ task.status }}
-              </span>
+            <div class="task-header-right">
+              <div class="task-badges">
+                <span class="badge" [ngClass]="getPriorityBadgeClass(task.priority)">
+                  {{ task.priority || 'Medium' }}
+                </span>
+                <span class="badge" [ngClass]="getStatusBadgeClass(task.status)">
+                  {{ task.status }}
+                </span>
+              </div>
+              <div class="task-actions">
+                <button class="btn-icon btn-edit" (click)="editTask(task)" title="Izmeni task">
+                  ✏️
+                </button>
+                <button class="btn-icon btn-delete" (click)="deleteTask(task.id)" title="Obriši task">
+                  🗑️
+                </button>
+              </div>
             </div>
           </div>
 
@@ -57,15 +67,6 @@
                 <span class="meta-value">{{ task.createdAt | date: 'dd.MM.yyyy HH:mm' }}</span>
               </div>
             </div>
-          </div>
-
-          <div class="task-actions">
-            <button class="btn-icon btn-edit" (click)="editTask(task)" title="Izmeni task">
-              ✏️
-            </button>
-            <button class="btn-icon btn-delete" (click)="deleteTask(task.id)" title="Obriši task">
-              🗑️
-            </button>
           </div>
         </div>
       </div>
