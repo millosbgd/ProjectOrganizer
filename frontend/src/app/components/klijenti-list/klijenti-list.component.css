@@ -52,6 +52,22 @@
   background-color: rgba(93, 173, 226, 0.05);
 }
 
+.btn-icon-minimal.danger {
+  color: #e74c3c;
+}
+
+.btn-icon-minimal.danger:hover {
+  color: #fff;
+  border-color: #e74c3c;
+  background-color: #e74c3c;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
 .loading, .no-data {
   text-align: center;
   padding: 40px;
