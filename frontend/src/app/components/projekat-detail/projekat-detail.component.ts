@@ -145,7 +145,8 @@ export class ProjekatDetailComponent implements OnInit {
         datum: this.projekat.datum,
         aktivan: this.projekat.aktivan,
         status: this.projekat.status,
-        klijentId: this.projekat.klijentId
+        klijentId: this.projekat.klijentId,
+        implementationModelId: this.projekat.implementationModelId
       };
 
       this.projekatService.create(projekatToSave as any).subscribe({
@@ -170,7 +171,8 @@ export class ProjekatDetailComponent implements OnInit {
         naziv: this.projekat.naziv,
         aktivan: this.projekat.aktivan,
         status: this.projekat.status,
-        klijentId: this.projekat.klijentId
+        klijentId: this.projekat.klijentId,
+        implementationModelId: this.projekat.implementationModelId
       };
 
       this.projekatService.update(this.projekat.id, projekatToSave).subscribe({
