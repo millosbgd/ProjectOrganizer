@@ -88,10 +88,10 @@
     </div>
 
     <div class="form-actions">
-      <button type="button" class="btn-cancel" (click)="cancel()" [disabled]="saving">
+      <button type="button" class="btn-secondary" (click)="cancel()" [disabled]="saving">
         Nazad
       </button>
-      <button type="submit" class="btn-save" [disabled]="saving">
+      <button type="submit" class="btn-primary" [disabled]="saving">
         {{ saving ? 'Čuvanje...' : 'Sačuvaj' }}
       </button>
     </div>
@@ -134,10 +134,10 @@
       </div>
 
       <div class="modal-footer">
-        <button type="button" class="btn-cancel" (click)="closeItemModal()">
+        <button type="button" class="btn-secondary" (click)="closeItemModal()">
           Otkaži
         </button>
-        <button type="button" class="btn-save" (click)="saveItemFromModal()">
+        <button type="button" class="btn-primary" (click)="saveItemFromModal()">
           Sačuvaj stavku
         </button>
       </div>
