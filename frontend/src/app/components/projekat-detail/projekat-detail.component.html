@@ -131,44 +131,120 @@
       </div>
     </div>
 
-    <!-- Aktivnosti Section -->
+    <!-- Tabs Section -->
     <div class="card" *ngIf="!isNewMode">
-      <div class="card-header-with-action">
-        <h3>Aktivnosti</h3>
-        <button class="btn-primary" (click)="openNewAktivnostModal()">
-          + Nova aktivnost
+      <div class="tabs-header">
+        <button 
+          class="tab-button" 
+          [class.active]="activeTab === 'aktivnosti'"
+          (click)="setActiveTab('aktivnosti')">
+          📋 Aktivnosti ({{ aktivnosti.length }})
+        </button>
+        <button 
+          class="tab-button" 
+          [class.active]="activeTab === 'implementacija'"
+          (click)="setActiveTab('implementacija')"
+          *ngIf="projekat.implementationModelId">
+          ✅ Stavke implementacije ({{ implementationItems.length }})
         </button>
       </div>
 
-      <!-- Aktivnosti List -->
-      <div class="aktivnosti-list" *ngIf="aktivnosti.length > 0">
-        <div class="aktivnost-item" *ngFor="let aktivnost of aktivnosti">
-          <div class="aktivnost-header">
-            <span class="aktivnost-datum">{{ aktivnost.datum | date:'dd.MM.yyyy' }}</span>
-            <span class="badge-small status-{{ aktivnost.status.toLowerCase() }}">{{ aktivnost.status }}</span>
-            <span class="badge-small vrsta-{{ aktivnost.vrsta.toLowerCase() }}">{{ aktivnost.vrsta }}</span>
-          </div>
-          <div class="aktivnost-body">
-            <p class="aktivnost-opis">{{ aktivnost.opis }}</p>
-            <div class="aktivnost-detalji-preview" *ngIf="aktivnost.detalji">
-              <span class="preview-label">Detalji:</span>
-              <span class="preview-text">{{ aktivnost.detalji.length > 150 ? (aktivnost.detalji.substring(0, 150) + '...') : aktivnost.detalji }}</span>
+      <!-- Aktivnosti Tab Content -->
+      <div class="tab-content" *ngIf="activeTab === 'aktivnosti'">
+        <div class="card-header-with-action">
+          <h3>Aktivnosti</h3>
+          <button class="btn-primary" (click)="openNewAktivnostModal()">
+            + Nova aktivnost
+          </button>
+        </div>
+
+        <!-- Aktivnosti List -->
+        <div class="aktivnosti-list" *ngIf="aktivnosti.length > 0">
+          <div class="aktivnost-item" *ngFor="let aktivnost of aktivnosti">
+            <div class="aktivnost-header">
+              <span class="aktivnost-datum">{{ aktivnost.datum | date:'dd.MM.yyyy' }}</span>
+              <span class="badge-small status-{{ aktivnost.status.toLowerCase() }}">{{ aktivnost.status }}</span>
+              <span class="badge-small vrsta-{{ aktivnost.vrsta.toLowerCase() }}">{{ aktivnost.vrsta }}</span>
             </div>
-          </div>
-          <div class="aktivnost-footer">
-            <div class="dropdown">
-              <button class="btn-dropdown" (click)="toggleDropdown(aktivnost.id)">⋮</button>
-              <div class="dropdown-menu" *ngIf="openDropdownId === aktivnost.id">
-                <button class="dropdown-item" (click)="openEditAktivnostModal(aktivnost); toggleDropdown(aktivnost.id)">Izmeni</button>
-                <button class="dropdown-item danger" (click)="deleteAktivnost(aktivnost.id); toggleDropdown(aktivnost.id)">Obriši</button>
+            <div class="aktivnost-body">
+              <p class="aktivnost-opis">{{ aktivnost.opis }}</p>
+              <div class="aktivnost-detalji-preview" *ngIf="aktivnost.detalji">
+                <span class="preview-label">Detalji:</span>
+                <span class="preview-text">{{ aktivnost.detalji.length > 150 ? (aktivnost.detalji.substring(0, 150) + '...') : aktivnost.detalji }}</span>
+              </div>
+            </div>
+            <div class="aktivnost-footer">
+              <div class="dropdown">
+                <button class="btn-dropdown" (click)="toggleDropdown(aktivnost.id)">⋮</button>
+                <div class="dropdown-menu" *ngIf="openDropdownId === aktivnost.id">
+                  <button class="dropdown-item" (click)="openEditAktivnostModal(aktivnost); toggleDropdown(aktivnost.id)">Izmeni</button>
+                  <button class="dropdown-item danger" (click)="deleteAktivnost(aktivnost.id); toggleDropdown(aktivnost.id)">Obriši</button>
+                </div>
               </div>
             </div>
           </div>
         </div>
+
+        <div *ngIf="aktivnosti.length === 0" class="no-data">
+          Nema aktivnosti za ovaj projekat.
+        </div>
       </div>
 
-      <div *ngIf="aktivnosti.length === 0" class="no-data">
-        Nema aktivnosti za ovaj projekat.
+      <!-- Implementation Items Tab Content -->
+      <div class="tab-content" *ngIf="activeTab === 'implementacija'">
+        <h3>Stavke implementacije</h3>
+        
+        <div class="implementation-items-table" *ngIf="implementationItems.length > 0">
+          <table>
+            <thead>
+              <tr>
+                <th>Stavka</th>
+                <th style="width: 30%">Napomena</th>
+                <th style="width: 120px; text-align: center;">Završeno</th>
+                <th style="width: 140px; text-align: center;">Datum završetka</th>
+                <th style="width: 120px; text-align: center;">Klijent potvrdio</th>
+                <th style="width: 140px; text-align: center;">Datum potvrde</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let item of implementationItems">
+                <td>{{ item.implementationItemNaziv }}</td>
+                <td>
+                  <input 
+                    type="text" 
+                    [(ngModel)]="item.napomena" 
+                    (blur)="updateImplementationItem(item)"
+                    class="inline-input"
+                    placeholder="Dodaj napomenu...">
+                </td>
+                <td style="text-align: center;">
+                  <input 
+                    type="checkbox" 
+                    [(ngModel)]="item.zavrseno"
+                    (change)="toggleZavrseno(item)">
+                </td>
+                <td style="text-align: center;">
+                  <span *ngIf="item.zavrsenoDatum">{{ item.zavrsenoDatum | date:'dd.MM.yyyy' }}</span>
+                  <span *ngIf="!item.zavrsenoDatum" class="text-muted">-</span>
+                </td>
+                <td style="text-align: center;">
+                  <input 
+                    type="checkbox" 
+                    [(ngModel)]="item.klijentPotvrdio"
+                    (change)="toggleKlijentPotvrdio(item)">
+                </td>
+                <td style="text-align: center;">
+                  <span *ngIf="item.klijentPotvrdioDatum">{{ item.klijentPotvrdioDatum | date:'dd.MM.yyyy' }}</span>
+                  <span *ngIf="!item.klijentPotvrdioDatum" class="text-muted">-</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div *ngIf="implementationItems.length === 0" class="no-data">
+          Nema stavki implementacije. Izaberite model implementacije u podacima projekta.
+        </div>
       </div>
     </div>
 

@@ -8,12 +8,14 @@ import { AktivnostService } from '../../services/aktivnost.service';
 import { DokumentService } from '../../services/dokument.service';
 import { NoteService } from '../../services/note.service';
 import { ImplementationModelService } from '../../services/implementation-model.service';
+import { ProjectImplementationItemService } from '../../services/project-implementation-item.service';
 import { Projekat } from '../../models/projekat.model';
 import { Klijent } from '../../models/klijent.model';
 import { Aktivnost } from '../../models/aktivnost.model';
 import { Dokument } from '../../models/dokument.model';
 import { Note } from '../../models/note.model';
 import { ImplementationModel } from '../../models/implementation-model.model';
+import { ProjectImplementationItem } from '../../models/project-implementation-item.model';
 import { AktivnostModalComponent } from '../aktivnost-modal/aktivnost-modal.component';
 
 @Component({
@@ -37,12 +39,14 @@ export class ProjekatDetailComponent implements OnInit {
   klijenti: Klijent[] = [];
   implementationModels: ImplementationModel[] = [];
   aktivnosti: Aktivnost[] = [];
+  implementationItems: ProjectImplementationItem[] = [];
   dokumenti: Dokument[] = [];
   notes: Note[] = [];
   isEditMode = false;
   isNewMode = false;
   loading = true;
   uploadingFile = false;
+  activeTab: 'aktivnosti' | 'implementacija' = 'aktivnosti';
   
   currentAktivnost: Aktivnost = {
     id: 0,
@@ -68,6 +72,7 @@ export class ProjekatDetailComponent implements OnInit {
     private klijentService: KlijentService,
     private aktivnostService: AktivnostService,
     private implementationModelService: ImplementationModelService,
+    private implementationItemService: ProjectImplementationItemService,
     private route: ActivatedRoute,
     private router: Router
   ) {}
@@ -86,9 +91,14 @@ export class ProjekatDetailComponent implements OnInit {
     } else if (id) {
       this.loadProjekat(+id);
       this.loadAktivnosti(+id);
+      this.loadImplementationItems(+id);
       this.loadDokumenti(+id);
       this.loadNotes(+id);
     }
+  }
+
+  setActiveTab(tab: 'aktivnosti' | 'implementacija'): void {
+    this.activeTab = tab;
   }
 
   loadKlijenti(): void {
@@ -135,6 +145,40 @@ export class ProjekatDetailComponent implements OnInit {
         console.error('Error loading aktivnosti:', error);
       }
     });
+  }
+
+  loadImplementationItems(projekatId: number): void {
+    this.implementationItemService.getByProjectId(projekatId).subscribe({
+      next: (data) => {
+        this.implementationItems = data;
+      },
+      error: (error) => {
+        console.error('Error loading implementation items:', error);
+      }
+    });
+  }
+
+  updateImplementationItem(item: ProjectImplementationItem): void {
+    this.implementationItemService.update(item.id, item).subscribe({
+      next: () => {
+        alert('Stavka je uspešno ažurirana');
+        this.loadImplementationItems(this.projekat.id);
+      },
+      error: (error) => {
+        console.error('Error updating implementation item:', error);
+        alert('Greška pri ažuriranju stavke');
+      }
+    });
+  }
+
+  toggleZavrseno(item: ProjectImplementationItem): void {
+    item.zavrsenoDatum = item.zavrseno ? new Date() : undefined;
+    this.updateImplementationItem(item);
+  }
+
+  toggleKlijentPotvrdio(item: ProjectImplementationItem): void {
+    item.klijentPotvrdioDatum = item.klijentPotvrdio ? new Date() : undefined;
+    this.updateImplementationItem(item);
   }
 
   saveProjekat(): void {

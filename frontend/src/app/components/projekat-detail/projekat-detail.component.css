@@ -49,6 +49,106 @@
   font-weight: 600;
 }
 
+/* Tabs */
+.tabs-header {
+  display: flex;
+  gap: 5px;
+  border-bottom: 2px solid #e0e0e0;
+  margin-bottom: 20px;
+}
+
+.tab-button {
+  background: none;
+  border: none;
+  padding: 12px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #666;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  transition: all 0.3s;
+  position: relative;
+  top: 2px;
+}
+
+.tab-button:hover {
+  color: #3498db;
+  background-color: rgba(93, 173, 226, 0.05);
+}
+
+.tab-button.active {
+  color: #3498db;
+  border-bottom-color: #3498db;
+  font-weight: 600;
+}
+
+.tab-content {
+  animation: fadeIn 0.3s;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Implementation Items Table */
+.implementation-items-table {
+  overflow-x: auto;
+  margin-top: 20px;
+}
+
+.implementation-items-table table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.implementation-items-table thead {
+  background-color: #f8f9fa;
+}
+
+.implementation-items-table th {
+  padding: 12px;
+  text-align: left;
+  font-weight: 600;
+  color: #2c3e50;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.implementation-items-table td {
+  padding: 12px;
+  border-bottom: 1px solid #e0e0e0;
+  vertical-align: middle;
+}
+
+.implementation-items-table tr:hover {
+  background-color: #f8f9fa;
+}
+
+.implementation-items-table .inline-input {
+  width: 100%;
+  padding: 6px 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+.implementation-items-table .inline-input:focus {
+  outline: none;
+  border-color: #5dade2;
+}
+
+.implementation-items-table input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.text-muted {
+  color: #999;
+  font-style: italic;
+}
+
 .form-group small {
   display: block;
   margin-top: 5px;
