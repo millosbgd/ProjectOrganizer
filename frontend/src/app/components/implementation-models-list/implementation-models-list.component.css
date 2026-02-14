@@ -16,24 +16,6 @@
   color: #333;
 }
 
-.btn-primary {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 20px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: background-color 0.2s;
-}
-
-.btn-primary:hover {
-  background-color: #0056b3;
-}
-
 .loading,
 .no-data {
   text-align: center;
@@ -111,37 +93,7 @@
 
 .card-actions {
   display: flex;
-  gap: 10px;
-}
-
-.btn-secondary,
-.btn-danger {
-  display: flex;
+  gap: 8px;
+  justify-content: center;
   align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: all 0.2s;
-}
-
-.btn-secondary {
-  background-color: #6c757d;
-  color: white;
-  flex: 1;
-}
-
-.btn-secondary:hover {
-  background-color: #5a6268;
-}
-
-.btn-danger {
-  background-color: #dc3545;
-  color: white;
-}
-
-.btn-danger:hover {
-  background-color: #c82333;
 }
