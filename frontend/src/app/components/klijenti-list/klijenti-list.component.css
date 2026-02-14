@@ -32,36 +32,6 @@
   background-color: #3498db;
 }
 
-.btn-icon-minimal {
-  background-color: transparent;
-  color: #5dade2;
-  border: 1px solid #e0e0e0;
-  width: 36px;
-  height: 36px;
-  border-radius: 6px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s;
-}
-
-.btn-icon-minimal:hover {
-  color: #3498db;
-  border-color: #5dade2;
-  background-color: rgba(93, 173, 226, 0.05);
-}
-
-.btn-icon-minimal.danger {
-  color: #e74c3c;
-}
-
-.btn-icon-minimal.danger:hover {
-  color: #fff;
-  border-color: #e74c3c;
-  background-color: #e74c3c;
-}
-
 .actions {
   display: flex;
   gap: 8px;
