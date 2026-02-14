@@ -91,6 +91,7 @@ public class AktivnostiController : ControllerBase
         existingAktivnost.Status = aktivnost.Status;
         existingAktivnost.Vrsta = aktivnost.Vrsta;
         existingAktivnost.ProjekatId = aktivnost.ProjekatId;
+        existingAktivnost.ProjectImplementationItemId = aktivnost.ProjectImplementationItemId;
         existingAktivnost.UpdatedAt = DateTime.UtcNow;
 
         try
