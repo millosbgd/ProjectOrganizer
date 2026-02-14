@@ -37,7 +37,7 @@
         <select [(ngModel)]="aktivnost.projectImplementationItemId" name="projectImplementationItemId">
           <option [ngValue]="null">- Nije povezano sa stavkom -</option>
           <option *ngFor="let item of implementationItems" [ngValue]="item.id">
-            {{ item.implementationItem?.naziv || 'Stavka bez naziva' }}
+            {{ item.implementationItemNaziv || 'Stavka bez naziva' }}
           </option>
         </select>
       </div>
