@@ -233,3 +233,38 @@ textarea.form-control {
   padding-top: 20px;
   border-top: 1px solid #ddd;
 }
+
+.btn-primary,
+.btn-secondary {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s;
+}
+
+.btn-primary {
+  background-color: #5dade2;
+  color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background-color: #3498db;
+}
+
+.btn-secondary {
+  background-color: #ecf0f1;
+  color: #2c3e50;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background-color: #d5dbdb;
+}
+
+.btn-primary:disabled,
+.btn-secondary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
