@@ -123,8 +123,7 @@ public class ProjektiController : ControllerBase
             {
                 ProjekatId = projekat.Id,
                 UserId = currentUser.Id,
-                CanEdit = true,
-                CanDelete = true
+                PermissionLevel = "Admin"
             };
             _context.ProjectPermissions.Add(permission);
             await _context.SaveChangesAsync();
