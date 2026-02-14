@@ -61,28 +61,28 @@
 
 .projekti-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 20px;
 }
 
 /* 3 kolone za tablet landscape i srednje ekrane */
 @media (max-width: 1200px) {
   .projekti-grid {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
 /* 2 kolone za tablet portrait i male ekrane */
 @media (max-width: 900px) {
   .projekti-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
 /* 1 kolona za mobilne telefone */
 @media (max-width: 600px) {
   .projekti-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
@@ -96,6 +96,8 @@
   display: flex;
   flex-direction: column;
   height: 100%;
+  min-width: 0;
+  width: 100%;
 }
 
 .projekat-card:hover {
@@ -147,6 +149,8 @@
 .card-body {
   margin-bottom: 15px;
   flex-grow: 1;
+  min-width: 0;
+  width: 100%;
 }
 
 .card-body p {
@@ -156,6 +160,12 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.card-body p strong {
+  font-weight: 600;
 }
 
 .card-footer {
