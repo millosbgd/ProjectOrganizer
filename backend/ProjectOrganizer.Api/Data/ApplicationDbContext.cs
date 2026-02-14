@@ -41,11 +41,17 @@ public class ApplicationDbContext : DbContext
             entity.HasIndex(e => e.BrojProjekta).IsUnique();
             entity.HasIndex(e => e.Status);
             entity.HasIndex(e => e.KlijentId);
+            entity.HasIndex(e => e.CreatedBy);
 
             entity.HasOne(p => p.Klijent)
                 .WithMany(k => k.Projekti)
                 .HasForeignKey(p => p.KlijentId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(p => p.CreatedByUser)
+                .WithMany()
+                .HasForeignKey(p => p.CreatedBy)
+                .OnDelete(DeleteBehavior.SetNull);
         });
 
         // Aktivnost configuration

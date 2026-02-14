@@ -28,6 +28,7 @@
         <p><strong>Datum:</strong> {{ projekat.datum | date:'dd.MM.yyyy' }}</p>
         <p><strong>Status:</strong> {{ projekat.status }}</p>
         <p *ngIf="projekat.klijent"><strong>Klijent:</strong> {{ projekat.klijent.naziv }}</p>
+        <p *ngIf="projekat.createdByUser" class="created-by"><strong>Kreirao:</strong> {{ projekat.createdByUser.name || projekat.createdByUser.email }}</p>
       </div>
       <div class="card-footer">
         <div class="dropdown">

@@ -28,6 +28,8 @@ public class Projekat
     [Required]
     public int KlijentId { get; set; }
 
+    public int? CreatedBy { get; set; }
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
@@ -47,6 +49,9 @@ public class Projekat
     // Navigation properties
     [ForeignKey("KlijentId")]
     public Klijent? Klijent { get; set; }
+
+    [ForeignKey("CreatedBy")]
+    public User? CreatedByUser { get; set; }
 
     public ICollection<Aktivnost> Aktivnosti { get; set; } = new List<Aktivnost>();
 }

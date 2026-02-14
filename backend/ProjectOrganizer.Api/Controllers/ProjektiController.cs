@@ -35,6 +35,7 @@ public class ProjektiController : ControllerBase
         var query = _context.Projekti
             .Include(p => p.Klijent)
             .Include(p => p.Aktivnosti)
+            .Include(p => p.CreatedByUser)
             .AsQueryable();
 
         // Filter by permissions (Admins see all)
@@ -79,6 +80,7 @@ public class ProjektiController : ControllerBase
         var projekat = await _context.Projekti
             .Include(p => p.Klijent)
             .Include(p => p.Aktivnosti)
+            .Include(p => p.CreatedByUser)
             .FirstOrDefaultAsync(p => p.Id == id);
 
         if (projekat == null)
@@ -95,6 +97,8 @@ public class ProjektiController : ControllerBase
         if (!await _context.Klijenti.AnyAsync(k => k.Id == dto.KlijentId))
             return BadRequest("Klijent ne postoji.");
 
+        var currentUser = await _userService.EnsureUserExistsAsync(User);
+
         // Create projekat with auto-generated BrojProjekta
         var projekat = new Projekat
         {
@@ -104,12 +108,27 @@ public class ProjektiController : ControllerBase
             Aktivan = dto.Aktivan,
             Status = dto.Status,
             KlijentId = dto.KlijentId,
+            CreatedBy = currentUser.Id,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
 
         _context.Projekti.Add(projekat);
         await _context.SaveChangesAsync();
+
+        // Grant permission to creator (if not admin)
+        if (currentUser.Role != "Admin")
+        {
+            var permission = new ProjectPermission
+            {
+                ProjekatId = projekat.Id,
+                UserId = currentUser.Id,
+                CanEdit = true,
+                CanDelete = true
+            };
+            _context.ProjectPermissions.Add(permission);
+            await _context.SaveChangesAsync();
+        }
 
         return CreatedAtAction(nameof(GetProjekat), new { id = projekat.Id }, projekat);
     }
