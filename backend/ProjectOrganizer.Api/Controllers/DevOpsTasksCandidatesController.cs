@@ -93,6 +93,37 @@ public class DevOpsTasksCandidatesController : ControllerBase
         }
     }
 
+    // PUT: api/devopstaskscandidates/{id}
+    [HttpPut("{id}")]
+    public async Task<IActionResult> UpdateCandidate(int id, [FromBody] UpdateDevOpsTaskCandidateDto dto)
+    {
+        try
+        {
+            var candidate = await _context.DevOpsTasksCandidates.FindAsync(id);
+            if (candidate == null)
+                return NotFound();
+
+            candidate.Title = dto.Title;
+            candidate.Description = dto.Description;
+            candidate.AcceptanceCriteria = dto.AcceptanceCriteria;
+            candidate.Priority = dto.Priority;
+            candidate.Estimation = dto.Estimation;
+            candidate.OrderIndex = dto.OrderIndex;
+            candidate.Status = dto.Status;
+
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation($"Candidate {id} updated");
+
+            return NoContent();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, $"Error updating candidate {id}");
+            return StatusCode(500, "Error updating candidate");
+        }
+    }
+
     // PUT: api/devopstaskscandidates/{id}/status
     [HttpPut("{id}/status")]
     public async Task<IActionResult> UpdateStatus(int id, [FromBody] UpdateStatusDto dto)
@@ -145,4 +176,15 @@ public class DevOpsTasksCandidatesController : ControllerBase
 public class UpdateStatusDto
 {
     public string Status { get; set; } = string.Empty;
+}
+
+public class UpdateDevOpsTaskCandidateDto
+{
+    public string Title { get; set; } = string.Empty;
+    public string? Description { get; set; }
+    public string? AcceptanceCriteria { get; set; }
+    public string? Priority { get; set; }
+    public string? Estimation { get; set; }
+    public int OrderIndex { get; set; }
+    public string Status { get; set; } = "Draft";
 }
