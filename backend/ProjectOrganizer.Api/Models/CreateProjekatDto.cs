@@ -19,4 +19,6 @@ public class CreateProjekatDto
 
     [Required]
     public int KlijentId { get; set; }
+
+    public int? ImplementationModelId { get; set; }
 }

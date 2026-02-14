@@ -120,6 +120,7 @@ public class ProjektiController : ControllerBase
             Aktivan = dto.Aktivan,
             Status = dto.Status,
             KlijentId = dto.KlijentId,
+            ImplementationModelId = dto.ImplementationModelId,
             CreatedBy = currentUser.Id,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
@@ -139,6 +140,12 @@ public class ProjektiController : ControllerBase
             };
             _context.ProjectPermissions.Add(permission);
             await _context.SaveChangesAsync();
+        }
+
+        // Create implementation items if model is selected
+        if (dto.ImplementationModelId.HasValue)
+        {
+            await CreateProjectImplementationItems(projekat.Id, dto.ImplementationModelId.Value);
         }
 
         return CreatedAtAction(nameof(GetProjekat), new { id = projekat.Id }, projekat);
