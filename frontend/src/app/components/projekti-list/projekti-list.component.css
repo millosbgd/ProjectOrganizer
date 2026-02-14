@@ -1,13 +1,7 @@
 .projekti-container {
-  padding: 20px 40px;
-  max-width: 1600px;
+  padding: 20px;
+  max-width: 1400px;
   margin: 0 auto;
-}
-
-@media (max-width: 768px) {
-  .projekti-container {
-    padding: 20px;
-  }
 }
 
 .header {
@@ -68,29 +62,27 @@
 .projekti-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 24px;
-  padding: 0 20px;
+  gap: 20px;
 }
 
 /* 3 kolone za tablet landscape i srednje ekrane */
-@media (max-width: 1400px) {
+@media (max-width: 1200px) {
   .projekti-grid {
     grid-template-columns: repeat(3, 1fr);
   }
 }
 
 /* 2 kolone za tablet portrait i male ekrane */
-@media (max-width: 1024px) {
+@media (max-width: 900px) {
   .projekti-grid {
     grid-template-columns: repeat(2, 1fr);
   }
 }
 
 /* 1 kolona za mobilne telefone */
-@media (max-width: 768px) {
+@media (max-width: 600px) {
   .projekti-grid {
     grid-template-columns: 1fr;
-    padding: 0;
   }
 }
 
