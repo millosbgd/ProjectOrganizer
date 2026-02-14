@@ -59,51 +59,89 @@
         Nema stavki. Kliknite "Dodaj stavku" da dodate prvu stavku.
       </div>
 
-      <div class="items-list" *ngIf="model.items.length > 0">
-        <div class="item-card" *ngFor="let item of model.items; let i = index">
-          <div class="item-header">
-            <span class="item-number">Stavka #{{ i + 1 }}</span>
-            <button type="button" class="btn-remove" (click)="removeItem(i)" title="Obriši stavku">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="18" y1="6" x2="6" y2="18"></line>
-                <line x1="6" y1="6" x2="18" y2="18"></line>
-              </svg>
-            </button>
-          </div>
-          
-          <div class="form-group">
-            <label [for]="'item-naziv-' + i">Naziv *</label>
-            <input 
-              type="text" 
-              [id]="'item-naziv-' + i"
-              [(ngModel)]="item.naziv" 
-              [name]="'item-naziv-' + i"
-              class="form-control" 
-              maxlength="100"
-              required>
-          </div>
-
-          <div class="form-group">
-            <label [for]="'item-detalji-' + i">Detalji</label>
-            <textarea 
-              [id]="'item-detalji-' + i"
-              [(ngModel)]="item.detalji" 
-              [name]="'item-detalji-' + i"
-              class="form-control" 
-              rows="2"
-              maxlength="500"></textarea>
-          </div>
-        </div>
+      <div class="items-table-container" *ngIf="model.items.length > 0">
+        <table class="items-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Naziv</th>
+              <th>Detalji</th>
+              <th class="actions-column">Akcije</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of model.items; let i = index" (click)="editItem(i)" class="table-row">
+              <td>{{ i + 1 }}</td>
+              <td>{{ item.naziv || '(bez naziva)' }}</td>
+              <td class="detalji-cell">{{ item.detalji || '-' }}</td>
+              <td class="actions-column">
+                <button type="button" class="btn-table-delete" (click)="removeItem(i); $event.stopPropagation()" title="Obriši stavku">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                  </svg>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
 
     <div class="form-actions">
       <button type="button" class="btn-cancel" (click)="cancel()" [disabled]="saving">
-        Otkaži
+        Nazad
       </button>
       <button type="submit" class="btn-save" [disabled]="saving">
         {{ saving ? 'Čuvanje...' : 'Sačuvaj' }}
       </button>
     </div>
   </form>
+
+  <!-- Modal za edit stavke -->
+  <div class="modal-overlay" *ngIf="showItemModal" (click)="closeItemModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>{{ editingItemIndex !== null && editingItemIndex >= 0 && model.items[editingItemIndex]?.id ? 'Izmena stavke' : 'Nova stavka' }}</h3>
+        <button type="button" class="btn-close" (click)="closeItemModal()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="modal-naziv">Naziv *</label>
+          <input 
+            type="text" 
+            id="modal-naziv"
+            [(ngModel)]="editingItem.naziv" 
+            class="form-control" 
+            maxlength="100"
+            required>
+        </div>
+
+        <div class="form-group">
+          <label for="modal-detalji">Detalji</label>
+          <textarea 
+            id="modal-detalji"
+            [(ngModel)]="editingItem.detalji" 
+            class="form-control" 
+            rows="4"
+            maxlength="500"></textarea>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn-cancel" (click)="closeItemModal()">
+          Otkaži
+        </button>
+        <button type="button" class="btn-save" (click)="saveItemFromModal()">
+          Sačuvaj stavku
+        </button>
+      </div>
+    </div>
+  </div>
 </div>

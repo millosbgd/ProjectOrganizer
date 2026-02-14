@@ -23,6 +23,9 @@ export class ImplementationModelEditComponent implements OnInit {
   isNew = true;
   loading = false;
   saving = false;
+  showItemModal = false;
+  editingItem: ImplementationItem = { id: 0, implementationModelId: 0, naziv: '', detalji: '' };
+  editingItemIndex: number | null = null;
 
   constructor(
     private route: ActivatedRoute,
@@ -54,13 +57,44 @@ export class ImplementationModelEditComponent implements OnInit {
   }
 
   addItem(): void {
-    const newItem: ImplementationItem = {
+    this.editingItem = {
       id: 0,
       implementationModelId: this.model.id,
       naziv: '',
       detalji: ''
     };
-    this.model.items.push(newItem);
+    this.editingItemIndex = null;
+    this.showItemModal = true;
+  }
+
+  editItem(index: number): void {
+    this.editingItemIndex = index;
+    // Create a copy to avoid direct editing
+    this.editingItem = { ...this.model.items[index] };
+    this.showItemModal = true;
+  }
+
+  saveItemFromModal(): void {
+    if (!this.editingItem.naziv || this.editingItem.naziv.trim() === '') {
+      alert('Naziv je obavezan');
+      return;
+    }
+
+    if (this.editingItemIndex !== null) {
+      // Update existing item
+      this.model.items[this.editingItemIndex] = { ...this.editingItem };
+    } else {
+      // Add new item
+      this.model.items.push({ ...this.editingItem });
+    }
+
+    this.closeItemModal();
+  }
+
+  closeItemModal(): void {
+    this.showItemModal = false;
+    this.editingItem = { id: 0, implementationModelId: 0, naziv: '', detalji: '' };
+    this.editingItemIndex = null;
   }
 
   removeItem(index: number): void {
@@ -87,8 +121,12 @@ export class ImplementationModelEditComponent implements OnInit {
 
     if (this.isNew) {
       this.implementationModelService.create(this.model).subscribe({
-        next: () => {
-          this.router.navigate(['/implementation-models']);
+        next: (createdModel) => {
+          alert('Model uspešno kreiran!');
+          // Update model with created data (including ID)
+          this.model = createdModel;
+          this.isNew = false;
+          this.saving = false;
         },
         error: (error: any) => {
           console.error('Error saving model:', error);
@@ -99,7 +137,10 @@ export class ImplementationModelEditComponent implements OnInit {
     } else {
       this.implementationModelService.update(this.model.id, this.model).subscribe({
         next: () => {
-          this.router.navigate(['/implementation-models']);
+          alert('Model uspešno ažuriran!');
+          this.saving = false;
+          // Reload model to get fresh data
+          this.loadModel(this.model.id);
         },
         error: (error: any) => {
           console.error('Error saving model:', error);
