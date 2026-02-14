@@ -288,6 +288,16 @@
   transform: scale(1.1);
 }
 
+.btn-edit {
+  border-color: #42a5f5;
+  color: #42a5f5;
+}
+
+.btn-edit:hover {
+  background: #42a5f5;
+  color: white;
+}
+
 .btn-delete {
   border-color: #ef5350;
   color: #ef5350;

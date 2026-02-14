@@ -2,11 +2,12 @@ import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DevOpsTasksCandidateService } from '../../services/devops-tasks-candidate.service';
 import { DevOpsTasksCandidate } from '../../models/devops-tasks-candidate.model';
+import { DevOpsTaskEditModalComponent } from '../devops-task-edit-modal/devops-task-edit-modal.component';
 
 @Component({
   selector: 'app-devops-tasks-modal',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, DevOpsTaskEditModalComponent],
   templateUrl: './devops-tasks-modal.component.html',
   styleUrls: ['./devops-tasks-modal.component.css']
 })
@@ -17,6 +18,10 @@ export class DevOpsTasksModalComponent implements OnInit {
   tasks: DevOpsTasksCandidate[] = [];
   loading = true;
   selectedTasks: Set<number> = new Set();
+  
+  // Edit modal
+  isEditModalOpen = false;
+  taskToEdit: DevOpsTasksCandidate | null = null;
 
   constructor(private devOpsTasksCandidateService: DevOpsTasksCandidateService) {}
 
@@ -52,6 +57,39 @@ export class DevOpsTasksModalComponent implements OnInit {
 
   isTaskSelected(taskId: number): boolean {
     return this.selectedTasks.has(taskId);
+  }
+
+  editTask(task: DevOpsTasksCandidate): void {
+    this.taskToEdit = { ...task };
+    this.isEditModalOpen = true;
+  }
+
+  closeEditModal(): void {
+    this.isEditModalOpen = false;
+    this.taskToEdit = null;
+  }
+
+  saveTask(task: DevOpsTasksCandidate): void {
+    if (task.id) {
+      this.devOpsTasksCandidateService.updateCandidate(task.id, {
+        title: task.title,
+        description: task.description,
+        acceptanceCriteria: task.acceptanceCriteria,
+        priority: task.priority,
+        estimation: task.estimation,
+        orderIndex: task.orderIndex,
+        status: task.status
+      }).subscribe({
+        next: () => {
+          this.closeEditModal();
+          this.loadTasks();
+        },
+        error: (error) => {
+          console.error('Error updating task:', error);
+          alert('Greška prilikom ažuriranja taska.');
+        }
+      });
+    }
   }
 
   deleteTask(taskId: number): void {

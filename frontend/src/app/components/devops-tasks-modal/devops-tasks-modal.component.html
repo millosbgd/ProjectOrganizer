@@ -60,6 +60,9 @@
           </div>
 
           <div class="task-actions">
+            <button class="btn-icon btn-edit" (click)="editTask(task)" title="Izmeni task">
+              ✏️
+            </button>
             <button class="btn-icon btn-delete" (click)="deleteTask(task.id)" title="Obriši task">
               🗑️
             </button>
@@ -76,3 +79,10 @@
     </div>
   </div>
 </div>
+
+<app-devops-task-edit-modal
+  [task]="taskToEdit"
+  [isOpen]="isEditModalOpen"
+  (save)="saveTask($event)"
+  (close)="closeEditModal()"
+></app-devops-task-edit-modal>

@@ -20,6 +20,10 @@ export class DevOpsTasksCandidateService {
     return this.http.get<DevOpsTasksCandidate>(`${this.apiUrl}/${id}`);
   }
 
+  updateCandidate(id: number, candidate: Partial<DevOpsTasksCandidate>): Observable<void> {
+    return this.http.put<void>(`${this.apiUrl}/${id}`, candidate);
+  }
+
   updateStatus(id: number, status: string): Observable<void> {
     return this.http.put<void>(`${this.apiUrl}/${id}/status`, { status });
   }
