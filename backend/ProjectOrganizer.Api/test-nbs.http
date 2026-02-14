@@ -1,0 +1,13 @@
+### Test NBS SOAP API
+POST https://webservices.nbs.rs/CommunicationOfficeService1_0/CompanyAccountService.asmx
+Content-Type: text/xml; charset=utf-8
+SOAPAction: "http://communicationoffice.nbs.rs/GetCompanyInformation"
+
+<?xml version="1.0" encoding="utf-8"?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:com="http://communicationoffice.nbs.rs">
+    <soap:Body>
+        <com:GetCompanyInformation>
+            <com:CompanyRegistryIdentifier>103669300</com:CompanyRegistryIdentifier>
+        </com:GetCompanyInformation>
+    </soap:Body>
+</soap:Envelope>

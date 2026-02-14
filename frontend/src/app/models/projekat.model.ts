@@ -12,6 +12,7 @@ export interface Projekat {
   klijentId: number;
   createdBy?: number;
   createdByUser?: User;
+  implementationModelId?: number;
   devOpsOrganization?: string;
   devOpsProject?: string;
   devOpsAreaPath?: string;

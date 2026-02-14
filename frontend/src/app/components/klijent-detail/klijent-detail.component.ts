@@ -116,13 +116,25 @@ export class KlijentDetailComponent implements OnInit {
         this.klijent.maticniBroj = data.maticniBroj;
         this.klijent.adresa = data.adresa;
         this.klijent.grad = data.grad;
+        this.klijent.zemlja = "RS"; // NBS = Narodna banka SRBIJE!
         this.isFetchingNbs = false;
         alert('Podaci uspešno preuzeti sa NBS!');
       },
       error: (error) => {
         console.error('Error fetching company info:', error);
         this.isFetchingNbs = false;
-        alert('Greška pri preuzimanju podataka sa NBS. Proverite PIB.');
+        
+        let errorMessage = 'Greška pri preuzimanju podataka sa NBS.';
+        
+        if (error.status === 404) {
+          errorMessage = `Kompanija sa PIB-om ${this.klijent.pib} nije pronađena u NBS registru.`;
+        } else if (error.status === 503) {
+          errorMessage = 'NBS servis trenutno nije dostupan. Pokušajte kasnije.';
+        } else if (error.error?.message) {
+          errorMessage = error.error.message;
+        }
+        
+        alert(errorMessage);
       }
     });
   }

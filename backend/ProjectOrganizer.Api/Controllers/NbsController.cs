@@ -33,6 +33,11 @@ public class NbsController : ControllerBase
 
             return Ok(companyInfo);
         }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogWarning(ex, "NBS operacija nije uspela za PIB {PIB}", pib);
+            return StatusCode(503, new { message = ex.Message });
+        }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Greška pri preuzimanju podataka o kompaniji sa PIB-om {PIB}", pib);

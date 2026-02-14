@@ -9,6 +9,7 @@ export interface CompanyInfo {
   maticniBroj: string;
   adresa: string;
   grad: string;
+  zemlja: string;
   isActive: boolean;
 }
 

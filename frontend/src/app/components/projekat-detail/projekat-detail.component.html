@@ -55,6 +55,16 @@
           </select>
         </div>
 
+        <div class="form-group">
+          <label>Model Implementacije:</label>
+          <select [(ngModel)]="projekat.implementationModelId" name="implementationModelId">
+            <option [ngValue]="null">Bez modela</option>
+            <option *ngFor="let model of implementationModels" [ngValue]="model.id">
+              {{ model.naziv }}
+            </option>
+          </select>
+        </div>
+
         <div class="form-group checkbox">
           <label>
             <input type="checkbox" [(ngModel)]="projekat.aktivan" name="aktivan" />

@@ -24,6 +24,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<Codebook> Codebooks { get; set; }
     public DbSet<ImplementationModel> ImplementationModels { get; set; }
     public DbSet<ImplementationItem> ImplementationItems { get; set; }
+    public DbSet<ProjectImplementationItem> ProjectImplementationItems { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -44,6 +45,7 @@ public class ApplicationDbContext : DbContext
             entity.HasIndex(e => e.Status);
             entity.HasIndex(e => e.KlijentId);
             entity.HasIndex(e => e.CreatedBy);
+            entity.HasIndex(e => e.ImplementationModelId);
 
             entity.HasOne(p => p.Klijent)
                 .WithMany(k => k.Projekti)
@@ -53,6 +55,11 @@ public class ApplicationDbContext : DbContext
             entity.HasOne(p => p.CreatedByUser)
                 .WithMany()
                 .HasForeignKey(p => p.CreatedBy)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasOne(p => p.ImplementationModel)
+                .WithMany()
+                .HasForeignKey(p => p.ImplementationModelId)
                 .OnDelete(DeleteBehavior.SetNull);
         });
 
@@ -107,6 +114,30 @@ public class ApplicationDbContext : DbContext
                 .WithMany(m => m.Items)
                 .HasForeignKey(i => i.ImplementationModelId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // ProjectImplementationItem configuration
+        modelBuilder.Entity<ProjectImplementationItem>(entity =>
+        {
+            entity.ToTable("ProjectImplementationItems");
+            entity.HasIndex(e => e.ProjectId);
+            entity.HasIndex(e => e.ImplementationModelId);
+            entity.HasIndex(e => e.ImplementationItemId);
+
+            entity.HasOne(pi => pi.Project)
+                .WithMany(p => p.ImplementationItems)
+                .HasForeignKey(pi => pi.ProjectId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(pi => pi.ImplementationModel)
+                .WithMany()
+                .HasForeignKey(pi => pi.ImplementationModelId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(pi => pi.ImplementationItem)
+                .WithMany()
+                .HasForeignKey(pi => pi.ImplementationItemId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
     }
 

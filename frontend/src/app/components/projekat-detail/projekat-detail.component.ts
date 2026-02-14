@@ -7,11 +7,13 @@ import { KlijentService } from '../../services/klijent.service';
 import { AktivnostService } from '../../services/aktivnost.service';
 import { DokumentService } from '../../services/dokument.service';
 import { NoteService } from '../../services/note.service';
+import { ImplementationModelService } from '../../services/implementation-model.service';
 import { Projekat } from '../../models/projekat.model';
 import { Klijent } from '../../models/klijent.model';
 import { Aktivnost } from '../../models/aktivnost.model';
 import { Dokument } from '../../models/dokument.model';
 import { Note } from '../../models/note.model';
+import { ImplementationModel } from '../../models/implementation-model.model';
 import { AktivnostModalComponent } from '../aktivnost-modal/aktivnost-modal.component';
 
 @Component({
@@ -33,6 +35,7 @@ export class ProjekatDetailComponent implements OnInit {
   };
   
   klijenti: Klijent[] = [];
+  implementationModels: ImplementationModel[] = [];
   aktivnosti: Aktivnost[] = [];
   dokumenti: Dokument[] = [];
   notes: Note[] = [];
@@ -64,12 +67,14 @@ export class ProjekatDetailComponent implements OnInit {
     private dokumentService: DokumentService,
     private klijentService: KlijentService,
     private aktivnostService: AktivnostService,
+    private implementationModelService: ImplementationModelService,
     private route: ActivatedRoute,
     private router: Router
   ) {}
 
   ngOnInit(): void {
     this.loadKlijenti();
+    this.loadImplementationModels();
     
     const id = this.route.snapshot.paramMap.get('id');
     
@@ -93,6 +98,17 @@ export class ProjekatDetailComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error loading klijenti:', error);
+      }
+    });
+  }
+
+  loadImplementationModels(): void {
+    this.implementationModelService.getAll().subscribe({
+      next: (data) => {
+        this.implementationModels = data;
+      },
+      error: (error) => {
+        console.error('Error loading implementation models:', error);
       }
     });
   }

@@ -198,6 +198,32 @@ public class ProjektiController : ControllerBase
         existingProjekat.Aktivan = projekat.Aktivan;
         existingProjekat.Status = projekat.Status;
         existingProjekat.KlijentId = projekat.KlijentId;
+        existingProjekat.DevOpsOrganization = projekat.DevOpsOrganization;
+        existingProjekat.DevOpsProject = projekat.DevOpsProject;
+        existingProjekat.DevOpsAreaPath = projekat.DevOpsAreaPath;
+        existingProjekat.DevOpsIterationPath = projekat.DevOpsIterationPath;
+        
+        // Handle ImplementationModel change
+        if (existingProjekat.ImplementationModelId != projekat.ImplementationModelId)
+        {
+            // Remove old implementation items if model is being changed
+            if (existingProjekat.ImplementationModelId.HasValue)
+            {
+                var oldItems = await _context.ProjectImplementationItems
+                    .Where(pi => pi.ProjectId == id)
+                    .ToListAsync();
+                _context.ProjectImplementationItems.RemoveRange(oldItems);
+            }
+
+            existingProjekat.ImplementationModelId = projekat.ImplementationModelId;
+
+            // Create new implementation items if model is selected
+            if (projekat.ImplementationModelId.HasValue)
+            {
+                await CreateProjectImplementationItems(id, projekat.ImplementationModelId.Value);
+            }
+        }
+        
         existingProjekat.UpdatedAt = DateTime.UtcNow;
 
         try
@@ -226,5 +252,29 @@ public class ProjektiController : ControllerBase
         await _context.SaveChangesAsync();
 
         return NoContent();
+    }
+
+    private async Task CreateProjectImplementationItems(int projectId, int implementationModelId)
+    {
+        // Get all items for the selected implementation model
+        var implementationItems = await _context.ImplementationItems
+            .Where(i => i.ImplementationModelId == implementationModelId)
+            .ToListAsync();
+
+        // Create ProjectImplementationItem for each item in the model
+        foreach (var item in implementationItems)
+        {
+            var projectItem = new ProjectImplementationItem
+            {
+                ProjectId = projectId,
+                ImplementationModelId = implementationModelId,
+                ImplementationItemId = item.Id,
+                Zavrseno = false,
+                KlijentPotvrdio = false
+            };
+            _context.ProjectImplementationItems.Add(projectItem);
+        }
+
+        await _context.SaveChangesAsync();
     }
 }

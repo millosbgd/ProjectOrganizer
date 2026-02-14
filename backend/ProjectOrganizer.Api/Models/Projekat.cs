@@ -30,6 +30,8 @@ public class Projekat
 
     public int? CreatedBy { get; set; }
 
+    public int? ImplementationModelId { get; set; }
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
@@ -53,5 +55,9 @@ public class Projekat
     [ForeignKey("CreatedBy")]
     public User? CreatedByUser { get; set; }
 
+    [ForeignKey("ImplementationModelId")]
+    public ImplementationModel? ImplementationModel { get; set; }
+
     public ICollection<Aktivnost> Aktivnosti { get; set; } = new List<Aktivnost>();
+    public ICollection<ProjectImplementationItem> ImplementationItems { get; set; } = new List<ProjectImplementationItem>();
 }
