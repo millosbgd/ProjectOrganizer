@@ -1,8 +1,10 @@
-import { Component, EventEmitter, Input, Output, ViewChild, ElementRef } from '@angular/core';
+import { Component, EventEmitter, Input, Output, ViewChild, ElementRef, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Aktivnost } from '../../models/aktivnost.model';
+import { ProjectImplementationItem } from '../../models/project-implementation-item.model';
 import { AktivnostService } from '../../services/aktivnost.service';
+import { ProjectImplementationItemService } from '../../services/project-implementation-item.service';
 import { OcrService } from '../../services/ocr.service';
 import { ZapisnikModalComponent } from '../zapisnik-modal/zapisnik-modal.component';
 import { DevOpsTasksModalComponent } from '../devops-tasks-modal/devops-tasks-modal.component';
@@ -15,7 +17,7 @@ import { DevOpsTasksPreviewModalComponent, ParsedTask } from '../devops-tasks-pr
   templateUrl: './aktivnost-modal.component.html',
   styleUrl: './aktivnost-modal.component.css'
 })
-export class AktivnostModalComponent {
+export class AktivnostModalComponent implements OnChanges {
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
   
   @Input() aktivnost: Aktivnost = {
@@ -31,6 +33,7 @@ export class AktivnostModalComponent {
   @Output() save = new EventEmitter<Aktivnost>();
   @Output() close = new EventEmitter<void>();
 
+  implementationItems: ProjectImplementationItem[] = [];
   zapisnik: string = '';
   isGeneratingZapisnik: boolean = false;
   showZapisnikModal: boolean = false;
@@ -46,8 +49,26 @@ export class AktivnostModalComponent {
 
   constructor(
     private aktivnostService: AktivnostService,
+    private implementationItemService: ProjectImplementationItemService,
     private ocrService: OcrService
   ) {}
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['aktivnost'] && this.aktivnost.projekatId) {
+      this.loadImplementationItems();
+    }
+  }
+
+  loadImplementationItems(): void {
+    this.implementationItemService.getByProjectId(this.aktivnost.projekatId).subscribe({
+      next: (data) => {
+        this.implementationItems = data;
+      },
+      error: (error) => {
+        console.error('Error loading implementation items:', error);
+      }
+    });
+  }
 
   get datumString(): string {
     if (!this.aktivnost.datum) return '';

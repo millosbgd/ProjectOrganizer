@@ -28,10 +28,15 @@ public class Aktivnost
     [Required]
     public int ProjekatId { get; set; }
 
+    public int? ProjectImplementationItemId { get; set; }
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
-    // Navigation property
+    // Navigation properties
     [ForeignKey("ProjekatId")]
     public Projekat? Projekat { get; set; }
+
+    [ForeignKey("ProjectImplementationItemId")]
+    public ProjectImplementationItem? ProjectImplementationItem { get; set; }
 }

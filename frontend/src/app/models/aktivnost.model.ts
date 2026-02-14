@@ -6,4 +6,5 @@ export interface Aktivnost {
   status: string;
   vrsta: string;
   projekatId: number;
+  projectImplementationItemId?: number;
 }
