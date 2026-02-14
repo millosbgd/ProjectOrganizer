@@ -8,6 +8,12 @@ export interface CodebookEntry {
   value: string;
 }
 
+export interface CodebookEntityEntry {
+  id: number;
+  name: string;
+  description?: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -16,11 +22,37 @@ export class CodebookService {
 
   constructor(private http: HttpClient) { }
 
-  getByType(type: string): Observable<CodebookEntry[]> {
-    return this.http.get<CodebookEntry[]>(`${this.apiUrl}/${type}`);
+  // Get all codebook entities (types)
+  getEntities(): Observable<CodebookEntityEntry[]> {
+    return this.http.get<CodebookEntityEntry[]>(`${this.apiUrl}/entities`);
   }
 
+  // Get codebooks by entity type ID
+  getByEntityType(entityTypeId: number): Observable<CodebookEntry[]> {
+    return this.http.get<CodebookEntry[]>(`${this.apiUrl}/entity/${entityTypeId}`);
+  }
+
+  // Get codebooks by entity name (backward compatibility)
+  getByEntityName(entityName: string): Observable<CodebookEntry[]> {
+    return this.http.get<CodebookEntry[]>(`${this.apiUrl}/entityname/${entityName}`);
+  }
+
+  // Deprecated: Use getByEntityName instead
+  getByType(type: string): Observable<CodebookEntry[]> {
+    return this.getByEntityName(type);
+  }
+
+  // Deprecated: Use getEntities instead
   getTypes(): Observable<string[]> {
-    return this.http.get<string[]>(`${this.apiUrl}/types`);
+    // Transform entities to string array for backward compatibility
+    return new Observable(observer => {
+      this.getEntities().subscribe({
+        next: (entities) => {
+          observer.next(entities.map(e => e.name));
+          observer.complete();
+        },
+        error: (err) => observer.error(err)
+      });
+    });
   }
 }

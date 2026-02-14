@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ProjectOrganizer.Api.Models;
 
@@ -8,8 +9,7 @@ public class Codebook
     public int Id { get; set; }
 
     [Required]
-    [MaxLength(50)]
-    public string Type { get; set; } = string.Empty;
+    public int EntityTypeId { get; set; }
 
     [Required]
     [MaxLength(100)]
@@ -24,4 +24,8 @@ public class Codebook
     public bool IsActive { get; set; } = true;
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+    // Navigation property
+    [ForeignKey("EntityTypeId")]
+    public CodebookEntity? EntityType { get; set; }
 }

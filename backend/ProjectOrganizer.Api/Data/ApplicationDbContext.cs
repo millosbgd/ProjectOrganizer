@@ -20,6 +20,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<User> Users { get; set; }
     public DbSet<ProjectPermission> ProjectPermissions { get; set; }
     public DbSet<DevOpsTasksCandidate> DevOpsTasksCandidates { get; set; }
+    public DbSet<CodebookEntity> CodebookEntities { get; set; }
     public DbSet<Codebook> Codebooks { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -60,13 +61,25 @@ public class ApplicationDbContext : DbContext
                 .OnDelete(DeleteBehavior.Cascade);
         });
 
+        // CodebookEntity configuration
+        modelBuilder.Entity<CodebookEntity>(entity =>
+        {
+            entity.ToTable("CodebookEntities");
+            entity.HasIndex(e => e.Name).IsUnique();
+        });
+
         // Codebook configuration
         modelBuilder.Entity<Codebook>(entity =>
         {
             entity.ToTable("Codebooks");
-            entity.HasIndex(e => e.Type);
-            entity.HasIndex(e => new { e.Type, e.IsActive });
-            entity.HasIndex(e => new { e.Type, e.Code }).IsUnique();
+            entity.HasIndex(e => e.EntityTypeId);
+            entity.HasIndex(e => new { e.EntityTypeId, e.IsActive });
+            entity.HasIndex(e => new { e.EntityTypeId, e.Code }).IsUnique();
+
+            entity.HasOne(c => c.EntityType)
+                .WithMany(et => et.Codebooks)
+                .HasForeignKey(c => c.EntityTypeId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
     }
 

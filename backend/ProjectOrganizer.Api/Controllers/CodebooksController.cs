@@ -18,12 +18,30 @@ public class CodebooksController : ControllerBase
         _context = context;
     }
 
-    // GET: api/codebooks/{type}
-    [HttpGet("{type}")]
-    public async Task<ActionResult<IEnumerable<CodebookDto>>> GetByType(string type)
+    // GET: api/codebooks/entities
+    [HttpGet("entities")]
+    public async Task<ActionResult<IEnumerable<CodebookEntityDto>>> GetEntities()
+    {
+        var entities = await _context.CodebookEntities
+            .Where(e => e.IsActive)
+            .OrderBy(e => e.Name)
+            .Select(e => new CodebookEntityDto
+            {
+                Id = e.Id,
+                Name = e.Name,
+                Description = e.Description
+            })
+            .ToListAsync();
+
+        return Ok(entities);
+    }
+
+    // GET: api/codebooks/entity/{entityTypeId}
+    [HttpGet("entity/{entityTypeId}")]
+    public async Task<ActionResult<IEnumerable<CodebookDto>>> GetByEntityType(int entityTypeId)
     {
         var codebooks = await _context.Codebooks
-            .Where(c => c.Type == type && c.IsActive)
+            .Where(c => c.EntityTypeId == entityTypeId && c.IsActive)
             .OrderBy(c => c.OrderIndex)
             .ThenBy(c => c.Value)
             .Select(c => new CodebookDto
@@ -36,19 +54,31 @@ public class CodebooksController : ControllerBase
         return Ok(codebooks);
     }
 
-    // GET: api/codebooks/types
-    [HttpGet("types")]
-    public async Task<ActionResult<IEnumerable<string>>> GetTypes()
+    // GET: api/codebooks/entityname/{entityName}
+    [HttpGet("entityname/{entityName}")]
+    public async Task<ActionResult<IEnumerable<CodebookDto>>> GetByEntityName(string entityName)
     {
-        var types = await _context.Codebooks
-            .Where(c => c.IsActive)
-            .Select(c => c.Type)
-            .Distinct()
-            .OrderBy(t => t)
+        var codebooks = await _context.Codebooks
+            .Include(c => c.EntityType)
+            .Where(c => c.EntityType!.Name == entityName && c.IsActive && c.EntityType.IsActive)
+            .OrderBy(c => c.OrderIndex)
+            .ThenBy(c => c.Value)
+            .Select(c => new CodebookDto
+            {
+                Code = c.Code,
+                Value = c.Value
+            })
             .ToListAsync();
 
-        return Ok(types);
+        return Ok(codebooks);
     }
+}
+
+public class CodebookEntityDto
+{
+    public int Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string? Description { get; set; }
 }
 
 public class CodebookDto
