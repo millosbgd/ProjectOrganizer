@@ -138,14 +138,14 @@
           class="tab-button" 
           [class.active]="activeTab === 'aktivnosti'"
           (click)="setActiveTab('aktivnosti')">
-          📋 Aktivnosti ({{ aktivnosti.length }})
+          Aktivnosti
         </button>
         <button 
           class="tab-button" 
           [class.active]="activeTab === 'implementacija'"
           (click)="setActiveTab('implementacija')"
           *ngIf="projekat.implementationModelId">
-          ✅ Stavke implementacije ({{ implementationItems.length }})
+          Stavke implementacije
         </button>
       </div>
 
@@ -204,38 +204,35 @@
                 <th style="width: 140px; text-align: center;">Datum završetka</th>
                 <th style="width: 120px; text-align: center;">Klijent potvrdio</th>
                 <th style="width: 140px; text-align: center;">Datum potvrde</th>
+                <th style="width: 80px; text-align: center;">Akcije</th>
               </tr>
             </thead>
             <tbody>
               <tr *ngFor="let item of implementationItems">
                 <td>{{ item.implementationItemNaziv }}</td>
                 <td>
-                  <input 
-                    type="text" 
-                    [(ngModel)]="item.napomena" 
-                    (blur)="updateImplementationItem(item)"
-                    class="inline-input"
-                    placeholder="Dodaj napomenu...">
+                  <span class="text-preview">{{ item.napomena || '-' }}</span>
                 </td>
                 <td style="text-align: center;">
-                  <input 
-                    type="checkbox" 
-                    [(ngModel)]="item.zavrseno"
-                    (change)="toggleZavrseno(item)">
+                  <span *ngIf="item.zavrseno">✓</span>
+                  <span *ngIf="!item.zavrseno" class="text-muted">✗</span>
                 </td>
                 <td style="text-align: center;">
                   <span *ngIf="item.zavrsenoDatum">{{ item.zavrsenoDatum | date:'dd.MM.yyyy' }}</span>
                   <span *ngIf="!item.zavrsenoDatum" class="text-muted">-</span>
                 </td>
                 <td style="text-align: center;">
-                  <input 
-                    type="checkbox" 
-                    [(ngModel)]="item.klijentPotvrdio"
-                    (change)="toggleKlijentPotvrdio(item)">
+                  <span *ngIf="item.klijentPotvrdio">✓</span>
+                  <span *ngIf="!item.klijentPotvrdio" class="text-muted">✗</span>
                 </td>
                 <td style="text-align: center;">
                   <span *ngIf="item.klijentPotvrdioDatum">{{ item.klijentPotvrdioDatum | date:'dd.MM.yyyy' }}</span>
                   <span *ngIf="!item.klijentPotvrdioDatum" class="text-muted">-</span>
+                </td>
+                <td style="text-align: center;">
+                  <button class="btn-edit-small" (click)="openImplementationItemModal(item)" title="Izmeni">
+                    ✏️
+                  </button>
                 </td>
               </tr>
             </tbody>
@@ -364,3 +361,11 @@
   (save)="saveAktivnost($event)"
   (close)="closeAktivnostModal()">
 </app-aktivnost-modal>
+
+<!-- Implementation Item Modal -->
+<app-implementation-item-modal
+  [isOpen]="showImplementationItemModal"
+  [item]="currentImplementationItem"
+  (save)="saveImplementationItem($event)"
+  (close)="closeImplementationItemModal()">
+</app-implementation-item-modal>

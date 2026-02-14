@@ -149,6 +149,31 @@
   font-style: italic;
 }
 
+.text-preview {
+  color: #333;
+  font-size: 13px;
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.btn-edit-small {
+  background: none;
+  border: 1px solid #5dade2;
+  color: #5dade2;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.btn-edit-small:hover {
+  background-color: #5dade2;
+  color: white;
+}
+
 .form-group small {
   display: block;
   margin-top: 5px;

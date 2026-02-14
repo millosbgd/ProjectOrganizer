@@ -17,11 +17,12 @@ import { Note } from '../../models/note.model';
 import { ImplementationModel } from '../../models/implementation-model.model';
 import { ProjectImplementationItem } from '../../models/project-implementation-item.model';
 import { AktivnostModalComponent } from '../aktivnost-modal/aktivnost-modal.component';
+import { ImplementationItemModalComponent } from '../implementation-item-modal/implementation-item-modal.component';
 
 @Component({
   selector: 'app-projekat-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, AktivnostModalComponent],
+  imports: [CommonModule, FormsModule, RouterModule, AktivnostModalComponent, ImplementationItemModalComponent],
   templateUrl: './projekat-detail.component.html',
   styleUrls: ['./projekat-detail.component.css']
 })
@@ -59,6 +60,8 @@ export class ProjekatDetailComponent implements OnInit {
   };
   
   showAktivnostModal = false;
+  showImplementationItemModal = false;
+  currentImplementationItem: ProjectImplementationItem | null = null;
   openDropdownId: number | null = null;
   showDokumentiSidebar = false;
   showNotesSidebar = false;
@@ -158,10 +161,21 @@ export class ProjekatDetailComponent implements OnInit {
     });
   }
 
-  updateImplementationItem(item: ProjectImplementationItem): void {
+  openImplementationItemModal(item: ProjectImplementationItem): void {
+    // Create a copy of the item to allow canceling changes
+    this.currentImplementationItem = { ...item };
+    this.showImplementationItemModal = true;
+  }
+
+  closeImplementationItemModal(): void {
+    this.showImplementationItemModal = false;
+    this.currentImplementationItem = null;
+  }
+
+  saveImplementationItem(item: ProjectImplementationItem): void {
     this.implementationItemService.update(item.id, item).subscribe({
       next: () => {
-        alert('Stavka je uspešno ažurirana');
+        this.closeImplementationItemModal();
         this.loadImplementationItems(this.projekat.id);
       },
       error: (error) => {
@@ -169,16 +183,6 @@ export class ProjekatDetailComponent implements OnInit {
         alert('Greška pri ažuriranju stavke');
       }
     });
-  }
-
-  toggleZavrseno(item: ProjectImplementationItem): void {
-    item.zavrsenoDatum = item.zavrseno ? new Date() : undefined;
-    this.updateImplementationItem(item);
-  }
-
-  toggleKlijentPotvrdio(item: ProjectImplementationItem): void {
-    item.klijentPotvrdioDatum = item.klijentPotvrdio ? new Date() : undefined;
-    this.updateImplementationItem(item);
   }
 
   saveProjekat(): void {
