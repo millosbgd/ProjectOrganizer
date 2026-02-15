@@ -18,7 +18,7 @@ BEGIN
         CONSTRAINT [FK_ProjectImplementationItemCheckLists_CheckListItems] 
             FOREIGN KEY ([CheckListItemId]) 
             REFERENCES [dbo].[CheckListItems]([Id]) 
-            ON DELETE RESTRICT
+            ON DELETE NO ACTION
     );
     PRINT 'ProjectImplementationItemCheckLists table created.';
 END
