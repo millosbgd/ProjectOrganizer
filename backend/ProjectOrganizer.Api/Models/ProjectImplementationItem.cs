@@ -37,5 +37,7 @@ namespace ProjectOrganizer.Api.Models
 
         [ForeignKey("ImplementationItemId")]
         public ImplementationItem? ImplementationItem { get; set; }
+
+        public ICollection<ProjectImplementationItemCheckList> CheckLists { get; set; } = new List<ProjectImplementationItemCheckList>();
     }
 }

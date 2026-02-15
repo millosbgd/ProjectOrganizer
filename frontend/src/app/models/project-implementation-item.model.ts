@@ -9,4 +9,13 @@ export interface ProjectImplementationItem {
   zavrsenoDatum?: Date;
   klijentPotvrdio: boolean;
   klijentPotvrdioDatum?: Date;
+  checkLists?: ProjectImplementationCheckListItem[];
+}
+
+export interface ProjectImplementationCheckListItem {
+  id: number;
+  checkListItemId: number;
+  checkListItemOpis?: string;
+  zavrsen: boolean;
+  zavrsenDatum?: Date;
 }

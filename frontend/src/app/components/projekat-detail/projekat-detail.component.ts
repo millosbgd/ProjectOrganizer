@@ -162,9 +162,17 @@ export class ProjekatDetailComponent implements OnInit {
   }
 
   openImplementationItemModal(item: ProjectImplementationItem): void {
-    // Create a copy of the item to allow canceling changes
-    this.currentImplementationItem = { ...item };
-    this.showImplementationItemModal = true;
+    // Load full details including checklists
+    this.implementationItemService.getById(item.id).subscribe({
+      next: (fullItem) => {
+        this.currentImplementationItem = fullItem;
+        this.showImplementationItemModal = true;
+      },
+      error: (error) => {
+        console.error('Error loading implementation item details:', error);
+        alert('Greška pri učitavanju detalja stavke.');
+      }
+    });
   }
 
   closeImplementationItemModal(): void {

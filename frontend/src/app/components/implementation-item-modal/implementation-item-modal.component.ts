@@ -1,7 +1,8 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ProjectImplementationItem } from '../../models/project-implementation-item.model';
+import { ProjectImplementationItem, ProjectImplementationCheckListItem } from '../../models/project-implementation-item.model';
+import { ProjectImplementationItemService } from '../../services/project-implementation-item.service';
 
 @Component({
   selector: 'app-implementation-item-modal',
@@ -16,6 +17,8 @@ export class ImplementationItemModalComponent {
   @Output() save = new EventEmitter<ProjectImplementationItem>();
   @Output() close = new EventEmitter<void>();
 
+  constructor(private implementationItemService: ProjectImplementationItemService) {}
+
   get zavrsenoDateRequired(): boolean {
     return this.item?.zavrseno === true;
   }
@@ -24,10 +27,36 @@ export class ImplementationItemModalComponent {
     return this.item?.klijentPotvrdio === true;
   }
 
+  get allCheckListsCompleted(): boolean {
+    if (!this.item?.checkLists || this.item.checkLists.length === 0) {
+      return true; // No checklists means no restriction
+    }
+    return this.item.checkLists.every(cl => cl.zavrsen);
+  }
+
+  onCheckListToggle(checkListItem: ProjectImplementationCheckListItem): void {
+    if (!this.item) return;
+
+    const newStatus = !checkListItem.zavrsen;
+    this.implementationItemService.updateCheckList(this.item.id, checkListItem.id, newStatus).subscribe({
+      next: () => {
+        checkListItem.zavrsen = newStatus;
+        checkListItem.zavrsenDatum = newStatus ? new Date() : undefined;
+      },
+      error: (error) => {
+        console.error('Error updating checklist item:', error);
+        alert('Greška pri ažuriranju stavke čekliste');
+      }
+    });
+  }
+
   onZavrsenoChange(): void {
     if (this.item) {
       if (!this.item.zavrseno) {
         this.item.zavrsenoDatum = undefined;
+      } else if (!this.allCheckListsCompleted) {
+        this.item.zavrseno = false;
+        alert('Sve stavke čekliste moraju biti završene pre nego što označite stavku kao završenu.');
       }
     }
   }
@@ -36,6 +65,9 @@ export class ImplementationItemModalComponent {
     if (this.item) {
       if (!this.item.klijentPotvrdio) {
         this.item.klijentPotvrdioDatum = undefined;
+      } else if (!this.allCheckListsCompleted) {
+        this.item.klijentPotvrdio = false;
+        alert('Sve stavke čekliste moraju biti završene pre nego da klijent potvrdi.');
       }
     }
   }

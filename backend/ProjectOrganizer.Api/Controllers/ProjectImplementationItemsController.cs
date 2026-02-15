@@ -24,6 +24,8 @@ public class ProjectImplementationItemsController : ControllerBase
     {
         var items = await _context.ProjectImplementationItems
             .Include(pi => pi.ImplementationItem)
+            .Include(pi => pi.CheckLists)
+                .ThenInclude(cl => cl.CheckListItem)
             .Where(pi => pi.ProjectId == projectId)
             .OrderBy(pi => pi.Id)
             .Select(pi => new
@@ -37,11 +39,57 @@ public class ProjectImplementationItemsController : ControllerBase
                 pi.Zavrseno,
                 pi.ZavrsenoDatum,
                 pi.KlijentPotvrdio,
-                pi.KlijentPotvrdioDatum
+                pi.KlijentPotvrdioDatum,
+                CheckLists = pi.CheckLists.Select(cl => new
+                {
+                    cl.Id,
+                    cl.CheckListItemId,
+                    CheckListItemOpis = cl.CheckListItem != null ? cl.CheckListItem.Opis : null,
+                    cl.Zavrsen,
+                    cl.ZavrsenDatum
+                }).ToList()
             })
             .ToListAsync();
 
         return Ok(items);
+    }
+
+    // GET: api/ProjectImplementationItems/5
+    [HttpGet("{id}")]
+    public async Task<ActionResult<object>> GetById(int id)
+    {
+        var item = await _context.ProjectImplementationItems
+            .Include(pi => pi.ImplementationItem)
+            .Include(pi => pi.CheckLists)
+                .ThenInclude(cl => cl.CheckListItem)
+            .Where(pi => pi.Id == id)
+            .Select(pi => new
+            {
+                pi.Id,
+                pi.ProjectId,
+                pi.ImplementationModelId,
+                pi.ImplementationItemId,
+                ImplementationItemNaziv = pi.ImplementationItem != null ? pi.ImplementationItem.Naziv : null,
+                pi.Napomena,
+                pi.Zavrseno,
+                pi.ZavrsenoDatum,
+                pi.KlijentPotvrdio,
+                pi.KlijentPotvrdioDatum,
+                CheckLists = pi.CheckLists.Select(cl => new
+                {
+                    cl.Id,
+                    cl.CheckListItemId,
+                    CheckListItemOpis = cl.CheckListItem != null ? cl.CheckListItem.Opis : null,
+                    cl.Zavrsen,
+                    cl.ZavrsenDatum
+                }).ToList()
+            })
+            .FirstOrDefaultAsync();
+
+        if (item == null)
+            return NotFound();
+
+        return Ok(item);
     }
 
     // PUT: api/ProjectImplementationItems/5
@@ -51,15 +99,31 @@ public class ProjectImplementationItemsController : ControllerBase
         if (id != item.Id)
             return BadRequest();
 
-        var existingItem = await _context.ProjectImplementationItems.FindAsync(id);
+        var existingItem = await _context.ProjectImplementationItems
+            .Include(pi => pi.CheckLists)
+            .FirstOrDefaultAsync(pi => pi.Id == id);
+
         if (existingItem == null)
             return NotFound();
 
+        // Validate: Cannot mark as Zavrseno or KlijentPotvrdio if not all checklists are completed
+        if ((item.Zavrseno || item.KlijentPotvrdio) && existingItem.CheckLists.Any())
+        {
+            var allCheckListsCompleted = existingItem.CheckLists.All(cl => cl.Zavrsen);
+            if (!allCheckListsCompleted)
+            {
+                return BadRequest(new 
+                { 
+                    message = "Sve stavke čekliste moraju biti završene pre nego što označite stavku kao završenu ili potvrđenu." 
+                });
+            }
+        }
+
         existingItem.Napomena = item.Napomena;
         existingItem.Zavrseno = item.Zavrseno;
-        existingItem.ZavrsenoDatum = item.ZavrsenoDatum;
+        existingItem.ZavrsenoDatum = item.Zavrseno ? (item.ZavrsenoDatum ?? DateTime.UtcNow) : null;
         existingItem.KlijentPotvrdio = item.KlijentPotvrdio;
-        existingItem.KlijentPotvrdioDatum = item.KlijentPotvrdioDatum;
+        existingItem.KlijentPotvrdioDatum = item.KlijentPotvrdio ? (item.KlijentPotvrdioDatum ?? DateTime.UtcNow) : null;
 
         try
         {
@@ -74,4 +138,28 @@ public class ProjectImplementationItemsController : ControllerBase
 
         return NoContent();
     }
+
+    // PUT: api/ProjectImplementationItems/5/checklist/3
+    [HttpPut("{id}/checklist/{checklistId}")]
+    public async Task<IActionResult> UpdateCheckList(int id, int checklistId, [FromBody] UpdateCheckListDto dto)
+    {
+        var checkList = await _context.ProjectImplementationItemCheckLists
+            .FirstOrDefaultAsync(cl => cl.Id == checklistId && cl.ProjectImplementationItemId == id);
+
+        if (checkList == null)
+            return NotFound(new { message = "Stavka čekliste nije pronađena." });
+
+        checkList.Zavrsen = dto.Zavrsen;
+        checkList.ZavrsenDatum = dto.Zavrsen ? (dto.ZavrsenDatum ?? DateTime.UtcNow) : null;
+
+        await _context.SaveChangesAsync();
+
+        return NoContent();
+    }
+}
+
+public class UpdateCheckListDto
+{
+    public bool Zavrsen { get; set; }
+    public DateTime? ZavrsenDatum { get; set; }
 }

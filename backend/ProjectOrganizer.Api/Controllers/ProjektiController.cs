@@ -263,8 +263,10 @@ public class ProjektiController : ControllerBase
 
     private async Task CreateProjectImplementationItems(int projectId, int implementationModelId)
     {
-        // Get all items for the selected implementation model
+        // Get all items for the selected implementation model with their check lists
         var implementationItems = await _context.ImplementationItems
+            .Include(i => i.CheckListItems)
+                .ThenInclude(ic => ic.CheckListItem)
             .Where(i => i.ImplementationModelId == implementationModelId)
             .ToListAsync();
 
@@ -280,6 +282,19 @@ public class ProjektiController : ControllerBase
                 KlijentPotvrdio = false
             };
             _context.ProjectImplementationItems.Add(projectItem);
+            await _context.SaveChangesAsync(); // Save to get the Id
+
+            // Create check list items for this project implementation item
+            foreach (var checkListLink in item.CheckListItems)
+            {
+                var projectCheckList = new ProjectImplementationItemCheckList
+                {
+                    ProjectImplementationItemId = projectItem.Id,
+                    CheckListItemId = checkListLink.CheckListItemId,
+                    Zavrsen = false
+                };
+                _context.ProjectImplementationItemCheckLists.Add(projectCheckList);
+            }
         }
 
         await _context.SaveChangesAsync();

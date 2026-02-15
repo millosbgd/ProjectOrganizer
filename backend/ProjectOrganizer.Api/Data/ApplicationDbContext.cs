@@ -27,6 +27,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<ProjectImplementationItem> ProjectImplementationItems { get; set; }
     public DbSet<CheckListItem> CheckListItems { get; set; }
     public DbSet<ImplementationItemCheckListItem> ImplementationItemCheckListItems { get; set; }
+    public DbSet<ProjectImplementationItemCheckList> ProjectImplementationItemCheckLists { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -163,6 +164,24 @@ public class ApplicationDbContext : DbContext
             entity.HasOne(ic => ic.CheckListItem)
                 .WithMany()
                 .HasForeignKey(ic => ic.CheckListItemId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // ProjectImplementationItemCheckList configuration
+        modelBuilder.Entity<ProjectImplementationItemCheckList>(entity =>
+        {
+            entity.ToTable("ProjectImplementationItemCheckLists");
+            entity.HasIndex(e => e.ProjectImplementationItemId);
+            entity.HasIndex(e => e.CheckListItemId);
+
+            entity.HasOne(pic => pic.ProjectImplementationItem)
+                .WithMany(pi => pi.CheckLists)
+                .HasForeignKey(pic => pic.ProjectImplementationItemId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(pic => pic.CheckListItem)
+                .WithMany()
+                .HasForeignKey(pic => pic.CheckListItemId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
     }
