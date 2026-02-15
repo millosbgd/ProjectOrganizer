@@ -3,7 +3,7 @@
     <div class="modal-header">
       <div class="header-content">
         <span *ngIf="aktivnost.bau" class="bau-badge" title="Business As Usual - Aktivnost koja nije vezana za projekat">
-          🔄 BAU
+          BAU
         </span>
         <h3 *ngIf="!aktivnost.bau && aktivnost.projekatId != null && aktivnost.projekatId > 0">{{ getProjektNaziv() }}</h3>
       </div>
@@ -22,7 +22,7 @@
               name="bau" 
             />
             <span class="checkbox-text">
-              <span class="bau-icon">🔄</span> Business As Usual (BAU)
+              Business As Usual (BAU)
             </span>
           </label>
         </div>
