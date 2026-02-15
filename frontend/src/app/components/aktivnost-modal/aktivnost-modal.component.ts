@@ -73,7 +73,7 @@ export class AktivnostModalComponent implements OnChanges {
 
   loadProjekti(): void {
     // Load only user's projects (createdByMe=true)
-    this.projekatService.getAll(undefined, undefined, true).subscribe({
+    this.projekatService.getAll(true).subscribe({
       next: (data) => {
         this.projekti = data;
       },
