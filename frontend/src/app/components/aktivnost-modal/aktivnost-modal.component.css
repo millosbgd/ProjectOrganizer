@@ -76,7 +76,8 @@
 .checkbox-text {
   font-size: 15px;
   color: #555;
-  line-height: 18px; /* Match checkbox height for perfect alignment */
+  display: flex;
+  align-items: center;
 }
 
 .close-btn {
