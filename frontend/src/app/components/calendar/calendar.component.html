@@ -18,5 +18,6 @@
   [isOpen]="showAktivnostModal"
   [isProjectLocked]="false"
   (save)="saveAktivnost($event)"
-  (close)="closeAktivnostModal()">
+  (close)="closeAktivnostModal()"
+  (delete)="onAktivnostDeleted($event)">
 </app-aktivnost-modal>

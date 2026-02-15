@@ -309,6 +309,11 @@ export class ProjekatDetailComponent implements OnInit {
     this.showAktivnostModal = false;
   }
 
+  onAktivnostDeleted(id: number): void {
+    // Activity was deleted from modal, refresh the list
+    this.loadAktivnosti(this.projekat.id);
+  }
+
   toggleDropdown(aktivnostId: number): void {
     this.openDropdownId = this.openDropdownId === aktivnostId ? null : aktivnostId;
   }

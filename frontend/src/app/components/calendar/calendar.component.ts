@@ -267,6 +267,11 @@ export class CalendarComponent implements OnInit {
     };
   }
 
+  onAktivnostDeleted(id: number): void {
+    // Activity was deleted from modal, refresh the calendar
+    window.location.reload();
+  }
+
   getActivityColor(isBau: boolean): string {
     // BAU activities: olive-green (darker for better text contrast)
     // Project activities: darker blue (darker than header)

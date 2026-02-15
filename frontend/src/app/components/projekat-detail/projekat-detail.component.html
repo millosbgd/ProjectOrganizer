@@ -383,7 +383,8 @@
   [aktivnost]="currentAktivnost"
   [isProjectLocked]="true"
   (save)="saveAktivnost($event)"
-  (close)="closeAktivnostModal()">
+  (close)="closeAktivnostModal()"
+  (delete)="onAktivnostDeleted($event)">
 </app-aktivnost-modal>
 
 <!-- Implementation Item Modal -->

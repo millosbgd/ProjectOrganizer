@@ -36,6 +36,7 @@ export class AktivnostModalComponent implements OnChanges {
   @Input() isProjectLocked = false; // When true, projekatId cannot be changed
   @Output() save = new EventEmitter<Aktivnost>();
   @Output() close = new EventEmitter<void>();
+  @Output() delete = new EventEmitter<number>();
 
   projekti: Projekat[] = [];
   implementationItems: ProjectImplementationItem[] = [];
@@ -140,6 +141,31 @@ export class AktivnostModalComponent implements OnChanges {
 
   onClose(): void {
     this.close.emit();
+  }
+
+  onDelete(): void {
+    if (!this.aktivnost.id || this.aktivnost.id <= 0) {
+      return;
+    }
+
+    const confirmed = confirm('Da li ste sigurni da želite da obrišete aktivnost?');
+    if (!confirmed) {
+      return;
+    }
+
+    this.aktivnostService.delete(this.aktivnost.id).subscribe({
+      next: () => {
+        this.delete.emit(this.aktivnost.id);
+        this.onClose();
+      },
+      error: (error) => {
+        if (error.error && error.error.message) {
+          alert(error.error.message);
+        } else {
+          alert('Greška prilikom brisanja aktivnosti.');
+        }
+      }
+    });
   }
 
   onBackdropClick(event: MouseEvent): void {

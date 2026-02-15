@@ -131,6 +131,21 @@ public class AktivnostiController : ControllerBase
         if (aktivnost == null)
             return NotFound();
 
+        // Check if activity is linked to an implementation item
+        if (aktivnost.ProjectImplementationItemId.HasValue && aktivnost.ProjectImplementationItemId.Value > 0)
+        {
+            return BadRequest(new { message = "Ne možete obrisati aktivnost koja je vezana za stavku implementacije." });
+        }
+
+        // Check if activity has saved DevOps tasks
+        var hasTasks = await _context.DevOpsTasksCandidates
+            .AnyAsync(t => t.AktivnostId == id);
+        
+        if (hasTasks)
+        {
+            return BadRequest(new { message = "Ne možete obrisati aktivnost koja ima sačuvane DevOps taskove." });
+        }
+
         _context.Aktivnosti.Remove(aktivnost);
         await _context.SaveChangesAsync();
 
