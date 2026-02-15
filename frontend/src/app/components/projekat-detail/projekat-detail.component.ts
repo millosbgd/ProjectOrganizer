@@ -2,8 +2,6 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { DatePickerModule } from 'primeng/datepicker';
-import { DropdownModule } from 'primeng/dropdown';
 import { ProjekatService } from '../../services/projekat.service';
 import { KlijentService } from '../../services/klijent.service';
 import { AktivnostService } from '../../services/aktivnost.service';
@@ -24,7 +22,7 @@ import { ImplementationItemModalComponent } from '../implementation-item-modal/i
 @Component({
   selector: 'app-projekat-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, DatePickerModule, DropdownModule, AktivnostModalComponent, ImplementationItemModalComponent],
+  imports: [CommonModule, FormsModule, RouterModule, AktivnostModalComponent, ImplementationItemModalComponent],
   templateUrl: './projekat-detail.component.html',
   styleUrls: ['./projekat-detail.component.css']
 })
@@ -69,13 +67,6 @@ export class ProjekatDetailComponent implements OnInit {
   showNotesSidebar = false;
   currentNote: string = '';
   editingNoteId: number | null = null;
-
-  statusOptions = [
-    { label: 'U pripremi', value: 'U pripremi' },
-    { label: 'Aktivan', value: 'Aktivan' },
-    { label: 'Na čekanju', value: 'Na čekanju' },
-    { label: 'Završen', value: 'Završen' }
-  ];
 
   constructor(
     private projekatService: ProjekatService,

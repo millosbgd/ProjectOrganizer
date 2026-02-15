@@ -1,5 +1,4 @@
 /* Global Styles */
-@import 'primeicons/primeicons.css';
 
 * {
   box-sizing: border-box;
@@ -46,59 +45,4 @@ main {
   color: #fff;
   border-color: #e74c3c;
   background-color: #e74c3c;
-}
-
-/* PrimeNG Component Overrides */
-.p-dropdown {
-  width: 100%;
-}
-
-.p-datepicker {
-  width: 100%;
-}
-
-.p-dropdown .p-dropdown-trigger,
-.p-datepicker .p-datepicker-trigger {
-  background: transparent;
-}
-
-.p-dropdown-panel {
-  z-index: 9999 !important;
-  background-color: white !important;
-  border: 1px solid #ddd !important;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15) !important;
-}
-
-.p-datepicker-panel {
-  z-index: 9999 !important;
-  background-color: white !important;
-  border: 1px solid #ddd !important;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15) !important;
-  width: auto !important;
-  max-width: 320px !important;
-}
-
-/* Additional datepicker overlay styles */
-.p-datepicker-panel .p-datepicker {
-  width: auto !important;
-  max-width: 320px !important;
-}
-
-.p-datepicker-panel > div {
-  background-color: white !important;
-}
-
-/* Ensure PrimeNG inputs match form styling */
-.p-inputtext {
-  width: 100%;
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 5px;
-  font-size: 14px;
-}
-
-.p-inputtext:enabled:focus {
-  outline: 0;
-  border-color: #5dade2;
-  box-shadow: 0 0 0 0.2rem rgba(93, 173, 226, 0.25);
 }
