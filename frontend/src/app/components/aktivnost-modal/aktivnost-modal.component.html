@@ -70,7 +70,7 @@
         </div>
       </div>
 
-      <div class="form-group">
+      <div class="form-group" *ngIf="!aktivnost.bau">
         <label>Stavka implementacije:</label>
         <select [(ngModel)]="aktivnost.projectImplementationItemId" name="projectImplementationItemId">
           <option [ngValue]="null">- Nije povezano sa stavkom -</option>

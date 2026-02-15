@@ -86,6 +86,7 @@ export class AktivnostModalComponent implements OnChanges {
   onBauChange(): void {
     if (this.aktivnost.bau) {
       this.aktivnost.projekatId = null;
+      this.aktivnost.projectImplementationItemId = undefined;
       this.implementationItems = [];
     } else {
       this.aktivnost.projekatId = 0;
