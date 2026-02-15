@@ -2,8 +2,10 @@ import { Component, EventEmitter, Input, Output, ViewChild, ElementRef, OnChange
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Aktivnost } from '../../models/aktivnost.model';
+import { Projekat } from '../../models/projekat.model';
 import { ProjectImplementationItem } from '../../models/project-implementation-item.model';
 import { AktivnostService } from '../../services/aktivnost.service';
+import { ProjekatService } from '../../services/projekat.service';
 import { ProjectImplementationItemService } from '../../services/project-implementation-item.service';
 import { OcrService } from '../../services/ocr.service';
 import { ZapisnikModalComponent } from '../zapisnik-modal/zapisnik-modal.component';
@@ -27,12 +29,15 @@ export class AktivnostModalComponent implements OnChanges {
     datum: new Date(),
     status: 'Planirana',
     vrsta: 'Razvoj',
+    bau: false,
     projekatId: 0
   };
   @Input() isOpen = false;
+  @Input() isProjectLocked = false; // When true, projekatId cannot be changed
   @Output() save = new EventEmitter<Aktivnost>();
   @Output() close = new EventEmitter<void>();
 
+  projekti: Projekat[] = [];
   implementationItems: ProjectImplementationItem[] = [];
   zapisnik: string = '';
   isGeneratingZapisnik: boolean = false;
@@ -49,14 +54,56 @@ export class AktivnostModalComponent implements OnChanges {
 
   constructor(
     private aktivnostService: AktivnostService,
+    private projekatService: ProjekatService,
     private implementationItemService: ProjectImplementationItemService,
     private ocrService: OcrService
   ) {}
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['aktivnost'] && this.aktivnost.projekatId) {
+    if (changes['isOpen'] && this.isOpen) {
+      this.loadProjekti();
+      if (this.aktivnost.projekatId && this.aktivnost.projekatId > 0) {
+        this.loadImplementationItems();
+      }
+    }
+    if (changes['aktivnost'] && this.aktivnost.projekatId && this.aktivnost.projekatId > 0) {
       this.loadImplementationItems();
     }
+  }
+
+  loadProjekti(): void {
+    // Load only user's projects (createdByMe=true)
+    this.projekatService.getAll(undefined, undefined, true).subscribe({
+      next: (data) => {
+        this.projekti = data;
+      },
+      error: (error) => {
+        console.error('Error loading projects:', error);
+      }
+    });
+  }
+
+  onBauChange(): void {
+    if (this.aktivnost.bau) {
+      this.aktivnost.projekatId = -1;
+      this.implementationItems = [];
+    } else {
+      this.aktivnost.projekatId = 0;
+    }
+  }
+
+  onProjekatChange(): void {
+    if (this.aktivnost.projekatId && this.aktivnost.projekatId > 0) {
+      this.loadImplementationItems();
+    } else {
+      this.implementationItems = [];
+      this.aktivnost.projectImplementationItemId = undefined;
+    }
+  }
+
+  getProjektNaziv(): string {
+    const projekat = this.projekti.find(p => p.id === this.aktivnost.projekatId);
+    return projekat ? `${projekat.brojProjekta} - ${projekat.naziv}` : '';
   }
 
   loadImplementationItems(): void {

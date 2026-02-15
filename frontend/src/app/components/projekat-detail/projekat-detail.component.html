@@ -381,6 +381,7 @@
 <app-aktivnost-modal 
   [isOpen]="showAktivnostModal" 
   [aktivnost]="currentAktivnost"
+  [isProjectLocked]="true"
   (save)="saveAktivnost($event)"
   (close)="closeAktivnostModal()">
 </app-aktivnost-modal>

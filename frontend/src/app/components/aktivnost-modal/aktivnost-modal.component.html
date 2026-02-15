@@ -1,10 +1,48 @@
 <div class="modal-backdrop" *ngIf="isOpen" (click)="onBackdropClick($event)">
   <div class="modal-content">
     <div class="modal-header">
+      <div class="header-content">
+        <span *ngIf="aktivnost.bau" class="bau-badge" title="Business As Usual - Aktivnost koja nije vezana za projekat">
+          🔄 BAU
+        </span>
+        <h3 *ngIf="!aktivnost.bau && aktivnost.projekatId > 0">{{ getProjektNaziv() }}</h3>
+      </div>
       <button class="close-btn" (click)="onClose()">&times;</button>
     </div>
 
     <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input 
+              type="checkbox" 
+              [(ngModel)]="aktivnost.bau" 
+              (change)="onBauChange()"
+              [disabled]="isProjectLocked"
+              name="bau" 
+            />
+            <span class="checkbox-text">
+              <span class="bau-icon">🔄</span> Business As Usual (BAU)
+            </span>
+          </label>
+        </div>
+      </div>
+
+      <div class="form-group" *ngIf="!aktivnost.bau">
+        <label>Projekat: *</label>
+        <select 
+          [(ngModel)]="aktivnost.projekatId" 
+          (change)="onProjekatChange()"
+          [disabled]="isProjectLocked"
+          name="projekat" 
+          required>
+          <option [ngValue]="0">- Izaberite projekat -</option>
+          <option *ngFor="let projekat of projekti" [ngValue]="projekat.id">
+            {{ projekat.brojProjekta }} - {{ projekat.naziv }}
+          </option>
+        </select>
+      </div>
+
       <div class="form-row">
         <div class="form-group">
           <label>Datum:</label>

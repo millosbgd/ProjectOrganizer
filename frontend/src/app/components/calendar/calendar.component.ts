@@ -96,6 +96,7 @@ export class CalendarComponent implements OnInit {
     datum: new Date(),
     status: 'Planirana',
     vrsta: 'Razvoj',
+    bau: false,
     projekatId: 0
   };
 
@@ -205,7 +206,8 @@ export class CalendarComponent implements OnInit {
       endUtc: selectInfo.end.toISOString(),
       status: 'Planirana',
       vrsta: 'Razvoj',
-      projekatId: 0 // Will be set in modal if needed
+      bau: false, // Default to non-BAU
+      projekatId: 0 // Will be selected in modal
     };
     this.showAktivnostModal = true;
 
@@ -259,6 +261,7 @@ export class CalendarComponent implements OnInit {
       datum: new Date(),
       status: 'Planirana',
       vrsta: 'Razvoj',
+      bau: false,
       projekatId: 0
     };
   }

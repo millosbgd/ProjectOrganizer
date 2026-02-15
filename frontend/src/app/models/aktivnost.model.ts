@@ -7,6 +7,7 @@ export interface Aktivnost {
   endUtc?: string;
   status: string;
   vrsta: string;
+  bau?: boolean;
   projekatId: number;
   projectImplementationItemId?: number;
 }

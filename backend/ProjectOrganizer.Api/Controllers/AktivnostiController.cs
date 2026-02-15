@@ -64,9 +64,17 @@ public class AktivnostiController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<Aktivnost>> CreateAktivnost(Aktivnost aktivnost)
     {
-        // Check if Projekat exists
-        if (!await _context.Projekti.AnyAsync(p => p.Id == aktivnost.ProjekatId))
-            return BadRequest("Projekat ne postoji.");
+        // BAU activities use ProjekatId = -1
+        if (aktivnost.Bau)
+        {
+            aktivnost.ProjekatId = -1;
+        }
+        else
+        {
+            // Check if Projekat exists for non-BAU activities
+            if (!await _context.Projekti.AnyAsync(p => p.Id == aktivnost.ProjekatId))
+                return BadRequest("Projekat ne postoji.");
+        }
 
         // Get current user and set as creator
         var currentUser = await _userService.EnsureUserExistsAsync(User);

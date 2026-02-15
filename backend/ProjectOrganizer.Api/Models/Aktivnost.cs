@@ -29,6 +29,9 @@ public class Aktivnost
     [MaxLength(100)]
     public string Vrsta { get; set; } = string.Empty;
 
+    // BAU (Business As Usual) - not tied to a specific project
+    public bool Bau { get; set; } = false;
+
     [Required]
     public int ProjekatId { get; set; }
 
