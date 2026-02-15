@@ -21,7 +21,7 @@
         ></textarea>
       </div>
 
-      <div class="form-group" *ngIf="item?.checkLists && item.checkLists.length > 0">
+      <div class="form-group" *ngIf="item && item.checkLists && item.checkLists.length > 0">
         <label>Čeklista:</label>
         <div class="checklist-container">
           <table class="checklist-table">
@@ -41,7 +41,7 @@
                     (change)="onCheckListToggle(checkList)"
                   />
                 </td>
-                <td>{{ checkList.opis }}</td>
+                <td>{{ checkList.checkListItemOpis }}</td>
                 <td>
                   <span *ngIf="checkList.zavrsenDatum">
                     {{ checkList.zavrsenDatum | date: 'dd.MM.yyyy HH:mm' }}
