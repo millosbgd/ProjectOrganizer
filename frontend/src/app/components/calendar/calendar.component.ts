@@ -122,12 +122,13 @@ export class CalendarComponent implements OnInit {
           title: activity.title,
           start: activity.start,
           end: activity.end,
-          backgroundColor: this.getActivityColor(activity.type),
-          borderColor: this.getActivityColor(activity.type),
+          backgroundColor: this.getActivityColor(activity.bau),
+          borderColor: this.getActivityColor(activity.bau),
           extendedProps: {
             projectName: activity.projectName,
             projectId: activity.projectId,
-            type: activity.type
+            type: activity.type,
+            bau: activity.bau
           }
         }));
         successCallback(events);
@@ -266,15 +267,9 @@ export class CalendarComponent implements OnInit {
     };
   }
 
-  getActivityColor(type: string): string {
-    const colorMap: { [key: string]: string } = {
-      'Development': '#3498db',
-      'Meeting': '#e74c3c',
-      'Testing': '#2ecc71',
-      'Documentation': '#f39c12',
-      'Planning': '#9b59b6',
-      'Default': '#95a5a6'
-    };
-    return colorMap[type] || colorMap['Default'];
+  getActivityColor(isBau: boolean): string {
+    // BAU activities: light pastel green
+    // Project activities: darker blue (darker than header)
+    return isBau ? '#a8e6cf' : '#2980b9';
   }
 }

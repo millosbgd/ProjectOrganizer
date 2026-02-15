@@ -65,8 +65,9 @@ public class ActivitiesController : ControllerBase
                 Start = a.StartUtc!.Value,
                 End = a.EndUtc!.Value,
                 Type = a.Vrsta,
-                ProjectName = a.Projekat != null ? a.Projekat.Naziv : "Unknown",
-                ProjectId = a.ProjekatId
+                ProjectName = a.Projekat != null ? a.Projekat.Naziv : "BAU",
+                ProjectId = a.ProjekatId,
+                Bau = a.Bau
             })
             .ToListAsync();
 
@@ -137,6 +138,7 @@ public class CalendarActivityDto
     public string Type { get; set; } = string.Empty;
     public string ProjectName { get; set; } = string.Empty;
     public int? ProjectId { get; set; }
+    public bool Bau { get; set; }
 }
 
 /// <summary>
