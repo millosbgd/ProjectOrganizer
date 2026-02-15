@@ -5,7 +5,7 @@ export interface CalendarActivity {
   end: string; // ISO string (UTC)
   type: string;
   projectName: string;
-  projectId: number;
+  projectId: number | null;
 }
 
 export interface UpdateActivityTimeDto {

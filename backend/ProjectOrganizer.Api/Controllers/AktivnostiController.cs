@@ -64,15 +64,15 @@ public class AktivnostiController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<Aktivnost>> CreateAktivnost(Aktivnost aktivnost)
     {
-        // BAU activities use ProjekatId = -1
+        // BAU activities don't need a project
         if (aktivnost.Bau)
         {
-            aktivnost.ProjekatId = -1;
+            aktivnost.ProjekatId = null;
         }
         else
         {
             // Check if Projekat exists for non-BAU activities
-            if (!await _context.Projekti.AnyAsync(p => p.Id == aktivnost.ProjekatId))
+            if (aktivnost.ProjekatId == null || !await _context.Projekti.AnyAsync(p => p.Id == aktivnost.ProjekatId))
                 return BadRequest("Projekat ne postoji.");
         }
 

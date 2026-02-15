@@ -8,6 +8,6 @@ export interface Aktivnost {
   status: string;
   vrsta: string;
   bau?: boolean;
-  projekatId: number;
+  projekatId: number | null;
   projectImplementationItemId?: number;
 }

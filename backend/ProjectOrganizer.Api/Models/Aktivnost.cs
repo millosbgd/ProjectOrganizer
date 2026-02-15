@@ -32,8 +32,8 @@ public class Aktivnost
     // BAU (Business As Usual) - not tied to a specific project
     public bool Bau { get; set; } = false;
 
-    [Required]
-    public int ProjekatId { get; set; }
+    // Nullable for BAU activities - no project assignment
+    public int? ProjekatId { get; set; }
 
     public int? ProjectImplementationItemId { get; set; }
 
