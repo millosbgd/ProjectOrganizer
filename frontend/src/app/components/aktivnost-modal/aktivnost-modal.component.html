@@ -5,7 +5,7 @@
         <span *ngIf="aktivnost.bau" class="bau-badge" title="Business As Usual - Aktivnost koja nije vezana za projekat">
           🔄 BAU
         </span>
-        <h3 *ngIf="!aktivnost.bau && aktivnost.projekatId > 0">{{ getProjektNaziv() }}</h3>
+        <h3 *ngIf="!aktivnost.bau && aktivnost.projekatId != null && aktivnost.projekatId > 0">{{ getProjektNaziv() }}</h3>
       </div>
       <button class="close-btn" (click)="onClose()">&times;</button>
     </div>

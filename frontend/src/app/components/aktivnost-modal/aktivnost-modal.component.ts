@@ -107,6 +107,9 @@ export class AktivnostModalComponent implements OnChanges {
   }
 
   loadImplementationItems(): void {
+    if (this.aktivnost.projekatId == null || this.aktivnost.projekatId <= 0) {
+      return;
+    }
     this.implementationItemService.getByProjectId(this.aktivnost.projekatId).subscribe({
       next: (data) => {
         this.implementationItems = data;
