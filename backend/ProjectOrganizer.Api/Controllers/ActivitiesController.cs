@@ -103,9 +103,10 @@ public class ActivitiesController : ControllerBase
             return BadRequest(new { message = "Vreme završetka mora biti posle vremena početka." });
         }
 
-        // Update times
+        // Update times and date field
         activity.StartUtc = dto.StartUtc;
         activity.EndUtc = dto.EndUtc;
+        activity.Datum = dto.StartUtc; // Update Datum field based on activity start time
         activity.UpdatedAt = DateTime.UtcNow;
 
         try
