@@ -78,6 +78,16 @@ main {
   max-width: 320px !important;
 }
 
+/* Additional datepicker overlay styles */
+.p-datepicker-panel .p-datepicker {
+  width: auto !important;
+  max-width: 320px !important;
+}
+
+.p-datepicker-panel > div {
+  background-color: white !important;
+}
+
 /* Ensure PrimeNG inputs match form styling */
 .p-inputtext {
   width: 100%;
