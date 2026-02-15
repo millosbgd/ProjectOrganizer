@@ -131,6 +131,55 @@
             rows="4"
             maxlength="500"></textarea>
         </div>
+
+        <!-- Check Lists Section - Only for existing items -->
+        <div *ngIf="editingItem.id && editingItem.id > 0" class="checklist-section">
+          <div class="section-header">
+            <h4>Stavke čekliste</h4>
+            <button type="button" class="btn-icon-minimal" (click)="openCheckListSelection()" title="Dodaj stavke čekliste">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+            </button>
+          </div>
+
+          <div *ngIf="loadingCheckLists" class="loading-small">Učitavanje...</div>
+
+          <div *ngIf="!loadingCheckLists && (!editingItem.checkListItems || editingItem.checkListItems.length === 0)" class="no-items-small">
+            Nema stavki čekliste. Kliknite + da dodate stavke.
+          </div>
+
+          <div *ngIf="!loadingCheckLists && editingItem.checkListItems && editingItem.checkListItems.length > 0" class="checklist-table-container">
+            <table class="checklist-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Opis</th>
+                  <th class="actions-column-mini"></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let checkItem of editingItem.checkListItems; let i = index">
+                  <td>{{ i + 1 }}</td>
+                  <td>{{ checkItem.opis }}</td>
+                  <td class="actions-column-mini">
+                    <button type="button" class="btn-icon-delete" (click)="removeCheckListItem(checkItem.linkId)" title="Ukloni">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                      </svg>
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div *ngIf="!editingItem.id || editingItem.id === 0" class="info-message">
+          💡 Stavke čekliste će biti dostupne nakon što sačuvate stavku modela.
+        </div>
       </div>
 
       <div class="modal-footer">
@@ -139,6 +188,70 @@
         </button>
         <button type="button" class="btn-primary" (click)="saveItemFromModal()">
           Sačuvaj stavku
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal za izbor stavki čekliste -->
+  <div class="modal-overlay" *ngIf="showCheckListSelectionModal" (click)="cancelCheckListSelection()">
+    <div class="modal-content modal-wide" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Izbor stavki čekliste</h3>
+        <button type="button" class="btn-close" (click)="cancelCheckListSelection()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      
+      <div class="modal-body">
+        <p class="modal-description">Izaberite stavke koje želite da dodate na ovu stavku modela:</p>
+        
+        <div *ngIf="availableCheckListItems.length === 0" class="no-items">
+          Nema dostupnih stavki čekliste u šifarniku.
+        </div>
+
+        <div *ngIf="availableCheckListItems.length > 0" class="checklist-selection-container">
+          <table class="selection-table">
+            <thead>
+              <tr>
+                <th class="checkbox-column">
+                  <input type="checkbox" disabled title="Izaberite pojedinačno">
+                </th>
+                <th>#</th>
+                <th>Opis</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let item of availableCheckListItems; let i = index" 
+                  (click)="toggleCheckListSelection(item.id)"
+                  [class.selected]="isCheckListSelected(item.id)"
+                  class="selectable-row">
+                <td class="checkbox-column">
+                  <input type="checkbox" 
+                         [checked]="isCheckListSelected(item.id)"
+                         (click)="$event.stopPropagation(); toggleCheckListSelection(item.id)">
+                </td>
+                <td>{{ i + 1 }}</td>
+                <td>{{ item.opis }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div *ngIf="selectedCheckListIds.length > 0" class="selection-summary">
+          Izabrano: {{ selectedCheckListIds.length }} stavki
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" (click)="cancelCheckListSelection()">
+          Otkaži
+        </button>
+        <button type="button" class="btn-primary" (click)="saveCheckListSelection()" [disabled]="selectedCheckListIds.length === 0">
+          Dodaj izabrane ({{ selectedCheckListIds.length }})
         </button>
       </div>
     </div>

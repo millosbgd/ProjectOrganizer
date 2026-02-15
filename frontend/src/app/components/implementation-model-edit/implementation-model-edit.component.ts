@@ -4,6 +4,9 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ImplementationModelService } from '../../services/implementation-model.service';
 import { ImplementationModel, ImplementationItem } from '../../models/implementation-model.model';
+import { ImplementationItemService } from '../../services/implementation-item.service';
+import { CheckListItemService } from '../../services/checklist-item.service';
+import { CheckListItem } from '../../models/checklist-item.model';
 
 @Component({
   selector: 'app-implementation-model-edit',
@@ -24,13 +27,21 @@ export class ImplementationModelEditComponent implements OnInit {
   loading = false;
   saving = false;
   showItemModal = false;
-  editingItem: ImplementationItem = { id: 0, implementationModelId: 0, naziv: '', detalji: '' };
+  editingItem: ImplementationItem = { id: 0, implementationModelId: 0, naziv: '', detalji: '', checkListItems: [] };
   editingItemIndex: number | null = null;
+  
+  // Check list management
+  loadingCheckLists = false;
+  showCheckListSelectionModal = false;
+  availableCheckListItems: CheckListItem[] = [];
+  selectedCheckListIds: number[] = [];
 
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private implementationModelService: ImplementationModelService
+    private implementationModelService: ImplementationModelService,
+    private implementationItemService: ImplementationItemService,
+    private checkListItemService: CheckListItemService
   ) { }
 
   ngOnInit(): void {
@@ -61,7 +72,8 @@ export class ImplementationModelEditComponent implements OnInit {
       id: 0,
       implementationModelId: this.model.id,
       naziv: '',
-      detalji: ''
+      detalji: '',
+      checkListItems: []
     };
     this.editingItemIndex = null;
     this.showItemModal = true;
@@ -70,8 +82,110 @@ export class ImplementationModelEditComponent implements OnInit {
   editItem(index: number): void {
     this.editingItemIndex = index;
     // Create a copy to avoid direct editing
-    this.editingItem = { ...this.model.items[index] };
+    this.editingItem = { ...this.model.items[index], checkListItems: [] };
     this.showItemModal = true;
+    
+    // Load check list items if editing existing item
+    if (this.editingItem.id && this.editingItem.id > 0) {
+      this.loadCheckListsForItem(this.editingItem.id);
+    }
+  }
+
+  loadCheckListsForItem(itemId: number): void {
+    this.loadingCheckLists = true;
+    this.implementationItemService.getCheckLists(itemId).subscribe({
+      next: (checkLists) => {
+        this.editingItem.checkListItems = checkLists;
+        this.loadingCheckLists = false;
+      },
+      error: (error) => {
+        console.error('Error loading check lists:', error);
+        alert('Greška pri učitavanju čekliste');
+        this.loadingCheckLists = false;
+      }
+    });
+  }
+
+  openCheckListSelection(): void {
+    // Load all available check list items
+    this.checkListItemService.getAll().subscribe({
+      next: (items) => {
+        this.availableCheckListItems = items;
+        this.selectedCheckListIds = [];
+        this.showCheckListSelectionModal = true;
+      },
+      error: (error) => {
+        console.error('Error loading check list items:', error);
+        alert('Greška pri učitavanju dostupnih stavki čekliste');
+      }
+    });
+  }
+
+  toggleCheckListSelection(id: number): void {
+    const index = this.selectedCheckListIds.indexOf(id);
+    if (index > -1) {
+      this.selectedCheckListIds.splice(index, 1);
+    } else {
+      this.selectedCheckListIds.push(id);
+    }
+  }
+
+  isCheckListSelected(id: number): boolean {
+    return this.selectedCheckListIds.includes(id);
+  }
+
+  saveCheckListSelection(): void {
+    if (this.selectedCheckListIds.length === 0) {
+      alert('Molimo izaberite bar jednu stavku');
+      return;
+    }
+
+    if (!this.editingItem.id || this.editingItem.id === 0) {
+      alert('Molimo prvo sačuvajte stavku modela pre dodavanja čekliste');
+      this.showCheckListSelectionModal = false;
+      return;
+    }
+
+    this.implementationItemService.addCheckLists(this.editingItem.id, {
+      checkListItemIds: this.selectedCheckListIds
+    }).subscribe({
+      next: () => {
+        this.showCheckListSelectionModal = false;
+        this.selectedCheckListIds = [];
+        // Reload check lists
+        this.loadCheckListsForItem(this.editingItem.id!);
+      },
+      error: (error) => {
+        console.error('Error adding check lists:', error);
+        alert('Greška pri dodavanju stavki čekliste');
+      }
+    });
+  }
+
+  cancelCheckListSelection(): void {
+    this.showCheckListSelectionModal = false;
+    this.selectedCheckListIds = [];
+  }
+
+  removeCheckListItem(linkId: number | undefined): void {
+    if (!linkId || !this.editingItem.id) {
+      return;
+    }
+
+    if (!confirm('Da li ste sigurni da želite da uklonite ovu stavku čekliste?')) {
+      return;
+    }
+
+    this.implementationItemService.removeCheckList(this.editingItem.id, linkId).subscribe({
+      next: () => {
+        // Remove from local array
+        this.editingItem.checkListItems = this.editingItem.checkListItems?.filter(c => c.linkId !== linkId) || [];
+      },
+      error: (error) => {
+        console.error('Error removing check list item:', error);
+        alert('Greška pri uklanjanju stavke čekliste');
+      }
+    });
   }
 
   saveItemFromModal(): void {
@@ -93,7 +207,7 @@ export class ImplementationModelEditComponent implements OnInit {
 
   closeItemModal(): void {
     this.showItemModal = false;
-    this.editingItem = { id: 0, implementationModelId: 0, naziv: '', detalji: '' };
+    this.editingItem = { id: 0, implementationModelId: 0, naziv: '', detalji: '', checkListItems: [] };
     this.editingItemIndex = null;
   }
 

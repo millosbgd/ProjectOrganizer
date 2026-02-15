@@ -18,8 +18,10 @@ namespace ProjectOrganizer.Api.Models
         [MaxLength(500)]
         public string? Detalji { get; set; }
 
-        // Navigation property
+        // Navigation properties
         [ForeignKey("ImplementationModelId")]
         public ImplementationModel? ImplementationModel { get; set; }
+
+        public ICollection<ImplementationItemCheckListItem> CheckListItems { get; set; } = new List<ImplementationItemCheckListItem>();
     }
 }

@@ -268,3 +268,218 @@ textarea.form-control {
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+/* Check List Section Styles */
+.checklist-section {
+  margin-top: 25px;
+  padding-top: 25px;
+  border-top: 2px solid #eee;
+}
+
+.checklist-section h4 {
+  margin: 0;
+  color: #555;
+  font-size: 16px;
+}
+
+.loading-small {
+  text-align: center;
+  padding: 20px;
+  color: #999;
+  font-size: 13px;
+}
+
+.no-items-small {
+  text-align: center;
+  padding: 20px;
+  color: #999;
+  font-size: 13px;
+  font-style: italic;
+  background: #f8f9fa;
+  border-radius: 4px;
+}
+
+.checklist-table-container {
+  overflow-x: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  margin-top: 12px;
+}
+
+.checklist-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  font-size: 13px;
+}
+
+.checklist-table thead {
+  background: #f8f9fa;
+  border-bottom: 1px solid #ddd;
+}
+
+.checklist-table th {
+  padding: 8px 10px;
+  text-align: left;
+  font-weight: 600;
+  color: #333;
+  font-size: 12px;
+}
+
+.checklist-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid #eee;
+}
+
+.checklist-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.actions-column-mini {
+  width: 40px;
+  text-align: center;
+}
+
+.btn-icon-delete {
+  padding: 4px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #dc3545;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  border-radius: 3px;
+}
+
+.btn-icon-delete:hover {
+  background-color: #dc35451a;
+  color: #c82333;
+}
+
+.info-message {
+  padding: 15px;
+  background: #e7f3ff;
+  border: 1px solid #b3d9ff;
+  border-radius: 4px;
+  color: #004085;
+  font-size: 13px;
+  margin-top: 15px;
+}
+
+/* Check List Selection Modal */
+.modal-wide {
+  max-width: 700px;
+}
+
+.modal-description {
+  margin: 0 0 20px 0;
+  color: #666;
+  font-size: 14px;
+}
+
+.checklist-selection-container {
+  overflow-x: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.selection-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+}
+
+.selection-table thead {
+  background: #f8f9fa;
+  border-bottom: 2px solid #ddd;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.selection-table th {
+  padding: 12px;
+  text-align: left;
+  font-weight: 600;
+  color: #333;
+  font-size: 14px;
+}
+
+.selection-table td {
+  padding: 12px;
+  border-bottom: 1px solid #eee;
+  font-size: 14px;
+}
+
+.selection-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.selectable-row {
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.selectable-row:hover {
+  background-color: #f0f8ff;
+}
+
+.selectable-row.selected {
+  background-color: #e7f3ff;
+}
+
+.checkbox-column {
+  width: 50px;
+  text-align: center;
+}
+
+.checkbox-column input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.selection-summary {
+  margin-top: 15px;
+  padding: 10px 15px;
+  background: #e7f3ff;
+  border: 1px solid #b3d9ff;
+  border-radius: 4px;
+  color: #004085;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.btn-icon-minimal {
+  padding: 6px;
+  background: none;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  cursor: pointer;
+  color: #5dade2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.btn-icon-minimal:hover {
+  background-color: #5dade21a;
+  border-color: #5dade2;
+  color: #3498db;
+}
+
+.btn-icon-minimal.danger {
+  color: #dc3545;
+  border-color: #ddd;
+}
+
+.btn-icon-minimal.danger:hover {
+  background-color: #dc35451a;
+  border-color: #dc3545;
+  color: #c82333;
+}

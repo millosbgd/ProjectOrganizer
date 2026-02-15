@@ -25,6 +25,8 @@ public class ApplicationDbContext : DbContext
     public DbSet<ImplementationModel> ImplementationModels { get; set; }
     public DbSet<ImplementationItem> ImplementationItems { get; set; }
     public DbSet<ProjectImplementationItem> ProjectImplementationItems { get; set; }
+    public DbSet<CheckListItem> CheckListItems { get; set; }
+    public DbSet<ImplementationItemCheckListItem> ImplementationItemCheckListItems { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -137,6 +139,30 @@ public class ApplicationDbContext : DbContext
             entity.HasOne(pi => pi.ImplementationItem)
                 .WithMany()
                 .HasForeignKey(pi => pi.ImplementationItemId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // CheckListItem configuration
+        modelBuilder.Entity<CheckListItem>(entity =>
+        {
+            entity.ToTable("CheckListItems");
+        });
+
+        // ImplementationItemCheckListItem configuration
+        modelBuilder.Entity<ImplementationItemCheckListItem>(entity =>
+        {
+            entity.ToTable("ImplementationItemCheckListItems");
+            entity.HasIndex(e => e.ImplementationItemId);
+            entity.HasIndex(e => e.CheckListItemId);
+
+            entity.HasOne(ic => ic.ImplementationItem)
+                .WithMany(i => i.CheckListItems)
+                .HasForeignKey(ic => ic.ImplementationItemId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(ic => ic.CheckListItem)
+                .WithMany()
+                .HasForeignKey(ic => ic.CheckListItemId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
     }
