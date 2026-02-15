@@ -1,12 +1,15 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FullCalendarModule } from '@fullcalendar/angular';
-import { CalendarOptions, EventInput, EventChangeArg } from '@fullcalendar/core';
+import { CalendarOptions, EventInput, EventChangeArg, EventClickArg } from '@fullcalendar/core';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import { CalendarService } from '../../services/calendar.service';
 import { CalendarActivity } from '../../models/calendar-activity.model';
+import { AktivnostService } from '../../services/aktivnost.service';
+import { Aktivnost } from '../../models/aktivnost.model';
+import { AktivnostModalComponent } from '../aktivnost-modal/aktivnost-modal.component';
 
 // Custom Serbian Latin locale configuration
 const serbianLatinLocale = {
@@ -44,7 +47,7 @@ const serbianLatinLocale = {
 @Component({
   selector: 'app-calendar',
   standalone: true,
-  imports: [CommonModule, FullCalendarModule],
+  imports: [CommonModule, FullCalendarModule, AktivnostModalComponent],
   templateUrl: './calendar.component.html',
   styleUrls: ['./calendar.component.css']
 })
@@ -66,6 +69,7 @@ export class CalendarComponent implements OnInit {
     eventChange: this.handleEventChange.bind(this),
     eventDrop: this.handleEventChange.bind(this),
     eventResize: this.handleEventChange.bind(this),
+    eventClick: this.handleEventClick.bind(this),
     datesSet: this.handleDatesSet.bind(this),
     eventTimeFormat: {
       hour: '2-digit',
@@ -83,8 +87,21 @@ export class CalendarComponent implements OnInit {
 
   loading = false;
   error: string | null = null;
+  showAktivnostModal = false;
+  currentAktivnost: Aktivnost = {
+    id: 0,
+    opis: '',
+    detalji: '',
+    datum: new Date(),
+    status: 'Planirana',
+    vrsta: 'Razvoj',
+    projekatId: 0
+  };
 
-  constructor(private calendarService: CalendarService) {}
+  constructor(
+    private calendarService: CalendarService,
+    private aktivnostService: AktivnostService
+  ) {}
 
   ngOnInit(): void {
     // Initial load will be triggered by datesSet
@@ -94,7 +111,6 @@ export class CalendarComponent implements OnInit {
     const from = fetchInfo.start.toISOString();
     const to = fetchInfo.end.toISOString();
 
-    this.loading = true;
     this.error = null;
 
     this.calendarService.getActivities(from, to).subscribe({
@@ -108,17 +124,16 @@ export class CalendarComponent implements OnInit {
           borderColor: this.getActivityColor(activity.type),
           extendedProps: {
             projectName: activity.projectName,
+            projectId: activity.projectId,
             type: activity.type
           }
         }));
         successCallback(events);
-        this.loading = false;
       },
       error: (err: any) => {
         console.error('Error loading activities:', err);
         this.error = 'Greška pri učitavanju aktivnosti';
         failureCallback(err);
-        this.loading = false;
       }
     });
   }
@@ -157,6 +172,58 @@ export class CalendarComponent implements OnInit {
   handleDatesSet(dateInfo: any): void {
     // This is called when the user navigates to a different date range
     // Events will be automatically refetched via loadEvents
+  }
+
+  handleEventClick(clickInfo: EventClickArg): void {
+    const activityId = parseInt(clickInfo.event.id);
+    
+    // Load full activity details
+    this.aktivnostService.getById(activityId).subscribe({
+      next: (activity: Aktivnost) => {
+        this.currentAktivnost = { ...activity };
+        this.showAktivnostModal = true;
+      },
+      error: (err: any) => {
+        console.error('Error loading activity:', err);
+        this.error = 'Greška pri učitavanju aktivnosti';
+        setTimeout(() => {
+          this.error = null;
+        }, 5000);
+      }
+    });
+  }
+
+  saveAktivnost(aktivnost: Aktivnost): void {
+    if (aktivnost.id) {
+      // Update existing
+      this.aktivnostService.update(aktivnost.id, aktivnost).subscribe({
+        next: () => {
+          this.closeAktivnostModal();
+          // Refresh calendar events
+          window.location.reload();
+        },
+        error: (error) => {
+          console.error('Error updating activity:', error);
+          this.error = 'Greška pri ažuriranju aktivnosti';
+          setTimeout(() => {
+            this.error = null;
+          }, 5000);
+        }
+      });
+    }
+  }
+
+  closeAktivnostModal(): void {
+    this.showAktivnostModal = false;
+    this.currentAktivnost = {
+      id: 0,
+      opis: '',
+      detalji: '',
+      datum: new Date(),
+      status: 'Planirana',
+      vrsta: 'Razvoj',
+      projekatId: 0
+    };
   }
 
   getActivityColor(type: string): string {

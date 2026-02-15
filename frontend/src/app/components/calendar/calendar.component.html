@@ -2,8 +2,6 @@
   <div class="header">
     <h2>Kalendar aktivnosti</h2>
   </div>
-
-  <div *ngIf="loading" class="loading">Učitavanje aktivnosti...</div>
   
   <div *ngIf="error" class="error-message">
     {{ error }}
@@ -13,3 +11,11 @@
     <full-calendar [options]="calendarOptions()"></full-calendar>
   </div>
 </div>
+
+<!-- Activity Edit Modal -->
+<app-aktivnost-modal
+  [aktivnost]="currentAktivnost"
+  [isOpen]="showAktivnostModal"
+  (save)="saveAktivnost($event)"
+  (close)="closeAktivnostModal()">
+</app-aktivnost-modal>
