@@ -5,9 +5,41 @@ import { CalendarOptions, EventInput, EventChangeArg } from '@fullcalendar/core'
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
-import hrLocale from '@fullcalendar/core/locales/hr';
 import { CalendarService } from '../../services/calendar.service';
 import { CalendarActivity } from '../../models/calendar-activity.model';
+
+// Custom Serbian Latin locale configuration
+const serbianLatinLocale = {
+  code: 'sr-latn',
+  week: {
+    dow: 1, // Monday is the first day of the week
+    doy: 4  // First week of the year contains Jan 4th
+  },
+  buttonText: {
+    prev: 'Prethodni',
+    next: 'Sledeći',
+    today: 'Danas',
+    month: 'Mesec',
+    week: 'Nedelja',
+    day: 'Dan',
+    list: 'Lista'
+  },
+  weekText: 'Ned',
+  allDayText: 'Ceo dan',
+  moreLinkText: (n: number) => '+ još ' + n,
+  noEventsText: 'Nema aktivnosti za prikaz',
+  buttonHints: {
+    prev: 'Prethodni $0',
+    next: 'Sledeći $0',
+    today: 'Današnji $0'
+  },
+  viewHint: '$0 pregled',
+  navLinkHint: 'Idi na $0',
+  moreLinkHint: (eventCnt: number) => `Prikaži još ${eventCnt} događaj${eventCnt !== 1 ? 'a' : ''}`,
+  closeHint: 'Zatvori',
+  timeHint: 'Vreme',
+  eventHint: 'Događaj'
+};
 
 @Component({
   selector: 'app-calendar',
@@ -46,7 +78,7 @@ export class CalendarComponent implements OnInit {
       hour12: false
     },
     firstDay: 1, // Monday
-    locale: hrLocale
+    locale: serbianLatinLocale
   });
 
   loading = false;
