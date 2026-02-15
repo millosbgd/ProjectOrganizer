@@ -1,7 +1,7 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FullCalendarModule } from '@fullcalendar/angular';
-import { CalendarOptions, EventInput, EventChangeArg, EventClickArg } from '@fullcalendar/core';
+import { CalendarOptions, EventInput, EventChangeArg, EventClickArg, DateSelectArg } from '@fullcalendar/core';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
@@ -70,6 +70,7 @@ export class CalendarComponent implements OnInit {
     eventDrop: this.handleEventChange.bind(this),
     eventResize: this.handleEventChange.bind(this),
     eventClick: this.handleEventClick.bind(this),
+    select: this.handleDateSelect.bind(this),
     datesSet: this.handleDatesSet.bind(this),
     eventTimeFormat: {
       hour: '2-digit',
@@ -193,6 +194,26 @@ export class CalendarComponent implements OnInit {
     });
   }
 
+  handleDateSelect(selectInfo: DateSelectArg): void {
+    // Open modal to create new activity with selected date/time
+    this.currentAktivnost = {
+      id: 0,
+      opis: '',
+      detalji: '',
+      datum: selectInfo.start,
+      startUtc: selectInfo.start.toISOString(),
+      endUtc: selectInfo.end.toISOString(),
+      status: 'Planirana',
+      vrsta: 'Razvoj',
+      projekatId: 0 // Will be set in modal if needed
+    };
+    this.showAktivnostModal = true;
+
+    // Clear the selection
+    const calendarApi = selectInfo.view.calendar;
+    calendarApi.unselect();
+  }
+
   saveAktivnost(aktivnost: Aktivnost): void {
     if (aktivnost.id) {
       // Update existing
@@ -205,6 +226,22 @@ export class CalendarComponent implements OnInit {
         error: (error) => {
           console.error('Error updating activity:', error);
           this.error = 'Greška pri ažuriranju aktivnosti';
+          setTimeout(() => {
+            this.error = null;
+          }, 5000);
+        }
+      });
+    } else {
+      // Create new
+      this.aktivnostService.create(aktivnost).subscribe({
+        next: () => {
+          this.closeAktivnostModal();
+          // Refresh calendar events
+          window.location.reload();
+        },
+        error: (error) => {
+          console.error('Error creating activity:', error);
+          this.error = 'Greška pri kreiranju aktivnosti';
           setTimeout(() => {
             this.error = null;
           }, 5000);

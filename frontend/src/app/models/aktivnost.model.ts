@@ -3,6 +3,8 @@ export interface Aktivnost {
   opis: string;
   detalji: string;
   datum: Date;
+  startUtc?: string;
+  endUtc?: string;
   status: string;
   vrsta: string;
   projekatId: number;
