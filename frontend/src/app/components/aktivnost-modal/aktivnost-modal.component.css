@@ -152,15 +152,19 @@
 
 .modal-footer {
   display: flex;
-  justify-content: flex-end;
-  gap: 10px;
+  justify-content: space-between;
+  align-items: center;
   padding: 20px;
   border-top: 1px solid #e0e0e0;
 }
 
+.modal-footer-actions {
+  display: flex;
+  gap: 10px;
+}
+
 .btn-primary,
-.btn-secondary,
-.btn-danger {
+.btn-secondary {
   padding: 10px 20px;
   border: none;
   border-radius: 5px;
@@ -186,15 +190,6 @@
 
 .btn-secondary:hover {
   background-color: #d5dbdb;
-}
-
-.btn-danger {
-  background-color: #e74c3c;
-  color: white;
-}
-
-.btn-danger:hover {
-  background-color: #c0392b;
 }
 
 .detalji-header {
