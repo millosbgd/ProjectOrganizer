@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { CalendarModule } from 'primeng/calendar';
+import { DatePickerModule } from 'primeng/datepicker';
 import { DropdownModule } from 'primeng/dropdown';
 import { ProjekatService } from '../../services/projekat.service';
 import { KlijentService } from '../../services/klijent.service';
@@ -24,7 +24,7 @@ import { ImplementationItemModalComponent } from '../implementation-item-modal/i
 @Component({
   selector: 'app-projekat-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, CalendarModule, DropdownModule, AktivnostModalComponent, ImplementationItemModalComponent],
+  imports: [CommonModule, FormsModule, RouterModule, DatePickerModule, DropdownModule, AktivnostModalComponent, ImplementationItemModalComponent],
   templateUrl: './projekat-detail.component.html',
   styleUrls: ['./projekat-detail.component.css']
 })

@@ -53,12 +53,12 @@ main {
   width: 100%;
 }
 
-.p-calendar {
+.p-datepicker {
   width: 100%;
 }
 
 .p-dropdown .p-dropdown-trigger,
-.p-calendar .p-datepicker-trigger {
+.p-datepicker .p-datepicker-trigger {
   background: transparent;
 }
 
@@ -69,7 +69,7 @@ main {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15) !important;
 }
 
-.p-datepicker {
+.p-datepicker-panel {
   z-index: 9999 !important;
   background-color: white !important;
   border: 1px solid #ddd !important;
