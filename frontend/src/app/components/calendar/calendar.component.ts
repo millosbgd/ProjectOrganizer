@@ -268,8 +268,8 @@ export class CalendarComponent implements OnInit {
   }
 
   getActivityColor(isBau: boolean): string {
-    // BAU activities: light pastel green
+    // BAU activities: olive-green (darker for better text contrast)
     // Project activities: darker blue (darker than header)
-    return isBau ? '#a8e6cf' : '#2980b9';
+    return isBau ? '#7cb342' : '#2980b9';
   }
 }
