@@ -64,10 +64,16 @@ main {
 
 .p-dropdown-panel {
   z-index: 9999 !important;
+  background-color: white !important;
+  border: 1px solid #ddd !important;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15) !important;
 }
 
 .p-datepicker {
   z-index: 9999 !important;
+  background-color: white !important;
+  border: 1px solid #ddd !important;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15) !important;
 }
 
 /* Ensure PrimeNG inputs match form styling */
