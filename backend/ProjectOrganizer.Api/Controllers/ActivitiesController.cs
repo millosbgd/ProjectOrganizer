@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ProjectOrganizer.Api.Data;
 using ProjectOrganizer.Api.Models;
+using ProjectOrganizer.Api.Services;
 using System.Security.Claims;
 
 namespace ProjectOrganizer.Api.Controllers;
@@ -14,13 +15,16 @@ public class ActivitiesController : ControllerBase
 {
     private readonly ApplicationDbContext _context;
     private readonly ILogger<ActivitiesController> _logger;
+    private readonly UserService _userService;
 
     public ActivitiesController(
         ApplicationDbContext context,
-        ILogger<ActivitiesController> logger)
+        ILogger<ActivitiesController> logger,
+        UserService userService)
     {
         _context = context;
         _logger = logger;
+        _userService = userService;
     }
 
     /// <summary>
@@ -43,11 +47,16 @@ public class ActivitiesController : ControllerBase
             return BadRequest("Invalid date format. Use ISO format (UTC).");
         }
 
-        // Query activities that overlap with the requested range
-        // (StartUtc < to && EndUtc > from)
+        // Get current user
+        var currentUser = await _userService.EnsureUserExistsAsync(User);
+
+        // Query activities that overlap with the requested range and belong to the current user
+        // (StartUtc < to && EndUtc > from && CreatedBy == currentUserId)
         var activities = await _context.Aktivnosti
             .Include(a => a.Projekat)
-            .Where(a => a.StartUtc.HasValue && a.EndUtc.HasValue && a.StartUtc < toDate && a.EndUtc > fromDate)
+            .Where(a => a.StartUtc.HasValue && a.EndUtc.HasValue 
+                && a.StartUtc < toDate && a.EndUtc > fromDate
+                && a.CreatedBy == currentUser.Id)
             .OrderBy(a => a.StartUtc)
             .Select(a => new CalendarActivityDto
             {
@@ -72,11 +81,20 @@ public class ActivitiesController : ControllerBase
     [HttpPatch("{id}/time")]
     public async Task<IActionResult> UpdateActivityTime(int id, [FromBody] UpdateActivityTimeDto dto)
     {
+        // Get current user
+        var currentUser = await _userService.EnsureUserExistsAsync(User);
+
         var activity = await _context.Aktivnosti.FindAsync(id);
         
         if (activity == null)
         {
             return NotFound(new { message = "Aktivnost nije pronađena." });
+        }
+
+        // Check if user owns this activity
+        if (activity.CreatedBy != currentUser.Id)
+        {
+            return Forbid();
         }
 
         // Validate that end is after start

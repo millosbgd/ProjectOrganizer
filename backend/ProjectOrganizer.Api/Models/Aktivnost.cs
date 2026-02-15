@@ -34,6 +34,9 @@ public class Aktivnost
 
     public int? ProjectImplementationItemId { get; set; }
 
+    // User who created this activity
+    public int? CreatedBy { get; set; }
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
@@ -43,4 +46,7 @@ public class Aktivnost
 
     [ForeignKey("ProjectImplementationItemId")]
     public ProjectImplementationItem? ProjectImplementationItem { get; set; }
+
+    [ForeignKey("CreatedBy")]
+    public User? CreatedByUser { get; set; }
 }

@@ -16,15 +16,18 @@ public class AktivnostiController : ControllerBase
     private readonly ApplicationDbContext _context;
     private readonly ILogger<AktivnostiController> _logger;
     private readonly OpenAIService _openAIService;
+    private readonly UserService _userService;
 
     public AktivnostiController(
         ApplicationDbContext context, 
         ILogger<AktivnostiController> logger,
-        OpenAIService openAIService)
+        OpenAIService openAIService,
+        UserService userService)
     {
         _context = context;
         _logger = logger;
         _openAIService = openAIService;
+        _userService = userService;
     }
 
     // GET: api/Aktivnosti
@@ -64,6 +67,10 @@ public class AktivnostiController : ControllerBase
         // Check if Projekat exists
         if (!await _context.Projekti.AnyAsync(p => p.Id == aktivnost.ProjekatId))
             return BadRequest("Projekat ne postoji.");
+
+        // Get current user and set as creator
+        var currentUser = await _userService.EnsureUserExistsAsync(User);
+        aktivnost.CreatedBy = currentUser.Id;
 
         aktivnost.CreatedAt = DateTime.UtcNow;
         aktivnost.UpdatedAt = DateTime.UtcNow;

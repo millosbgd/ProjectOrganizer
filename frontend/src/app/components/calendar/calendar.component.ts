@@ -5,6 +5,7 @@ import { CalendarOptions, EventInput, EventChangeArg } from '@fullcalendar/core'
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
+import hrLocale from '@fullcalendar/core/locales/hr';
 import { CalendarService } from '../../services/calendar.service';
 import { CalendarActivity } from '../../models/calendar-activity.model';
 
@@ -45,7 +46,7 @@ export class CalendarComponent implements OnInit {
       hour12: false
     },
     firstDay: 1, // Monday
-    locale: 'sr'
+    locale: hrLocale
   });
 
   loading = false;
