@@ -32,17 +32,25 @@
 
         <div class="form-group">
           <label>Datum:</label>
-          <input type="date" [(ngModel)]="projekat.datum" name="datum" required />
+          <p-calendar 
+            [(ngModel)]="projekat.datum" 
+            name="datum" 
+            dateFormat="dd.mm.yy"
+            [showIcon]="true"
+            [required]="true">
+          </p-calendar>
         </div>
 
         <div class="form-group">
           <label>Status:</label>
-          <select [(ngModel)]="projekat.status" name="status">
-            <option value="U pripremi">U pripremi</option>
-            <option value="Aktivan">Aktivan</option>
-            <option value="Na čekanju">Na čekanju</option>
-            <option value="Završen">Završen</option>
-          </select>
+          <p-dropdown 
+            [(ngModel)]="projekat.status" 
+            name="status"
+            [options]="statusOptions"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Izaberite status">
+          </p-dropdown>
         </div>
 
         <div class="form-group">

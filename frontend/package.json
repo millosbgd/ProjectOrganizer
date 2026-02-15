@@ -19,6 +19,9 @@
     "@angular/platform-browser-dynamic": "^18.2.0",
     "@angular/router": "^18.2.0",
     "@auth0/auth0-angular": "^2.3.0",
+    "@primeng/themes": "^21.0.4",
+    "primeicons": "^7.0.0",
+    "primeng": "^18.0.0",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
     "zone.js": "~0.14.10"
