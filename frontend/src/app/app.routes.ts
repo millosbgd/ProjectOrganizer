@@ -8,6 +8,7 @@ import { SettingsComponent } from './components/settings/settings.component';
 import { AdminUsersComponent } from './components/admin-users/admin-users.component';
 import { ImplementationModelsListComponent } from './components/implementation-models-list/implementation-models-list.component';
 import { ImplementationModelEditComponent } from './components/implementation-model-edit/implementation-model-edit.component';
+import { CalendarComponent } from './components/calendar/calendar.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/projekti', pathMatch: 'full' },
@@ -29,6 +30,11 @@ export const routes: Routes = [
   { 
     path: 'klijenti/:id', 
     component: KlijentDetailComponent,
+    canActivate: [AuthGuard]
+  },
+  { 
+    path: 'kalendar', 
+    component: CalendarComponent,
     canActivate: [AuthGuard]
   },
   { 

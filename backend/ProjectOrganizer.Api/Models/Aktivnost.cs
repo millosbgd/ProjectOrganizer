@@ -17,6 +17,10 @@ public class Aktivnost
     [Required]
     public DateTime Datum { get; set; }
 
+    // Calendar support - UTC timestamps
+    public DateTime? StartUtc { get; set; }
+    public DateTime? EndUtc { get; set; }
+
     [Required]
     [MaxLength(50)]
     public string Status { get; set; } = string.Empty;
