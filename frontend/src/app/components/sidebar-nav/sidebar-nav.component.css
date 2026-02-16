@@ -28,18 +28,19 @@
   background: transparent;
   border: none;
   border-bottom: 1px solid #e0e0e0;
-  color: #00a1ff;
+  color: #333333;
   cursor: pointer;
   transition: background 0.2s ease;
 }
 
 .toggle-btn:hover {
   background: rgba(0, 161, 255, 0.05);
+  color: #00a1ff;
 }
 
 .toggle-btn .material-icons {
   font-size: 24px;
-  color: #00a1ff;
+  color: inherit;
 }
 
 /* Navigation */
@@ -75,7 +76,7 @@
   align-items: center;
   gap: 16px;
   padding: 16px 20px;
-  color: #00a1ff;
+  color: #333333;
   text-decoration: none;
   font-size: 15px;
   font-weight: 400;
@@ -88,7 +89,7 @@
 
 .nav-item .material-icons {
   font-size: 24px;
-  color: #00a1ff;
+  color: #333333;
   min-width: 24px;
   transition: transform 0.2s ease;
 }
@@ -114,10 +115,12 @@
 .nav-item:hover {
   background: rgba(0, 161, 255, 0.05);
   border-right-color: #00a1ff;
+  color: #00a1ff;
 }
 
 .nav-item:hover .material-icons {
   transform: scale(1.1);
+  color: #00a1ff;
 }
 
 /* Active State */
