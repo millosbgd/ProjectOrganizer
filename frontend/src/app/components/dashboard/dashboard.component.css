@@ -1,0 +1,307 @@
+.dashboard-container {
+  padding: 20px;
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.header h2 {
+  margin: 0;
+  color: #333;
+  font-size: 28px;
+  font-weight: 600;
+}
+
+.header-actions {
+  display: flex;
+  gap: 12px;
+}
+
+/* Loading State */
+.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px;
+  color: #666;
+}
+
+.loading .spinner {
+  font-size: 48px;
+  animation: spin 1s linear infinite;
+  margin-bottom: 16px;
+  color: #3B82F6;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading p {
+  font-size: 16px;
+  margin: 0;
+}
+
+/* Error State */
+.error-message {
+  text-align: center;
+  padding: 40px;
+  color: #EF4444;
+}
+
+.error-message .material-icons {
+  font-size: 64px;
+  margin-bottom: 16px;
+}
+
+.error-message p {
+  margin-bottom: 20px;
+  font-size: 16px;
+}
+
+/* Dashboard Content */
+.dashboard-content {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Metrics Row - Big Cards */
+.metrics-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.metric-card {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.metric-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+.metric-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.metric-icon .material-icons {
+  font-size: 32px;
+  color: white;
+}
+
+.metric-card.blue .metric-icon {
+  background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+}
+
+.metric-card.red .metric-icon {
+  background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+}
+
+.metric-content {
+  flex: 1;
+}
+
+.metric-value {
+  font-size: 36px;
+  font-weight: 700;
+  color: #1F2937;
+  line-height: 1.2;
+}
+
+.metric-label {
+  font-size: 14px;
+  color: #6B7280;
+  margin-top: 4px;
+  font-weight: 500;
+}
+
+/* Charts Grid */
+.charts-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+}
+
+.chart-card {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.chart-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+.chart-card h3 {
+  margin: 0 0 20px 0;
+  color: #1F2937;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.chart-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 300px;
+}
+
+.no-data {
+  text-align: center;
+  padding: 60px 20px;
+  color: #9CA3AF;
+  font-size: 14px;
+  min-height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Button Styles */
+.btn-primary {
+  background-color: #3B82F6;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.btn-primary:hover {
+  background-color: #2563EB;
+}
+
+.btn-primary:disabled {
+  background-color: #9CA3AF;
+  cursor: not-allowed;
+}
+
+.btn-icon-minimal {
+  background: transparent;
+  border: 1px solid #E5E7EB;
+  color: #6B7280;
+  padding: 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.btn-icon-minimal:hover:not(:disabled) {
+  background-color: #F3F4F6;
+  border-color: #3B82F6;
+  color: #3B82F6;
+}
+
+.btn-icon-minimal:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-icon-minimal .material-icons {
+  font-size: 20px;
+}
+
+/* Responsive Design */
+
+/* Tablet landscape - 3 kolone za metrike, 1 za grafikone */
+@media (max-width: 1200px) {
+  .metrics-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .charts-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Tablet portrait */
+@media (max-width: 768px) {
+  .dashboard-container {
+    padding: 16px;
+  }
+
+  .header h2 {
+    font-size: 24px;
+  }
+
+  .metrics-row {
+    grid-template-columns: 1fr;
+  }
+
+  .metric-card {
+    padding: 20px;
+  }
+
+  .metric-value {
+    font-size: 28px;
+  }
+
+  .chart-card {
+    padding: 16px;
+  }
+
+  .chart-card h3 {
+    font-size: 16px;
+  }
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+  .dashboard-container {
+    padding: 12px;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .metric-icon {
+    width: 48px;
+    height: 48px;
+  }
+
+  .metric-icon .material-icons {
+    font-size: 24px;
+  }
+
+  .metric-value {
+    font-size: 24px;
+  }
+
+  .metric-label {
+    font-size: 12px;
+  }
+}

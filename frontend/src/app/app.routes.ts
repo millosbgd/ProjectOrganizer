@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { AuthGuard } from '@auth0/auth0-angular';
+import { DashboardComponent } from './components/dashboard/dashboard.component';
 import { ProjektiListComponent } from './components/projekti-list/projekti-list.component';
 import { ProjekatDetailComponent } from './components/projekat-detail/projekat-detail.component';
 import { KlijentiListComponent } from './components/klijenti-list/klijenti-list.component';
@@ -11,7 +12,12 @@ import { ImplementationModelEditComponent } from './components/implementation-mo
 import { CalendarComponent } from './components/calendar/calendar.component';
 
 export const routes: Routes = [
-  { path: '', redirectTo: '/projekti', pathMatch: 'full' },
+  { path: '', redirectTo: '/dashboard', pathMatch: 'full' },
+  { 
+    path: 'dashboard', 
+    component: DashboardComponent,
+    canActivate: [AuthGuard]
+  },
   { 
     path: 'projekti', 
     component: ProjektiListComponent,
