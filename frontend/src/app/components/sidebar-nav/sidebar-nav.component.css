@@ -1,0 +1,164 @@
+.sidebar {
+  position: fixed;
+  top: 50px; /* Height of header */
+  left: 0;
+  height: calc(100vh - 50px);
+  width: 250px;
+  background-color: #ffffff;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+  border-right: 1px solid #e0e0e0;
+  transition: width 0.3s ease-in-out;
+  z-index: 900;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar.collapsed {
+  width: 70px;
+}
+
+/* Toggle Button */
+.toggle-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 60px;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid #e0e0e0;
+  color: #1464e6;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.toggle-btn:hover {
+  background: rgba(20, 100, 230, 0.05);
+}
+
+.toggle-btn .material-icons {
+  font-size: 24px;
+  color: #1464e6;
+}
+
+/* Navigation */
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  padding: 20px 0;
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* Scrollbar styling */
+.sidebar-nav::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar-nav::-webkit-scrollbar-track {
+  background: #f5f5f5;
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb {
+  background: #c0c0c0;
+  border-radius: 3px;
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb:hover {
+  background: #a0a0a0;
+}
+
+/* Nav Items */
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  color: #1464e6;
+  text-decoration: none;
+  font-size: 15px;
+  font-weight: 400;
+  font-family: 'Roboto', sans-serif;
+  transition: all 0.2s ease;
+  position: relative;
+  white-space: nowrap;
+  border-right: 3px solid transparent;
+}
+
+.nav-item .material-icons {
+  font-size: 24px;
+  color: #1464e6;
+  min-width: 24px;
+  transition: transform 0.2s ease;
+}
+
+.nav-item .nav-text {
+  opacity: 1;
+  transition: opacity 0.2s ease;
+  flex: 1;
+}
+
+.sidebar.collapsed .nav-item {
+  justify-content: center;
+  padding: 16px 0;
+}
+
+.sidebar.collapsed .nav-text {
+  opacity: 0;
+  width: 0;
+  overflow: hidden;
+}
+
+/* Hover Effect */
+.nav-item:hover {
+  background: rgba(20, 100, 230, 0.05);
+  border-right-color: #1464e6;
+}
+
+.nav-item:hover .material-icons {
+  transform: scale(1.1);
+}
+
+/* Active State */
+.nav-item.active {
+  background: rgba(20, 100, 230, 0.1);
+  border-right-color: #1464e6;
+  font-weight: 500;
+  color: #0d4db5;
+}
+
+.nav-item.active .material-icons {
+  color: #0d4db5;
+  filter: drop-shadow(0 0 4px rgba(20, 100, 230, 0.3));
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .sidebar {
+    width: 70px;
+    top: 50px;
+  }
+  
+  .sidebar.collapsed {
+    width: 0;
+  }
+  
+  .nav-text {
+    display: none;
+  }
+}
+
+/* Animation for smooth transitions */
+@keyframes slideIn {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.sidebar {
+  animation: slideIn 0.3s ease-out;
+}

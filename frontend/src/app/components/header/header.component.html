@@ -2,20 +2,14 @@
   <div class="header-container">
     <div class="header-left">
       <h1 routerLink="/"><span class="highlight">P</span>roject <span class="highlight">O</span>rganizer</h1>
-      <nav *ngIf="auth.isAuthenticated$ | async">
-        <a routerLink="/projekti" routerLinkActive="active">Projekti</a>
-        <a routerLink="/klijenti" routerLinkActive="active">Klijenti</a>
-        <a routerLink="/kalendar" routerLinkActive="active">Kalendar</a>
-        <a routerLink="/implementation-models" routerLinkActive="active">Modeli Implementacije</a>
-        <a routerLink="/admin/users" routerLinkActive="active">Korisnici</a>
-        <a routerLink="/settings" routerLinkActive="active">Podešavanja</a>
-      </nav>
     </div>
     
     <div class="header-right">
       <div *ngIf="auth.isAuthenticated$ | async; else loggedOut">
         <span class="user-name">{{ (auth.user$ | async)?.name }}</span>
-        <button class="btn-logout" (click)="logout()">Odjavi se</button>
+        <button class="btn-logout" (click)="logout()" title="Odjavi se">
+          <span class="material-icons">logout</span>
+        </button>
       </div>
       <ng-template #loggedOut>
         <button class="btn-login" (click)="login()">Prijavi se</button>

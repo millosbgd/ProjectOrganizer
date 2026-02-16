@@ -1,65 +1,40 @@
 .header {
-  background: linear-gradient(135deg, #5dade2 0%, #3498db 100%);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  background: #ffffff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  border-bottom: 3px solid #1464e6;
   position: sticky;
   top: 0;
   z-index: 1000;
 }
 
 .header-container {
-  max-width: 1400px;
+  max-width: 100%;
   margin: 0 auto;
-  padding: 0 20px;
+  padding: 0 30px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  height: 60px;
+  height: 50px;
 }
 
 .header-left {
   display: flex;
   align-items: center;
-  gap: 40px;
 }
 
 .header-left h1 {
   margin: 0;
-  font-size: 22px;
-  color: white;
+  font-size: 20px;
+  color: #1464e6;
   font-weight: 300;
   cursor: pointer;
   letter-spacing: 0.5px;
+  font-family: 'Roboto', sans-serif;
 }
 
 .header-left h1 .highlight {
-  color: #1a5490;
+  color: #1464e6;
   font-weight: 700;
-}
-
-nav {
-  display: flex;
-  gap: 25px;
-}
-
-nav a {
-  color: rgba(255, 255, 255, 0.9);
-  text-decoration: none;
-  font-size: 15px;
-  font-weight: 400;
-  padding: 8px 15px;
-  border-radius: 5px;
-  transition: all 0.3s;
-}
-
-nav a:hover {
-  background: rgba(255, 255, 255, 0.15);
-  color: white;
-}
-
-nav a.active {
-  background: rgba(255, 255, 255, 0.2);
-  color: white;
-  font-weight: 500;
 }
 
 .header-right {
@@ -68,25 +43,59 @@ nav a.active {
   gap: 15px;
 }
 
-.user-name {
-  color: white;
-  font-size: 14px;
-  margin-right: 10px;
+.header-right > div {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
-.btn-login, .btn-logout {
-  background: rgba(255, 255, 255, 0.2);
+.user-name {
+  color: #333333;
+  font-size: 14px;
+  font-family: 'Roboto', sans-serif;
+  font-weight: 400;
+}
+
+.btn-login {
+  background: #1464e6;
   color: white;
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  border: none;
   padding: 8px 20px;
   border-radius: 5px;
   cursor: pointer;
   font-size: 14px;
   font-weight: 400;
+  font-family: 'Roboto', sans-serif;
   transition: all 0.3s;
 }
 
-.btn-login:hover, .btn-logout:hover {
-  background: rgba(255, 255, 255, 0.3);
-  border-color: rgba(255, 255, 255, 0.5);
+.btn-login:hover {
+  background: #0d4db5;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(20, 100, 230, 0.3);
+}
+
+.btn-logout {
+  background: transparent;
+  color: #1464e6;
+  border: none;
+  padding: 8px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  width: 36px;
+  height: 36px;
+}
+
+.btn-logout:hover {
+  background: rgba(20, 100, 230, 0.1);
+  transform: scale(1.1);
+}
+
+.btn-logout .material-icons {
+  font-size: 20px;
+  color: #1464e6;
 }
