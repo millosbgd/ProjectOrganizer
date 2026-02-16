@@ -19,15 +19,12 @@
     <div class="model-card" *ngFor="let model of models">
       <div class="card-header">
         <h3>{{ model.naziv }}</h3>
-        <span class="badge" [class.active]="model.aktivan" [class.inactive]="!model.aktivan">
-          {{ model.aktivan ? 'Aktivan' : 'Neaktivan' }}
-        </span>
+        <div class="status-checkbox" [class.checked]="model.aktivan" [title]="model.aktivan ? 'Aktivan' : 'Neaktivan'">
+          <span class="material-icons">{{ model.aktivan ? 'check_box' : 'check_box_outline_blank' }}</span>
+        </div>
       </div>
       <div class="card-body">
         <p *ngIf="model.opis" class="opis">{{ model.opis }}</p>
-        <p class="items-count">
-          <strong>Stavke:</strong> {{ model.items.length || 0 }}
-        </p>
       </div>
       <div class="card-actions">
         <button class="btn-icon-minimal" [routerLink]="['/implementation-models', model.id]" title="Izmeni">
