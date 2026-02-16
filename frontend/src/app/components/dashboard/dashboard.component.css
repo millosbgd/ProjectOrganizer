@@ -141,7 +141,7 @@
 /* Charts Grid */
 .charts-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 24px;
 }
 
@@ -151,6 +151,8 @@
   padding: 24px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   transition: transform 0.2s, box-shadow 0.2s;
+  overflow: hidden;
+  min-width: 0;
 }
 
 .chart-card:hover {
@@ -169,6 +171,23 @@
   justify-content: center;
   align-items: center;
   min-height: 300px;
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+/* Force ngx-charts to use full width */
+.chart-wrapper ::ng-deep ngx-charts-pie-chart,
+.chart-wrapper ::ng-deep ngx-charts-bar-vertical,
+.chart-wrapper ::ng-deep ngx-charts-bar-horizontal,
+.chart-wrapper ::ng-deep ngx-charts-line-chart {
+  width: 100% !important;
+  height: 300px !important;
+}
+
+.chart-wrapper ::ng-deep .ngx-charts {
+  width: 100% !important;
+  height: 300px !important;
 }
 
 .no-data {

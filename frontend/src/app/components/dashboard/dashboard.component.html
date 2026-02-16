@@ -55,7 +55,6 @@
         <h3>Projekti po Statusu</h3>
         <div class="chart-wrapper" *ngIf="projectsByStatusData.length > 0">
           <ngx-charts-pie-chart
-            [view]="view"
             [results]="projectsByStatusData"
             [gradient]="gradient"
             [legend]="showLegend"
@@ -75,7 +74,6 @@
         <h3>Aktivnosti po Mesecima (Poslednjih 6 Meseci)</h3>
         <div class="chart-wrapper" *ngIf="activitiesByMonthData.length > 0 && activitiesByMonthData[0].series.length > 0">
           <ngx-charts-bar-vertical
-            [view]="view"
             [results]="activitiesByMonthData[0].series"
             [gradient]="gradient"
             [xAxis]="showXAxis"
@@ -99,7 +97,6 @@
         <h3>Aktivnosti po Statusu</h3>
         <div class="chart-wrapper" *ngIf="activitiesByStatusData.length > 0">
           <ngx-charts-bar-horizontal
-            [view]="view"
             [results]="activitiesByStatusData"
             [gradient]="gradient"
             [xAxis]="showXAxis"
@@ -123,7 +120,6 @@
         <h3>Novi Projekti (Trend za Poslednjih 12 Meseci)</h3>
         <div class="chart-wrapper" *ngIf="newProjectsByMonthData.length > 0 && newProjectsByMonthData[0].series.length > 0">
           <ngx-charts-line-chart
-            [view]="view"
             [results]="newProjectsByMonthData"
             [gradient]="gradient"
             [xAxis]="showXAxis"
