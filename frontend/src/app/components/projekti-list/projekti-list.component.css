@@ -145,23 +145,22 @@
   min-width: 0;
 }
 
-.badge {
-  padding: 4px 12px;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: 500;
-  white-space: nowrap;
+.status-checkbox {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
+  cursor: help;
 }
 
-.badge.active {
-  background-color: #d4edda;
-  color: #155724;
+.status-checkbox .material-icons {
+  font-size: 24px;
+  color: #999999;
+  transition: color 0.2s ease;
 }
 
-.badge.inactive {
-  background-color: #f8d7da;
-  color: #721c24;
+.status-checkbox.checked .material-icons {
+  color: #00a1ff;
 }
 
 .card-body {

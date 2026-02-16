@@ -36,9 +36,9 @@
     <div class="projekat-card" *ngFor="let projekat of projekti" [routerLink]="['/projekti', projekat.id]">
       <div class="card-header">
         <h3>{{ projekat.naziv }}</h3>
-        <span class="badge" [class.active]="projekat.aktivan" [class.inactive]="!projekat.aktivan">
-          {{ projekat.aktivan ? 'Aktivan' : 'Neaktivan' }}
-        </span>
+        <div class="status-checkbox" [class.checked]="projekat.aktivan" [title]="projekat.aktivan ? 'Aktivan' : 'Neaktivan'">
+          <span class="material-icons">{{ projekat.aktivan ? 'check_box' : 'check_box_outline_blank' }}</span>
+        </div>
       </div>
       <div class="card-body">
         <p><strong>Broj:</strong> {{ projekat.brojProjekta }}</p>
