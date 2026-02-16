@@ -1,7 +1,7 @@
 .header {
   background: #ffffff;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  border-bottom: 3px solid #1464e6;
+  border-bottom: 3px solid #00a1ff;
   position: sticky;
   top: 0;
   z-index: 1000;
@@ -25,7 +25,7 @@
 .header-left h1 {
   margin: 0;
   font-size: 20px;
-  color: #1464e6;
+  color: #00a1ff;
   font-weight: 300;
   cursor: pointer;
   letter-spacing: 0.5px;
@@ -33,7 +33,7 @@
 }
 
 .header-left h1 .highlight {
-  color: #1464e6;
+  color: #00a1ff;
   font-weight: 700;
 }
 
@@ -57,7 +57,7 @@
 }
 
 .btn-login {
-  background: #1464e6;
+  background: #00a1ff;
   color: white;
   border: none;
   padding: 8px 20px;
@@ -70,14 +70,14 @@
 }
 
 .btn-login:hover {
-  background: #0d4db5;
+  background: #0080cc;
   transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(20, 100, 230, 0.3);
+  box-shadow: 0 2px 8px rgba(0, 161, 255, 0.3);
 }
 
 .btn-logout {
   background: transparent;
-  color: #1464e6;
+  color: #00a1ff;
   border: none;
   padding: 8px;
   border-radius: 50%;
@@ -91,11 +91,11 @@
 }
 
 .btn-logout:hover {
-  background: rgba(20, 100, 230, 0.1);
+  background: rgba(0, 161, 255, 0.1);
   transform: scale(1.1);
 }
 
 .btn-logout .material-icons {
   font-size: 20px;
-  color: #1464e6;
+  color: #00a1ff;
 }

@@ -28,18 +28,18 @@
   background: transparent;
   border: none;
   border-bottom: 1px solid #e0e0e0;
-  color: #1464e6;
+  color: #00a1ff;
   cursor: pointer;
   transition: background 0.2s ease;
 }
 
 .toggle-btn:hover {
-  background: rgba(20, 100, 230, 0.05);
+  background: rgba(0, 161, 255, 0.05);
 }
 
 .toggle-btn .material-icons {
   font-size: 24px;
-  color: #1464e6;
+  color: #00a1ff;
 }
 
 /* Navigation */
@@ -75,7 +75,7 @@
   align-items: center;
   gap: 16px;
   padding: 16px 20px;
-  color: #1464e6;
+  color: #00a1ff;
   text-decoration: none;
   font-size: 15px;
   font-weight: 400;
@@ -88,7 +88,7 @@
 
 .nav-item .material-icons {
   font-size: 24px;
-  color: #1464e6;
+  color: #00a1ff;
   min-width: 24px;
   transition: transform 0.2s ease;
 }
@@ -112,8 +112,8 @@
 
 /* Hover Effect */
 .nav-item:hover {
-  background: rgba(20, 100, 230, 0.05);
-  border-right-color: #1464e6;
+  background: rgba(0, 161, 255, 0.05);
+  border-right-color: #00a1ff;
 }
 
 .nav-item:hover .material-icons {
@@ -122,15 +122,15 @@
 
 /* Active State */
 .nav-item.active {
-  background: rgba(20, 100, 230, 0.1);
-  border-right-color: #1464e6;
+  background: rgba(0, 161, 255, 0.1);
+  border-right-color: #00a1ff;
   font-weight: 500;
-  color: #0d4db5;
+  color: #0080cc;
 }
 
 .nav-item.active .material-icons {
-  color: #0d4db5;
-  filter: drop-shadow(0 0 4px rgba(20, 100, 230, 0.3));
+  color: #0080cc;
+  filter: drop-shadow(0 0 4px rgba(0, 161, 255, 0.3));
 }
 
 /* Responsive Design */

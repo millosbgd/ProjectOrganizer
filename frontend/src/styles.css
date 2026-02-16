@@ -15,7 +15,7 @@ body {
 /* Common Icon Button Styles */
 .btn-icon-minimal {
   background-color: transparent;
-  color: #1464e6;
+  color: #00a1ff;
   border: 1px solid #e0e0e0;
   width: 36px;
   height: 36px;
@@ -28,9 +28,9 @@ body {
 }
 
 .btn-icon-minimal:hover {
-  color: #0d4db5;
-  border-color: #1464e6;
-  background-color: rgba(20, 100, 230, 0.05);
+  color: #0080cc;
+  border-color: #00a1ff;
+  background-color: rgba(0, 161, 255, 0.05);
 }
 
 .btn-icon-minimal.danger {

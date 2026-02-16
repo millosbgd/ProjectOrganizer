@@ -8,10 +8,11 @@ Promena navigacije aplikacije sa horizontalnog top bar-a na **collapsable sideba
 ## 🎨 Dizajn Specifikacije
 
 ### Primarna Boja
-- **Plava**: `#1464e6`
+- **Plava**: `#00a1ff` (svetlo plava)
 - **Bela**: `#ffffff`
-- **Hover pozadinа**: `rgba(255, 255, 255, 0.1)` ili svetlo siva `#f5f5f5` (border)
-- **Border boja**: `#1464e6`
+- **Hover pozadinа**: `rgba(0, 161, 255, 0.05)` ili svetlo siva
+- **Border boja**: `#00a1ff`
+- **Active/Hover tamnija**: `#0080cc`
 
 ### Fontovi
 - **Google Fonts**: Roboto ili Inter (za moderan izgled)
@@ -34,7 +35,7 @@ Promena navigacije aplikacije sa horizontalnog top bar-a na **collapsable sideba
      - Logo ili naziv aplikacije (opciono, levo)
      - Ime korisnika (desno)
      - Logout ikonica (desno)
-   - **Border**: Donji border u boji `#1464e6` (npr. 2-3px)
+   - **Border**: Donji border u boji `#00a1ff` (3px)
 
 ### 3. **Modifikacija: `app.component`**
    - **Layout**: Treba prilagoditi da uključi sidebar pored main content-a
@@ -46,7 +47,7 @@ Promena navigacije aplikacije sa horizontalnog top bar-a na **collapsable sideba
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│  HEADER (bela traka, donji border #1464e6)             │
+│  HEADER (bela traka, donji border #00a1ff)             │
 │  [Logo?]                    [Ime korisnika] [Logout 🚪] │
 └─────────────────────────────────────────────────────────┘
 ┌─────────────────────┬───────────────────────────────────┐
@@ -127,8 +128,8 @@ Isti linkovi kao trenutno:
 3. ✅ Implementiraj collapsible logiku
 4. ✅ Stilizuj CSS:
    - Pozicioniranje (fixed, levo)
-   - Boja pozadine `#1464e6`
-   - Beli tekst i ikone
+   - Bela pozadina (#ffffff)
+   - Plavi tekst i ikone (#00a1ff)
    - Hover efekti
    - Animacije za collapse/expand
    - Width: expanded (npr. 250px), collapsed (npr. 70px)
@@ -140,8 +141,8 @@ Isti linkovi kao trenutno:
    - Ime korisnika
    - Logout ikonu (umesto dugmeta)
 3. ✅ Stilizuj kao tanku belu traku
-4. ✅ Dodaj donji border `#1464e6` (2-3px solid)
-5. ✅ Podesi visinu (npr. 50px umesto 60px)
+4. ✅ Dodaj donji border `#00a1ff` (3px solid)
+5. ✅ Podesi visinu (50px)
 
 ### **Faza 4: Layout Integracija**
 1. ✅ Modifikuj `app.component.html` da include novi sidebar
