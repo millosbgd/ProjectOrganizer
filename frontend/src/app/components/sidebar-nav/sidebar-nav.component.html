@@ -1,7 +1,7 @@
 <aside class="sidebar" [class.collapsed]="isCollapsed" *ngIf="auth.isAuthenticated$ | async">
   <!-- Toggle Button -->
   <button class="toggle-btn" (click)="toggleSidebar()" [attr.aria-label]="isCollapsed ? 'Proširi meni' : 'Skupi meni'">
-    <span class="material-icons">{{ isCollapsed ? 'menu' : 'close' }}</span>
+    <span class="material-icons">{{ isCollapsed ? 'keyboard_arrow_right' : 'keyboard_arrow_left' }}</span>
   </button>
 
   <!-- Navigation Links -->
