@@ -12,6 +12,31 @@ body {
   line-height: 1.6;
 }
 
+/* Main Content Layout */
+main {
+  margin-left: 250px; /* Width of expanded sidebar */
+  padding: 20px;
+  min-height: calc(100vh - 50px); /* Full height minus header */
+  background: #f5f5f5;
+  transition: margin-left 0.3s ease-in-out;
+}
+
+/* When sidebar is collapsed */
+body.sidebar-collapsed main {
+  margin-left: 70px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  main {
+    margin-left: 70px;
+  }
+  
+  body.sidebar-collapsed main {
+    margin-left: 0;
+  }
+}
+
 /* Common Icon Button Styles */
 .btn-icon-minimal {
   background-color: transparent;
