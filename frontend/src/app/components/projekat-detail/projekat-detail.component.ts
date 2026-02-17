@@ -180,6 +180,20 @@ export class ProjekatDetailComponent implements OnInit {
     this.currentImplementationItem = null;
   }
 
+  getTotalProcent(item: ProjectImplementationItem): number {
+    if (!item.checkLists || item.checkLists.length === 0) {
+      return 0;
+    }
+    return item.checkLists.reduce((sum, cl) => sum + (cl.procenat || 0), 0);
+  }
+
+  getTotalProcentColor(item: ProjectImplementationItem): string {
+    const total = this.getTotalProcent(item);
+    if (total === 0) return '#999'; // Gray for no data
+    if (Math.abs(total - 100) < 0.01) return '#28a745'; // Green for 100%
+    return '#dc3545'; // Red for not 100%
+  }
+
   saveImplementationItem(item: ProjectImplementationItem): void {
     this.implementationItemService.update(item.id, item).subscribe({
       next: () => {
