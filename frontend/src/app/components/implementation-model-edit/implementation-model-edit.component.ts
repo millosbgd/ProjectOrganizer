@@ -35,6 +35,11 @@ export class ImplementationModelEditComponent implements OnInit {
   showCheckListSelectionModal = false;
   availableCheckListItems: CheckListItem[] = [];
   selectedCheckListIds: number[] = [];
+  
+  // New check list item creation
+  showNewCheckListItemModal = false;
+  newCheckListItem: { opis: string; kompleksnost: number | null } = { opis: '', kompleksnost: null };
+  savingNewCheckListItem = false;
 
   constructor(
     private route: ActivatedRoute,
@@ -108,17 +113,9 @@ export class ImplementationModelEditComponent implements OnInit {
 
   openCheckListSelection(): void {
     // Load all available check list items
-    this.checkListItemService.getAll().subscribe({
-      next: (items) => {
-        this.availableCheckListItems = items;
-        this.selectedCheckListIds = [];
-        this.showCheckListSelectionModal = true;
-      },
-      error: (error) => {
-        console.error('Error loading check list items:', error);
-        alert('Greška pri učitavanju dostupnih stavki čekliste');
-      }
-    });
+    this.loadAvailableCheckListItems();
+    this.selectedCheckListIds = [];
+    this.showCheckListSelectionModal = true;
   }
 
   toggleCheckListSelection(id: number): void {
@@ -165,6 +162,63 @@ export class ImplementationModelEditComponent implements OnInit {
   cancelCheckListSelection(): void {
     this.showCheckListSelectionModal = false;
     this.selectedCheckListIds = [];
+  }
+
+  openNewCheckListItemModal(): void {
+    this.newCheckListItem = { opis: '', kompleksnost: null };
+    this.showNewCheckListItemModal = true;
+  }
+
+  closeNewCheckListItemModal(): void {
+    this.showNewCheckListItemModal = false;
+    this.newCheckListItem = { opis: '', kompleksnost: null };
+  }
+
+  saveNewCheckListItem(): void {
+    if (!this.newCheckListItem.opis || this.newCheckListItem.opis.trim() === '') {
+      alert('Opis je obavezan');
+      return;
+    }
+
+    if (this.newCheckListItem.kompleksnost !== null && 
+        (this.newCheckListItem.kompleksnost < 1 || this.newCheckListItem.kompleksnost > 10)) {
+      alert('Kompleksnost mora biti između 1 i 10');
+      return;
+    }
+
+    this.savingNewCheckListItem = true;
+
+    const newItem: CheckListItem = {
+      id: 0,
+      opis: this.newCheckListItem.opis,
+      kompleksnost: this.newCheckListItem.kompleksnost
+    };
+
+    this.checkListItemService.create(newItem).subscribe({
+      next: (createdItem) => {
+        this.savingNewCheckListItem = false;
+        this.closeNewCheckListItemModal();
+        // Refresh the list
+        this.loadAvailableCheckListItems();
+        alert('Stavka uspešno kreirana!');
+      },
+      error: (error) => {
+        console.error('Error creating check list item:', error);
+        alert('Greška pri kreiranju stavke');
+        this.savingNewCheckListItem = false;
+      }
+    });
+  }
+
+  loadAvailableCheckListItems(): void {
+    this.checkListItemService.getAll().subscribe({
+      next: (items) => {
+        this.availableCheckListItems = items;
+      },
+      error: (error) => {
+        console.error('Error loading check list items:', error);
+      }
+    });
   }
 
   removeCheckListItem(linkId: number | undefined): void {

@@ -13,5 +13,11 @@ namespace ProjectOrganizer.Api.Models
         [Required]
         [MaxLength(150)]
         public string Opis { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Complexity metric (1-10)
+        /// </summary>
+        [Range(1.0, 10.0, ErrorMessage = "Kompleksnost mora biti između 1 i 10")]
+        public decimal? Kompleksnost { get; set; }
     }
 }

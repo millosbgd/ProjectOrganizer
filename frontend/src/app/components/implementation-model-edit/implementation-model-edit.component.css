@@ -483,3 +483,24 @@ textarea.form-control {
   border-color: #dc3545;
   color: #c82333;
 }
+
+/* Modal Header Actions for multiple buttons */
+.modal-header-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+/* Smaller modal for simple forms */
+.modal-small {
+  max-width: 450px;
+}
+
+/* Form hint text */
+.form-hint {
+  display: block;
+  margin-top: 5px;
+  color: #6c757d;
+  font-size: 12px;
+  font-style: italic;
+}

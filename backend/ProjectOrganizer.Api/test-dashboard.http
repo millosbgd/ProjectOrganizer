@@ -1,0 +1,21 @@
+### Dashboard API Tests
+### Variables
+@baseUrl = http://localhost:5000/api
+@token = YOUR_AUTH0_TOKEN_HERE
+
+### Get Full Dashboard Stats
+GET {{baseUrl}}/dashboard/stats
+Authorization: Bearer {{token}}
+
+###
+
+### Get Basic Metrics Only
+GET {{baseUrl}}/dashboard/metrics
+Authorization: Bearer {{token}}
+
+###
+
+### Test without Authorization (should return 401)
+GET {{baseUrl}}/dashboard/stats
+
+###
