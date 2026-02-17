@@ -270,6 +270,27 @@ public class ProjektiController : ControllerBase
             .Where(i => i.ImplementationModelId == implementationModelId)
             .ToListAsync();
 
+        // Calculate total complexity for percentage calculation
+        decimal totalKompleksnost = 0;
+        var allCheckListItems = new List<(int CheckListItemId, decimal? Kompleksnost)>();
+        
+        foreach (var item in implementationItems)
+        {
+            foreach (var checkListLink in item.CheckListItems)
+            {
+                var kompleksnost = checkListLink.CheckListItem?.Kompleksnost;
+                if (kompleksnost.HasValue && kompleksnost.Value > 0)
+                {
+                    totalKompleksnost += kompleksnost.Value;
+                    allCheckListItems.Add((checkListLink.CheckListItemId, kompleksnost));
+                }
+                else
+                {
+                    allCheckListItems.Add((checkListLink.CheckListItemId, null));
+                }
+            }
+        }
+
         // Create ProjectImplementationItem for each item in the model
         foreach (var item in implementationItems)
         {
@@ -287,11 +308,21 @@ public class ProjektiController : ControllerBase
             // Create check list items for this project implementation item
             foreach (var checkListLink in item.CheckListItems)
             {
+                var kompleksnost = checkListLink.CheckListItem?.Kompleksnost;
+                decimal? procenat = null;
+
+                // Calculate percentage if kompleksnost is present and total > 0
+                if (kompleksnost.HasValue && kompleksnost.Value > 0 && totalKompleksnost > 0)
+                {
+                    procenat = Math.Round((kompleksnost.Value / totalKompleksnost) * 100, 2);
+                }
+
                 var projectCheckList = new ProjectImplementationItemCheckList
                 {
                     ProjectImplementationItemId = projectItem.Id,
                     CheckListItemId = checkListLink.CheckListItemId,
-                    Zavrsen = false
+                    Zavrsen = false,
+                    Procenat = procenat
                 };
                 _context.ProjectImplementationItemCheckLists.Add(projectCheckList);
             }

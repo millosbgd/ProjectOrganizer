@@ -25,6 +25,14 @@ namespace ProjectOrganizer.Api.Models
 
         public DateTime? ZavrsenDatum { get; set; }
 
+        /// <summary>
+        /// Percentage weight based on CheckListItem Kompleksnost
+        /// Calculated as: (Kompleksnost / Sum of all Kompleksnost) * 100
+        /// </summary>
+        [Range(0, 100)]
+        [Column(TypeName = "decimal(5,2)")]
+        public decimal? Procenat { get; set; }
+
         // Navigation properties
         [ForeignKey("ProjectImplementationItemId")]
         public ProjectImplementationItem? ProjectImplementationItem { get; set; }

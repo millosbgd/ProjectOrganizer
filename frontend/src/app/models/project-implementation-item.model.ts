@@ -17,6 +17,7 @@ export interface ProjectImplementationCheckListItem {
   checkListItemId: number;
   checkListItemOpis?: string;
   checkListItemKompleksnost?: number | null;
+  procenat?: number | null;
   zavrsen: boolean;
   zavrsenDatum?: Date;
 }
