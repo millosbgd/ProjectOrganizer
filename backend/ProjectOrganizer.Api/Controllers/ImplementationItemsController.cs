@@ -47,7 +47,8 @@ public class ImplementationItemsController : ControllerBase
             CheckListItems = item.CheckListItems.Select(ic => new CheckListItemDto
             {
                 Id = ic.CheckListItem!.Id,
-                Opis = ic.CheckListItem.Opis
+                Opis = ic.CheckListItem.Opis,
+                Kompleksnost = ic.CheckListItem.Kompleksnost
             }).ToList()
         };
 
@@ -73,6 +74,7 @@ public class ImplementationItemsController : ControllerBase
             {
                 Id = ic.CheckListItem!.Id,
                 Opis = ic.CheckListItem.Opis,
+                Kompleksnost = ic.CheckListItem.Kompleksnost,
                 LinkId = ic.Id  // ID of the junction table record for deletion
             })
             .OrderBy(c => c.Opis)
@@ -175,6 +177,7 @@ public class CheckListItemDto
 {
     public int Id { get; set; }
     public string Opis { get; set; } = string.Empty;
+    public decimal? Kompleksnost { get; set; }
     public int? LinkId { get; set; }  // ID in junction table for deletion
 }
 

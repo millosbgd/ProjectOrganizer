@@ -156,6 +156,7 @@
                 <tr>
                   <th>#</th>
                   <th>Opis</th>
+                  <th>Kompleksnost</th>
                   <th class="actions-column-mini"></th>
                 </tr>
               </thead>
@@ -163,6 +164,7 @@
                 <tr *ngFor="let checkItem of editingItem.checkListItems; let i = index">
                   <td>{{ i + 1 }}</td>
                   <td>{{ checkItem.opis }}</td>
+                  <td>{{ checkItem.kompleksnost || '-' }}</td>
                   <td class="actions-column-mini">
                     <button type="button" class="btn-icon-delete" (click)="removeCheckListItem(checkItem.linkId)" title="Ukloni">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

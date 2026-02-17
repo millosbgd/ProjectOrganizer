@@ -45,6 +45,7 @@ public class ProjectImplementationItemsController : ControllerBase
                     cl.Id,
                     cl.CheckListItemId,
                     CheckListItemOpis = cl.CheckListItem != null ? cl.CheckListItem.Opis : null,
+                    CheckListItemKompleksnost = cl.CheckListItem != null ? cl.CheckListItem.Kompleksnost : null,
                     cl.Zavrsen,
                     cl.ZavrsenDatum
                 }).ToList()
@@ -80,6 +81,7 @@ public class ProjectImplementationItemsController : ControllerBase
                     cl.Id,
                     cl.CheckListItemId,
                     CheckListItemOpis = cl.CheckListItem != null ? cl.CheckListItem.Opis : null,
+                    CheckListItemKompleksnost = cl.CheckListItem != null ? cl.CheckListItem.Kompleksnost : null,
                     cl.Zavrsen,
                     cl.ZavrsenDatum
                 }).ToList()

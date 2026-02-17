@@ -29,6 +29,7 @@
               <tr>
                 <th style="width: 50px;">✓</th>
                 <th>Opis</th>
+                <th style="width: 100px;">Kompleksnost</th>
                 <th style="width: 150px;">Završeno</th>
               </tr>
             </thead>
@@ -42,6 +43,7 @@
                   />
                 </td>
                 <td>{{ checkList.checkListItemOpis }}</td>
+                <td>{{ checkList.checkListItemKompleksnost || '-' }}</td>
                 <td>
                   <span *ngIf="checkList.zavrsenDatum">
                     {{ checkList.zavrsenDatum | date: 'dd.MM.yyyy HH:mm' }}
