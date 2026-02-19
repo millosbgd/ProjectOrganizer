@@ -169,9 +169,8 @@ export class AktivnostModalComponent implements OnChanges {
   }
 
   onBackdropClick(event: MouseEvent): void {
-    if (event.target === event.currentTarget) {
-      this.onClose();
-    }
+    // Modal se zatvara samo eksplicitno preko dugmeta Close ili Cancel
+    // Ne dozvoljavamo zatvaranje klikom na backdrop
   }
 
   generateZapisnik(): void {
