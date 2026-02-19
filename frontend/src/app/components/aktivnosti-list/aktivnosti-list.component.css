@@ -225,6 +225,7 @@
 }
 
 .actions-column .btn-icon-minimal {
+  display: inline-flex;
   margin-left: 0.25rem;
 }
 
