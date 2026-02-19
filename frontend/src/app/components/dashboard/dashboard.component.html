@@ -31,18 +31,23 @@
           <span class="material-icons">folder</span>
         </div>
         <div class="metric-content">
-          <div class="metric-value">{{ stats.activeProjectsCount }}</div>
-          <div class="metric-label">Aktivni Projekti</div>
+          <div class="metric-info">
+            <div class="metric-value">{{ stats.activeProjectsCount }}</div>
+            <div class="metric-label">Aktivni Projekti</div>
+          </div>
+          <a class="metric-link" routerLink="/projekti">Svi projekti →</a>
         </div>
       </div>
 
-      <div class="metric-card red" routerLink="/aktivnosti">
+      <div class="metric-card red">
         <div class="metric-icon">
           <span class="material-icons">assignment</span>
         </div>
         <div class="metric-content">
-          <div class="metric-value">{{ stats.unfinishedActivitiesCount }}</div>
-          <div class="metric-label">Nezavršene Aktivnosti</div>
+          <div class="metric-info">
+            <div class="metric-value">{{ stats.unfinishedActivitiesCount }}</div>
+            <div class="metric-label">Nezavršene Aktivnosti</div>
+          </div>
           <a class="metric-link" routerLink="/aktivnosti">Prikaži sve aktivnosti →</a>
         </div>
       </div>

@@ -90,7 +90,6 @@
   gap: 20px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   transition: transform 0.2s, box-shadow 0.2s;
-  cursor: pointer;
 }
 
 .metric-card:hover {
@@ -123,6 +122,14 @@
 
 .metric-content {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 80px;
+}
+
+.metric-info {
+  flex: 0;
 }
 
 .metric-value {
@@ -141,12 +148,18 @@
 
 .metric-link {
   display: inline-block;
-  margin-top: 8px;
+  align-self: flex-end;
   font-size: 13px;
   color: #3B82F6;
   text-decoration: none;
   font-weight: 600;
   transition: color 0.2s;
+  margin-top: 8px;
+}
+
+.metric-link:hover {
+  color: #2563EB;
+  text-decoration: underline;
 }
 
 .metric-link:hover {
