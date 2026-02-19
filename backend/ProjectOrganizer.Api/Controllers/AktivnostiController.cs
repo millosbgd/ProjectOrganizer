@@ -44,7 +44,7 @@ public class AktivnostiController : ControllerBase
         if (projekatId.HasValue)
             query = query.Where(a => a.ProjekatId == projekatId.Value);
 
-        // Filter by current user if requested
+        // Filter by current user if requested (default is to show only user's activities)
         if (myActivitiesOnly)
         {
             var currentUser = await _userService.EnsureUserExistsAsync(User);
