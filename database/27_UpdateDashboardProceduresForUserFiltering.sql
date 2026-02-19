@@ -1,14 +1,18 @@
 -- =============================================
--- 24_CreateDashboardProcedures.sql
--- Stored Procedures za Dashboard statistiku
+-- 27_UpdateDashboardProceduresForUserFiltering.sql
+-- Ažuriranje stored procedura za filtriranje aktivnosti po korisniku
 -- =============================================
 
 USE ProjectOrganizer;
 GO
 
+PRINT 'Ažuriranje stored procedura za dashboard filtriranje...';
+GO
+
 -- =============================================
 -- Procedura: sp_GetDashboardStats
 -- Opis: Vraća sve dashboard statistike za korisnika
+-- Ažurirano: Filtrira aktivnosti po korisniku koji ih je kreirao
 -- =============================================
 IF OBJECT_ID('sp_GetDashboardStats', 'P') IS NOT NULL
     DROP PROCEDURE sp_GetDashboardStats;
@@ -73,7 +77,7 @@ BEGIN
         MONTH(a.Datum)
     ORDER BY Year, MonthNum;
 
-    -- Rezultat 4: Aktivnosti po statusu (umesto prioriteta koji nemamo)
+    -- Rezultat 4: Aktivnosti po statusu
     SELECT 
         a.Status,
         COUNT(a.Id) AS Count
@@ -111,33 +115,7 @@ END;
 GO
 
 -- =============================================
--- Procedura: sp_GetActiveProjectsCount
--- Opis: Vraća broj aktivnih projekata za korisnika
--- =============================================
-IF OBJECT_ID('sp_GetActiveProjectsCount', 'P') IS NOT NULL
-    DROP PROCEDURE sp_GetActiveProjectsCount;
-GO
-
-CREATE PROCEDURE sp_GetActiveProjectsCount
-    @UserId INT
-AS
-BEGIN
-    SET NOCOUNT ON;
-
-    SELECT COUNT(DISTINCT p.Id) AS ActiveProjectsCount
-    FROM Projekti p
-    WHERE p.Aktivan = 1
-      AND (p.CreatedBy = @UserId 
-           OR EXISTS (
-               SELECT 1 FROM ProjectPermissions pp 
-               WHERE pp.ProjekatId = p.Id AND pp.UserId = @UserId
-           ));
-END;
-GO
-
--- =============================================
 -- Procedura: sp_GetUnfinishedActivitiesCount
--- Opis: Vraća broj nezavršenih aktivnosti za korisnika
 -- =============================================
 IF OBJECT_ID('sp_GetUnfinishedActivitiesCount', 'P') IS NOT NULL
     DROP PROCEDURE sp_GetUnfinishedActivitiesCount;
@@ -157,36 +135,7 @@ END;
 GO
 
 -- =============================================
--- Procedura: sp_GetProjectsByStatus
--- Opis: Vraća raspodelu projekata po statusu
--- =============================================
-IF OBJECT_ID('sp_GetProjectsByStatus', 'P') IS NOT NULL
-    DROP PROCEDURE sp_GetProjectsByStatus;
-GO
-
-CREATE PROCEDURE sp_GetProjectsByStatus
-    @UserId INT
-AS
-BEGIN
-    SET NOCOUNT ON;
-
-    SELECT 
-        p.Status,
-        COUNT(p.Id) AS Count
-    FROM Projekti p
-    WHERE (p.CreatedBy = @UserId 
-           OR EXISTS (
-               SELECT 1 FROM ProjectPermissions pp 
-               WHERE pp.ProjekatId = p.Id AND pp.UserId = @UserId
-           ))
-    GROUP BY p.Status
-    ORDER BY Count DESC;
-END;
-GO
-
--- =============================================
 -- Procedura: sp_GetActivitiesByMonth
--- Opis: Vraća broj aktivnosti po mesecima
 -- =============================================
 IF OBJECT_ID('sp_GetActivitiesByMonth', 'P') IS NOT NULL
     DROP PROCEDURE sp_GetActivitiesByMonth;
@@ -217,7 +166,6 @@ GO
 
 -- =============================================
 -- Procedura: sp_GetActivitiesByStatus
--- Opis: Vraća raspodelu aktivnosti po statusu
 -- =============================================
 IF OBJECT_ID('sp_GetActivitiesByStatus', 'P') IS NOT NULL
     DROP PROCEDURE sp_GetActivitiesByStatus;
@@ -246,43 +194,7 @@ END;
 GO
 
 -- =============================================
--- Procedura: sp_GetNewProjectsByMonth
--- Opis: Vraća broj novih projekata po mesecima
--- =============================================
-IF OBJECT_ID('sp_GetNewProjectsByMonth', 'P') IS NOT NULL
-    DROP PROCEDURE sp_GetNewProjectsByMonth;
-GO
-
-CREATE PROCEDURE sp_GetNewProjectsByMonth
-    @UserId INT,
-    @MonthsBack INT = 12
-AS
-BEGIN
-    SET NOCOUNT ON;
-
-    SELECT 
-        FORMAT(p.Datum, 'MMM yyyy', 'sr-Latn-RS') AS Month,
-        YEAR(p.Datum) AS Year,
-        MONTH(p.Datum) AS MonthNum,
-        COUNT(p.Id) AS Count
-    FROM Projekti p
-    WHERE p.Datum >= DATEADD(MONTH, -@MonthsBack, GETDATE())
-      AND (p.CreatedBy = @UserId 
-           OR EXISTS (
-               SELECT 1 FROM ProjectPermissions pp 
-               WHERE pp.ProjekatId = p.Id AND pp.UserId = @UserId
-           ))
-    GROUP BY 
-        FORMAT(p.Datum, 'MMM yyyy', 'sr-Latn-RS'),
-        YEAR(p.Datum),
-        MONTH(p.Datum)
-    ORDER BY Year, MonthNum;
-END;
-GO
-
--- =============================================
 -- Procedura: sp_GetTopProjectsByActivityCount
--- Opis: Vraća top 5 projekata sa najviše aktivnosti
 -- =============================================
 IF OBJECT_ID('sp_GetTopProjectsByActivityCount', 'P') IS NOT NULL
     DROP PROCEDURE sp_GetTopProjectsByActivityCount;
@@ -314,28 +226,22 @@ END;
 GO
 
 -- =============================================
--- Kreiranje indeksa za bolje performanse
+-- Kreiranje/Ažuriranje indeksa za bolje performanse
 -- =============================================
 
--- Index za pretragu po CreatedBy (ako ne postoji)
-IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_Projekti_CreatedBy_Aktivan')
+-- Ažuriranje postojećeg indeksa da uključi CreatedBy
+IF EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_Aktivnosti_Status_Datum')
 BEGIN
-    CREATE NONCLUSTERED INDEX IX_Projekti_CreatedBy_Aktivan
-        ON Projekti(CreatedBy, Aktivan)
-        INCLUDE (Status, Datum);
+    DROP INDEX IX_Aktivnosti_Status_Datum ON Aktivnosti;
 END;
 GO
 
--- Index za pretragu aktivnosti po statusu (ako ne postoji)
-IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_Aktivnosti_Status_Datum')
-BEGIN
-    CREATE NONCLUSTERED INDEX IX_Aktivnosti_Status_Datum
-        ON Aktivnosti(Status, Datum)
-        INCLUDE (ProjekatId, CreatedBy);
-END;
+CREATE NONCLUSTERED INDEX IX_Aktivnosti_Status_Datum
+    ON Aktivnosti(Status, Datum)
+    INCLUDE (ProjekatId, CreatedBy);
 GO
 
--- Index za pretragu aktivnosti po kreiranom korisniku (ako ne postoji)
+-- Novi indeks za pretragu po CreatedBy
 IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_Aktivnosti_CreatedBy')
 BEGIN
     CREATE NONCLUSTERED INDEX IX_Aktivnosti_CreatedBy
@@ -344,35 +250,6 @@ BEGIN
 END;
 GO
 
--- Index za pretragu aktivnosti po kreiranom korisniku (ako ne postoji)
-IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_Aktivnosti_CreatedBy')
-BEGIN
-    CREATE NONCLUSTERED INDEX IX_Aktivnosti_CreatedBy
-        ON Aktivnosti(CreatedBy)
-        INCLUDE (Status, Datum, ProjekatId);
-END;
-GO
-
--- Index za ProjectPermissions (ako ne postoji)
-IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_ProjectPermissions_UserId_ProjekatId')
-BEGIN
-    CREATE NONCLUSTERED INDEX IX_ProjectPermissions_UserId_ProjekatId
-        ON ProjectPermissions(UserId, ProjekatId);
-END;
-GO
-
-PRINT 'Dashboard stored procedures created successfully!';
-PRINT '';
-PRINT 'Available procedures:';
-PRINT '  - sp_GetDashboardStats (@UserId)           - Vraća sve statistike odjednom';
-PRINT '  - sp_GetActiveProjectsCount (@UserId)      - Broj aktivnih projekata';
-PRINT '  - sp_GetUnfinishedActivitiesCount (@UserId) - Broj nezavršenih aktivnosti';
-PRINT '  - sp_GetProjectsByStatus (@UserId)         - Projekti po statusu';
-PRINT '  - sp_GetActivitiesByMonth (@UserId, @MonthsBack) - Aktivnosti po mesecima';
-PRINT '  - sp_GetActivitiesByStatus (@UserId)       - Aktivnosti po statusu';
-PRINT '  - sp_GetNewProjectsByMonth (@UserId, @MonthsBack) - Novi projekti po mesecima';
-PRINT '  - sp_GetTopProjectsByActivityCount (@UserId, @TopCount) - Top projekti';
-PRINT '';
-PRINT 'Example usage:';
-PRINT '  EXEC sp_GetDashboardStats @UserId = 1;';
+PRINT 'Dashboard stored procedures successfully updated!';
+PRINT 'Aktivnosti se sada filtriraju po korisniku koji ih je kreirao.';
 GO
