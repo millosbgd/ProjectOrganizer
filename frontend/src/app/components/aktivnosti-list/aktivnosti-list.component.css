@@ -222,11 +222,13 @@
 .actions-column {
   width: 100px;
   text-align: right;
+  white-space: nowrap;
 }
 
 .actions-column .btn-icon-minimal {
   display: inline-flex;
   margin-left: 0.25rem;
+  vertical-align: middle;
 }
 
 @media (max-width: 768px) {
