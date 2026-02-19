@@ -32,12 +32,24 @@ public class AktivnostiController : ControllerBase
 
     // GET: api/Aktivnosti
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<Aktivnost>>> GetAktivnosti([FromQuery] int? projekatId = null)
+    public async Task<ActionResult<IEnumerable<Aktivnost>>> GetAktivnosti(
+        [FromQuery] int? projekatId = null, 
+        [FromQuery] bool myActivitiesOnly = false)
     {
-        var query = _context.Aktivnosti.AsQueryable();
+        var query = _context.Aktivnosti
+            .Include(a => a.Projekat)
+            .Include(a => a.CreatedByUser)
+            .AsQueryable();
 
         if (projekatId.HasValue)
             query = query.Where(a => a.ProjekatId == projekatId.Value);
+
+        // Filter by current user if requested
+        if (myActivitiesOnly)
+        {
+            var currentUser = await _userService.EnsureUserExistsAsync(User);
+            query = query.Where(a => a.CreatedBy == currentUser.Id);
+        }
 
         var aktivnosti = await query
             .OrderByDescending(a => a.Datum)

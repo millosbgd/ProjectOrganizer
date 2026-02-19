@@ -90,6 +90,7 @@
   gap: 20px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   transition: transform 0.2s, box-shadow 0.2s;
+  cursor: pointer;
 }
 
 .metric-card:hover {
@@ -136,6 +137,21 @@
   color: #6B7280;
   margin-top: 4px;
   font-weight: 500;
+}
+
+.metric-link {
+  display: inline-block;
+  margin-top: 8px;
+  font-size: 13px;
+  color: #3B82F6;
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.2s;
+}
+
+.metric-link:hover {
+  color: #2563EB;
+  text-decoration: underline;
 }
 
 /* Charts Grid */

@@ -12,8 +12,9 @@ export class AktivnostService {
 
   constructor(private http: HttpClient) { }
 
-  getAll(): Observable<Aktivnost[]> {
-    return this.http.get<Aktivnost[]>(this.apiUrl);
+  getAll(myActivitiesOnly: boolean = false): Observable<Aktivnost[]> {
+    const params = myActivitiesOnly ? '?myActivitiesOnly=true' : '';
+    return this.http.get<Aktivnost[]>(`${this.apiUrl}${params}`);
   }
 
   getById(id: number): Observable<Aktivnost> {

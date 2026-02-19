@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
 import { NgxChartsModule, Color, ScaleType } from '@swimlane/ngx-charts';
 import { DashboardService } from '../../services/dashboard.service';
 import { DashboardStats } from '../../models/dashboard.model';
@@ -7,7 +8,7 @@ import { DashboardStats } from '../../models/dashboard.model';
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, NgxChartsModule],
+  imports: [CommonModule, RouterModule, NgxChartsModule],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css']
 })

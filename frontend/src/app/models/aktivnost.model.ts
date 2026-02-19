@@ -10,4 +10,15 @@ export interface Aktivnost {
   bau?: boolean;
   projekatId: number | null;
   projectImplementationItemId?: number;
+  projekat?: {
+    id: number;
+    naziv: string;
+    brojProjekta: string;
+  };
+  createdBy?: number;
+  createdByUser?: {
+    id: number;
+    name: string;
+    email: string;
+  };
 }
