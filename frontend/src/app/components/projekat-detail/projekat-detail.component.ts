@@ -130,6 +130,11 @@ export class ProjekatDetailComponent implements OnInit {
     this.projekatService.getById(id).subscribe({
       next: (data) => {
         this.projekat = data;
+        // Convert datum to YYYY-MM-DD format for date input
+        if (this.projekat.datum) {
+          const date = new Date(this.projekat.datum);
+          this.projekat.datum = date.toISOString().split('T')[0];
+        }
         this.loading = false;
       },
       error: (error) => {

@@ -5,7 +5,7 @@ import { User } from './user.model';
 export interface Projekat {
   id: number;
   brojProjekta: string;
-  datum: Date;
+  datum: Date | string;
   naziv: string;
   aktivan: boolean;
   status: string;
