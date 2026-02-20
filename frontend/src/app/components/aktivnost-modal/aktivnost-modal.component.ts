@@ -48,6 +48,18 @@ export class AktivnostModalComponent implements OnChanges {
   showDevOpsTasksPreviewModal: boolean = false;
   parsedTasks: ParsedTask[] = [];
 
+  // Time fields
+  duration: string = ''; // Helper field for quick calculation
+  durationOptions = [
+    { label: '15 minuta', value: 15 },
+    { label: '30 minuta', value: 30 },
+    { label: '1 sat', value: 60 },
+    { label: '1.5 sata', value: 90 },
+    { label: '2 sata', value: 120 },
+    { label: '4 sata', value: 240 },
+    { label: '8 sati', value: 480 }
+  ];
+
   // OCR properties
   selectedImageFile: File | null = null;
   selectedImagePreview: string | null = null;
@@ -133,6 +145,56 @@ export class AktivnostModalComponent implements OnChanges {
 
   set datumString(value: string) {
     this.aktivnost.datum = new Date(value);
+  }
+
+  // Start time in HH:mm format (local timezone)
+  get startTime(): string {
+    if (!this.aktivnost.startUtc) return '';
+    const date = new Date(this.aktivnost.startUtc);
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    return `${hours}:${minutes}`;
+  }
+
+  set startTime(value: string) {
+    if (!value) {
+      this.aktivnost.startUtc = undefined;
+      return;
+    }
+    const [hours, minutes] = value.split(':').map(Number);
+    const date = new Date(this.aktivnost.datum);
+    date.setHours(hours, minutes, 0, 0);
+    this.aktivnost.startUtc = date.toISOString();
+  }
+
+  // End time in HH:mm format (local timezone)
+  get endTime(): string {
+    if (!this.aktivnost.endUtc) return '';
+    const date = new Date(this.aktivnost.endUtc);
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    return `${hours}:${minutes}`;
+  }
+
+  set endTime(value: string) {
+    if (!value) {
+      this.aktivnost.endUtc = undefined;
+      return;
+    }
+    const [hours, minutes] = value.split(':').map(Number);
+    const date = new Date(this.aktivnost.datum);
+    date.setHours(hours, minutes, 0, 0);
+    this.aktivnost.endUtc = date.toISOString();
+  }
+
+  onDurationChange(): void {
+    if (!this.duration || !this.aktivnost.startUtc) {
+      return;
+    }
+    const durationMinutes = parseInt(this.duration);
+    const startDate = new Date(this.aktivnost.startUtc);
+    const endDate = new Date(startDate.getTime() + durationMinutes * 60000);
+    this.aktivnost.endUtc = endDate.toISOString();
   }
 
   onSave(): void {

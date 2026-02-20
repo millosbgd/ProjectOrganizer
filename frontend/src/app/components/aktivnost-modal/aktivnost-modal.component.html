@@ -70,6 +70,26 @@
         </div>
       </div>
 
+      <div class="form-row">
+        <div class="form-group">
+          <label>Vreme početka:</label>
+          <input type="time" [(ngModel)]="startTime" name="startTime" />
+        </div>
+
+        <div class="form-group">
+          <label>Trajanje:</label>
+          <select [(ngModel)]="duration" (change)="onDurationChange()" name="duration">
+            <option value="">- Izaberi -</option>
+            <option *ngFor="let opt of durationOptions" [value]="opt.value">{{ opt.label }}</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Vreme završetka:</label>
+          <input type="time" [(ngModel)]="endTime" name="endTime" />
+        </div>
+      </div>
+
       <div class="form-group" *ngIf="!aktivnost.bau">
         <label>Stavka implementacije:</label>
         <select [(ngModel)]="aktivnost.projectImplementationItemId" name="projectImplementationItemId">
