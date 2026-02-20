@@ -115,6 +115,8 @@ public class AktivnostiController : ControllerBase
         existingAktivnost.Opis = aktivnost.Opis;
         existingAktivnost.Detalji = aktivnost.Detalji;
         existingAktivnost.Datum = aktivnost.Datum;
+        existingAktivnost.StartUtc = aktivnost.StartUtc;
+        existingAktivnost.EndUtc = aktivnost.EndUtc;
         existingAktivnost.Status = aktivnost.Status;
         existingAktivnost.Vrsta = aktivnost.Vrsta;
         existingAktivnost.ProjekatId = aktivnost.ProjekatId;
