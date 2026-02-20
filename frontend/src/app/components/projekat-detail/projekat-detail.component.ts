@@ -228,19 +228,19 @@ export class ProjekatDetailComponent implements OnInit {
   }
 
   saveProjekat(): void {
-    // Convert date string to ISO format avoiding timezone shift
+    // Convert date to YYYY-MM-DD format for DateOnly on backend
     let datumForServer: string;
     if (this.projekat.datum) {
       if (typeof this.projekat.datum === 'string') {
-        // Input date is in YYYY-MM-DD format, append time at noon UTC
-        const [year, month, day] = this.projekat.datum.split('-').map(Number);
-        const date = new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
-        datumForServer = date.toISOString();
+        // Input date is already in YYYY-MM-DD format
+        datumForServer = this.projekat.datum;
       } else {
-        datumForServer = new Date(this.projekat.datum).toISOString();
+        // Convert Date object to YYYY-MM-DD
+        const date = new Date(this.projekat.datum);
+        datumForServer = date.toISOString().split('T')[0];
       }
     } else {
-      datumForServer = new Date().toISOString();
+      datumForServer = new Date().toISOString().split('T')[0];
     }
 
     if (this.isNewMode) {
@@ -288,7 +288,21 @@ export class ProjekatDetailComponent implements OnInit {
         error: (error) => {
           console.error('Error updating projekat:', error);
           console.error('Error details:', error.error);
-          alert('Greška pri ažuriranju projekta: ' + (error.error || error.message));
+          let errorMsg = 'Nepoznata greška';
+          if (error.error) {
+            if (typeof error.error === 'string') {
+              errorMsg = error.error;
+            } else if (error.error.message) {
+              errorMsg = error.error.message;
+            } else if (error.error.title) {
+              errorMsg = error.error.title;
+            } else {
+              errorMsg = JSON.stringify(error.error);
+            }
+          } else if (error.message) {
+            errorMsg = error.message;
+          }
+          alert('Greška pri ažuriranju projekta: ' + errorMsg);
         }
       });
     }
