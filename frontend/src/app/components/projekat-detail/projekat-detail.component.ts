@@ -187,11 +187,26 @@ export class ProjekatDetailComponent implements OnInit {
     return item.checkLists.reduce((sum, cl) => sum + (cl.procenat || 0), 0);
   }
 
+  getCompletedProcent(item: ProjectImplementationItem): number {
+    if (!item.checkLists || item.checkLists.length === 0) {
+      return 0;
+    }
+    return item.checkLists
+      .filter(cl => cl.zavrsen)
+      .reduce((sum, cl) => sum + (cl.procenat || 0), 0);
+  }
+
   getTotalProcentColor(item: ProjectImplementationItem): string {
     const total = this.getTotalProcent(item);
     if (total === 0) return '#999'; // Gray for no data
     if (Math.abs(total - 100) < 0.01) return '#28a745'; // Green for 100%
-    return '#dc3545'; // Red for not 100%
+    return '#333'; // Dark gray for not 100% (changed from red)
+  }
+
+  getCompletedProcentColor(item: ProjectImplementationItem): string {
+    const completed = this.getCompletedProcent(item);
+    if (completed === 0) return '#999'; // Gray for no data
+    return '#28a745'; // Green for completed
   }
 
   saveImplementationItem(item: ProjectImplementationItem): void {

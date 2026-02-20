@@ -207,7 +207,8 @@
               <tr>
                 <th>Stavka</th>
                 <th style="width: 100px; text-align: center;">Σ Procenat</th>
-                <th style="width: 30%">Napomena</th>
+                <th style="width: 100px; text-align: center;">% Završeno</th>
+                <th style="width: 25%">Napomena</th>
                 <th style="width: 120px; text-align: center;">Završeno</th>
                 <th style="width: 140px; text-align: center;">Datum završetka</th>
                 <th style="width: 120px; text-align: center;">Klijent potvrdio</th>
@@ -220,6 +221,9 @@
                 <td>{{ item.implementationItemNaziv }}</td>
                 <td style="text-align: center; font-weight: 600;">
                   <span [style.color]="getTotalProcentColor(item)">{{ getTotalProcent(item) | number:'1.2-2' }}%</span>
+                </td>
+                <td style="text-align: center; font-weight: 600;">
+                  <span [style.color]="getCompletedProcentColor(item)">{{ getCompletedProcent(item) | number:'1.2-2' }}%</span>
                 </td>
                 <td>
                   <span class="text-preview">{{ item.napomena || '-' }}</span>
