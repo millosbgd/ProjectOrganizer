@@ -161,10 +161,17 @@ export class AktivnostModalComponent implements OnChanges {
       this.aktivnost.startUtc = undefined;
       return;
     }
-    const [hours, minutes] = value.split(':').map(Number);
-    const date = new Date(this.aktivnost.datum);
-    date.setHours(hours, minutes, 0, 0);
-    this.aktivnost.startUtc = date.toISOString();
+    // Get date in YYYY-MM-DD format
+    let dateStr: string;
+    if (typeof this.aktivnost.datum === 'string') {
+      dateStr = this.aktivnost.datum;
+    } else {
+      const d = new Date(this.aktivnost.datum);
+      dateStr = d.toISOString().split('T')[0];
+    }
+    // Create local datetime string and let browser handle timezone conversion
+    const localDateTime = `${dateStr}T${value}:00`;
+    this.aktivnost.startUtc = new Date(localDateTime).toISOString();
   }
 
   // End time in HH:mm format (local timezone)
@@ -181,10 +188,17 @@ export class AktivnostModalComponent implements OnChanges {
       this.aktivnost.endUtc = undefined;
       return;
     }
-    const [hours, minutes] = value.split(':').map(Number);
-    const date = new Date(this.aktivnost.datum);
-    date.setHours(hours, minutes, 0, 0);
-    this.aktivnost.endUtc = date.toISOString();
+    // Get date in YYYY-MM-DD format
+    let dateStr: string;
+    if (typeof this.aktivnost.datum === 'string') {
+      dateStr = this.aktivnost.datum;
+    } else {
+      const d = new Date(this.aktivnost.datum);
+      dateStr = d.toISOString().split('T')[0];
+    }
+    // Create local datetime string and let browser handle timezone conversion
+    const localDateTime = `${dateStr}T${value}:00`;
+    this.aktivnost.endUtc = new Date(localDateTime).toISOString();
   }
 
   onDurationChange(): void {
