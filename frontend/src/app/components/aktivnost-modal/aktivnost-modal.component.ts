@@ -161,23 +161,9 @@ export class AktivnostModalComponent implements OnChanges {
       this.aktivnost.startUtc = undefined;
       return;
     }
-    // Get date in YYYY-MM-DD format
-    let dateStr: string;
-    if (!this.aktivnost.datum) {
-      // Use today's date if datum is not set
-      dateStr = new Date().toISOString().split('T')[0];
-    } else if (typeof this.aktivnost.datum === 'string') {
-      dateStr = this.aktivnost.datum;
-    } else {
-      const d = new Date(this.aktivnost.datum);
-      if (isNaN(d.getTime())) {
-        dateStr = new Date().toISOString().split('T')[0];
-      } else {
-        dateStr = d.toISOString().split('T')[0];
-      }
-    }
-    // Create local datetime string and let browser handle timezone conversion
-    const localDateTime = `${dateStr}T${value}:00`;
+    // Get current datum value for combining with time
+    const currentDatum = this.datumString || new Date().toISOString().split('T')[0];
+    const localDateTime = `${currentDatum}T${value}:00`;
     const resultDate = new Date(localDateTime);
     if (!isNaN(resultDate.getTime())) {
       this.aktivnost.startUtc = resultDate.toISOString();
@@ -198,23 +184,9 @@ export class AktivnostModalComponent implements OnChanges {
       this.aktivnost.endUtc = undefined;
       return;
     }
-    // Get date in YYYY-MM-DD format
-    let dateStr: string;
-    if (!this.aktivnost.datum) {
-      // Use today's date if datum is not set
-      dateStr = new Date().toISOString().split('T')[0];
-    } else if (typeof this.aktivnost.datum === 'string') {
-      dateStr = this.aktivnost.datum;
-    } else {
-      const d = new Date(this.aktivnost.datum);
-      if (isNaN(d.getTime())) {
-        dateStr = new Date().toISOString().split('T')[0];
-      } else {
-        dateStr = d.toISOString().split('T')[0];
-      }
-    }
-    // Create local datetime string and let browser handle timezone conversion
-    const localDateTime = `${dateStr}T${value}:00`;
+    // Get current datum value for combining with time
+    const currentDatum = this.datumString || new Date().toISOString().split('T')[0];
+    const localDateTime = `${currentDatum}T${value}:00`;
     const resultDate = new Date(localDateTime);
     if (!isNaN(resultDate.getTime())) {
       this.aktivnost.endUtc = resultDate.toISOString();
