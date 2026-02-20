@@ -90,8 +90,31 @@ export class AktivnostiListComponent implements OnInit {
   }
 
   onModalSave(aktivnost: Aktivnost): void {
-    this.isModalOpen = false;
-    this.loadAktivnosti();
+    if (aktivnost.id && aktivnost.id > 0) {
+      // Update existing
+      this.aktivnostService.update(aktivnost.id, aktivnost).subscribe({
+        next: () => {
+          this.isModalOpen = false;
+          this.loadAktivnosti();
+        },
+        error: (error) => {
+          console.error('Error updating aktivnost:', error);
+          alert('Greška prilikom ažuriranja aktivnosti.');
+        }
+      });
+    } else {
+      // Create new
+      this.aktivnostService.create(aktivnost).subscribe({
+        next: () => {
+          this.isModalOpen = false;
+          this.loadAktivnosti();
+        },
+        error: (error) => {
+          console.error('Error creating aktivnost:', error);
+          alert('Greška prilikom kreiranja aktivnosti.');
+        }
+      });
+    }
   }
 
   onModalClose(): void {
