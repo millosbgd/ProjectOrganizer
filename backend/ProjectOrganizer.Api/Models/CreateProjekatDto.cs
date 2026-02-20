@@ -5,7 +5,7 @@ namespace ProjectOrganizer.Api.Models;
 public class CreateProjekatDto
 {
     [Required]
-    public DateTime Datum { get; set; }
+    public DateOnly Datum { get; set; }
 
     [Required]
     [MaxLength(300)]

@@ -13,7 +13,7 @@ public class Projekat
     public string BrojProjekta { get; set; } = string.Empty;
 
     [Required]
-    public DateTime Datum { get; set; }
+    public DateOnly Datum { get; set; }
 
     [Required]
     [MaxLength(300)]
