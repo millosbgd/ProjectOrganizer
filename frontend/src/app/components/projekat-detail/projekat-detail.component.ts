@@ -228,12 +228,20 @@ export class ProjekatDetailComponent implements OnInit {
   }
 
   saveProjekat(): void {
-    // Convert date string to ISO format with noon UTC to avoid timezone issues
-    const datumForServer = this.projekat.datum 
-      ? (typeof this.projekat.datum === 'string' 
-          ? this.projekat.datum + 'T12:00:00.000Z'
-          : new Date(this.projekat.datum).toISOString())
-      : new Date().toISOString();
+    // Convert date string to ISO format avoiding timezone shift
+    let datumForServer: string;
+    if (this.projekat.datum) {
+      if (typeof this.projekat.datum === 'string') {
+        // Input date is in YYYY-MM-DD format, append time at noon UTC
+        const [year, month, day] = this.projekat.datum.split('-').map(Number);
+        const date = new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
+        datumForServer = date.toISOString();
+      } else {
+        datumForServer = new Date(this.projekat.datum).toISOString();
+      }
+    } else {
+      datumForServer = new Date().toISOString();
+    }
 
     if (this.isNewMode) {
       // For new projects, don't send brojProjekta at all
