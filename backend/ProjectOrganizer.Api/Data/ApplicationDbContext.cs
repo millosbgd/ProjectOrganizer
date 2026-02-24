@@ -73,6 +73,15 @@ public class ApplicationDbContext : DbContext
             entity.HasIndex(e => e.ProjekatId);
             entity.HasIndex(e => e.Status);
 
+            // Configure UTC DateTime properties
+            entity.Property(e => e.StartUtc)
+                .HasConversion(new UtcDateTimeConverter())
+                .HasColumnType("datetime2");
+
+            entity.Property(e => e.EndUtc)
+                .HasConversion(new UtcDateTimeConverter())
+                .HasColumnType("datetime2");
+
             entity.HasOne(a => a.Projekat)
                 .WithMany(p => p.Aktivnosti)
                 .HasForeignKey(a => a.ProjekatId)

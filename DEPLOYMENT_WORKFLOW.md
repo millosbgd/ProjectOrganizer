@@ -47,7 +47,24 @@ Backend se deploy-uje **ručno** kroz Azure CLI.
 - Azure CLI instaliran
 - Ulogovan na Azure: `az login`
 
-### Koraci:
+### Način 1: Automatski (Preporučeno) 🎯
+
+Koristi PowerShell skriptu:
+
+```powershell
+# Iz root direktorijuma projekta
+.\deploy-backend.ps1
+```
+
+Skripta automatski:
+- ✓ Proverava Azure CLI i login
+- ✓ Build-uje backend u Release mode
+- ✓ Kreira ZIP arhivu
+- ✓ Deploy-uje na Azure
+- ✓ Čisti privremene fajlove
+- ✓ Prikazuje deployment status
+
+### Način 2: Manualno
 
 1. **Build backend-a u Release mode:**
    ```powershell
@@ -96,6 +113,64 @@ Backend se deploy-uje **ručno** kroz Azure CLI.
    ```sql
    -- Otvori skriptu u SSMS i izvrši (F5)
    ```
+
+---
+
+## ⚡ Quick Deploy - UTC DateTime Fix (29_AlterCalendarColumnsToDateTime2)
+
+**Ovaj deployment uključuje:**
+- ✅ Backend kod izmene (UtcDateTimeConverter.cs, ApplicationDbContext.cs)
+- ✅ SQL migraciju (29_AlterCalendarColumnsToDateTime2.sql)
+- ℹ️ Bez frontend izmena
+
+### Koraci (izvršavati REDOM):
+
+#### 1. Commituj izmene
+```powershell
+git add .
+git commit -m "Fix UTC DateTime timezone issues for aktivnosti"
+git push origin deploy
+```
+
+#### 2. SQL Migracija (PRVO!)
+```powershell
+# Otvori SSMS i konektuj se na Azure SQL:
+# Server: projectorganizer-sql.database.windows.net
+# Database: ProjectOrganizer
+# Auth: SQL Server Authentication
+
+# Otvori i izvrši (F5):
+# database/29_AlterCalendarColumnsToDateTime2.sql
+
+# (Opciono) Testiraj:
+# database/TEST_UTC_DateTime.sql
+```
+
+#### 3. Backend Deploy (ZATIM!)
+```powershell
+# Automatski način (preporučeno):
+.\deploy-backend.ps1
+
+# ILI manualno:
+cd backend/ProjectOrganizer.Api
+dotnet publish -c Release -o ./publish
+cd publish
+Compress-Archive -Path * -DestinationPath ../app.zip -Force
+cd ..
+az webapp deployment source config-zip --resource-group rg-projectorganizer-dev --name ProjectOrganizer --src app.zip
+```
+
+#### 4. Verifikacija
+```powershell
+# Testiraj API:
+# https://projectorganizer.azurewebsites.net/api/aktivnosti
+
+# Proveri da li se vremena čuvaju ispravno (bez timezone konverzije)
+```
+
+**⚠️ KRITIČNO:** SQL migracija **MORA** biti izvršena **PRE** backend deploya!
+- Backend očekuje DATETIME2 kolone i UTC converter
+- Ako deploy-uješ backend pre SQL migracije → greška!
 
 ---
 
@@ -184,13 +259,21 @@ az webapp deployment source config-zip --resource-group rg-projectorganizer-dev 
 
 ## ✅ Checklist Pre-Deployment
 
+**Generalno:**
 - [ ] Sve promene commitovane
 - [ ] Testirao lokalno (ako moguće)
 - [ ] SQL skripte pripremljene (ako ima database promena)
 - [ ] Backend build-a bez error-a
 - [ ] Frontend build-a bez error-a
-- [ ] Push na deploy branch
-- [ ] Backend deploy kroz Azure CLI
-- [ ] SQL skripte izvršene na Azure SQL
-- [ ] Hard refresh browsera
-- [ ] Testirao na production URL-u
+
+**Deployment redosled (KRITIČNO):**
+1. [ ] SQL migracije izvršene na Azure SQL **PRVO**
+2. [ ] Backend deploy (ako ima backend izmena)
+3. [ ] Frontend deploy/push (ako ima frontend izmena)
+4. [ ] Hard refresh browsera
+5. [ ] Testirao na production URL-u
+
+**Zašto ovaj redosled?**
+- Backend kod može zahtevati nove kolone/tabele iz SQL migracija
+- Frontend može zahtevati nove API endpoint-e iz backend-a
+- Uvek: **Database → Backend → Frontend**
