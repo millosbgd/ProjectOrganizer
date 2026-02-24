@@ -47,6 +47,7 @@ export class AktivnostModalComponent implements OnChanges {
   showDevOpsTasksModal: boolean = false;
   showDevOpsTasksPreviewModal: boolean = false;
   parsedTasks: ParsedTask[] = [];
+  validationError: string = ''; // Validation error message
 
   // Time fields
   readonly DURATION_STEP_MINUTES = 15; // 15 minutes per click
@@ -69,10 +70,36 @@ export class AktivnostModalComponent implements OnChanges {
       if (this.aktivnost.projekatId && this.aktivnost.projekatId > 0) {
         this.loadImplementationItems();
       }
+      // Set default times for new aktivnost (current time + 1 hour)
+      if (!this.aktivnost.id || this.aktivnost.id === 0) {
+        this.setDefaultTimes();
+      }
     }
     if (changes['aktivnost'] && this.aktivnost.projekatId && this.aktivnost.projekatId > 0) {
       this.loadImplementationItems();
     }
+  }
+
+  setDefaultTimes(): void {
+    // Only set default times if they're not already set
+    if (this.aktivnost.startUtc && this.aktivnost.endUtc) {
+      return;
+    }
+
+    const now = new Date();
+    // Round to next 15 minutes
+    const minutes = now.getMinutes();
+    const roundedMinutes = Math.ceil(minutes / 15) * 15;
+    now.setMinutes(roundedMinutes);
+    now.setSeconds(0);
+    now.setMilliseconds(0);
+
+    // Set start time to rounded current time
+    this.aktivnost.startUtc = now.toISOString();
+
+    // Set end time to 1 hour later
+    const endTime = new Date(now.getTime() + 60 * 60000); // +1 hour
+    this.aktivnost.endUtc = endTime.toISOString();
   }
 
   loadProjekti(): void {
@@ -158,6 +185,7 @@ export class AktivnostModalComponent implements OnChanges {
     const resultDate = new Date(localDateTime);
     if (!isNaN(resultDate.getTime())) {
       this.aktivnost.startUtc = resultDate.toISOString();
+      this.validationError = ''; // Clear validation error when time is set
     }
   }
 
@@ -181,6 +209,7 @@ export class AktivnostModalComponent implements OnChanges {
     const resultDate = new Date(localDateTime);
     if (!isNaN(resultDate.getTime())) {
       this.aktivnost.endUtc = resultDate.toISOString();
+      this.validationError = ''; // Clear validation error when time is set
     }
   }
 
@@ -214,6 +243,8 @@ export class AktivnostModalComponent implements OnChanges {
 
   // Increment duration by DURATION_STEP_MINUTES
   incrementDuration(): void {
+    this.validationError = ''; // Clear validation error
+    
     if (!this.aktivnost.startUtc) {
       // If no start time, set default start time to now
       const now = new Date();
@@ -237,6 +268,8 @@ export class AktivnostModalComponent implements OnChanges {
 
   // Decrement duration by DURATION_STEP_MINUTES
   decrementDuration(): void {
+    this.validationError = ''; // Clear validation error
+    
     if (!this.aktivnost.startUtc || !this.aktivnost.endUtc) {
       return;
     }
@@ -254,10 +287,28 @@ export class AktivnostModalComponent implements OnChanges {
   }
 
   onSave(): void {
+    // Clear previous validation error
+    this.validationError = '';
+
+    // Validate required fields
+    if (!this.aktivnost.startUtc || !this.aktivnost.endUtc) {
+      this.validationError = '⚠️ Morate uneti vreme početka i završetka aktivnosti.';
+      return;
+    }
+
+    // Validate end time is after start time
+    const start = new Date(this.aktivnost.startUtc);
+    const end = new Date(this.aktivnost.endUtc);
+    if (end <= start) {
+      this.validationError = '⚠️ Vreme završetka mora biti nakon vremena početka.';
+      return;
+    }
+
     this.save.emit(this.aktivnost);
   }
 
   onClose(): void {
+    this.validationError = ''; // Clear validation error on close
     this.close.emit();
   }
 

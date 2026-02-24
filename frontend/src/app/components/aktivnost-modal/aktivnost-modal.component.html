@@ -151,8 +151,17 @@
     </div>
 
     <div class="modal-footer">
-      <button type="button" class="btn-primary" (click)="onSave()">Sačuvaj</button>
-      <button type="button" class="btn-secondary" (click)="onClose()">Otkaži</button>
+      <div class="error-message" *ngIf="validationError">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        {{ validationError }}
+      </div>
+      <div class="footer-buttons">
+        <button type="button" class="btn-primary" (click)="onSave()">Sačuvaj</button>
+        <button type="button" class="btn-secondary" (click)="onClose()">Otkaži</button>
       <button 
         type="button" 
         class="btn-icon-minimal danger" 
