@@ -78,21 +78,35 @@ export class ProjektiListComponent implements OnInit {
   applyFilters(): void {
     let filtered = [...this.projekti];
 
+    console.log('Applying filters - nazivFilter:', this.filterNaziv, 'klijentFilter:', this.filterKlijentId);
+    console.log('Total projekti:', this.projekti.length);
+
     // Filter by naziv
-    if (this.filterNaziv) {
-      const searchTerm = this.filterNaziv.toLowerCase();
-      filtered = filtered.filter(p => 
-        p.naziv.toLowerCase().includes(searchTerm) ||
-        p.brojProjekta.toLowerCase().includes(searchTerm)
-      );
+    if (this.filterNaziv && this.filterNaziv.trim()) {
+      const searchTerm = this.filterNaziv.toLowerCase().trim();
+      filtered = filtered.filter(p => {
+        const naziv = p.naziv?.toLowerCase() || '';
+        const brojProjekta = p.brojProjekta?.toLowerCase() || '';
+        const matches = naziv.includes(searchTerm) || brojProjekta.includes(searchTerm);
+        return matches;
+      });
+      console.log('After naziv filter:', filtered.length);
     }
 
     // Filter by klijent
     if (this.filterKlijentId) {
-      filtered = filtered.filter(p => p.klijent?.id === this.filterKlijentId);
+      filtered = filtered.filter(p => {
+        const matches = p.klijentId === this.filterKlijentId;
+        if (!matches) {
+          console.log('Projekat', p.naziv, 'klijentId:', p.klijentId, 'vs filter:', this.filterKlijentId);
+        }
+        return matches;
+      });
+      console.log('After klijent filter:', filtered.length);
     }
 
     this.filteredProjekti = filtered;
+    console.log('Final filtered count:', this.filteredProjekti.length);
   }
 
   clearFilters(): void {
