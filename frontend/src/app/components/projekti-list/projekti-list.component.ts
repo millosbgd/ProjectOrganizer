@@ -78,8 +78,19 @@ export class ProjektiListComponent implements OnInit {
   applyFilters(): void {
     let filtered = [...this.projekti];
 
-    console.log('Applying filters - nazivFilter:', this.filterNaziv, 'klijentFilter:', this.filterKlijentId);
+    console.log('=== FILTER DEBUG ===');
+    console.log('filterNaziv:', this.filterNaziv, 'type:', typeof this.filterNaziv);
+    console.log('filterKlijentId:', this.filterKlijentId, 'type:', typeof this.filterKlijentId);
     console.log('Total projekti:', this.projekti.length);
+    
+    if (this.projekti.length > 0) {
+      console.log('Sample projekat:', {
+        naziv: this.projekti[0].naziv,
+        klijentId: this.projekti[0].klijentId,
+        klijentIdType: typeof this.projekti[0].klijentId,
+        klijent: this.projekti[0].klijent
+      });
+    }
 
     // Filter by naziv
     if (this.filterNaziv && this.filterNaziv.trim()) {
@@ -94,12 +105,12 @@ export class ProjektiListComponent implements OnInit {
     }
 
     // Filter by klijent
-    if (this.filterKlijentId) {
+    if (this.filterKlijentId !== null) {
+      const filterIdNum = Number(this.filterKlijentId);
+      console.log('Filtering by klijentId:', filterIdNum);
       filtered = filtered.filter(p => {
-        const matches = p.klijentId === this.filterKlijentId;
-        if (!matches) {
-          console.log('Projekat', p.naziv, 'klijentId:', p.klijentId, 'vs filter:', this.filterKlijentId);
-        }
+        const matches = p.klijentId === filterIdNum;
+        console.log(`Projekat "${p.naziv}": klijentId=${p.klijentId} (${typeof p.klijentId}) === ${filterIdNum} (${typeof filterIdNum}) = ${matches}`);
         return matches;
       });
       console.log('After klijent filter:', filtered.length);
@@ -107,6 +118,7 @@ export class ProjektiListComponent implements OnInit {
 
     this.filteredProjekti = filtered;
     console.log('Final filtered count:', this.filteredProjekti.length);
+    console.log('===================');
   }
 
   clearFilters(): void {
