@@ -26,13 +26,66 @@
     </div>
   </div>
 
+  <div class="filters-bar">
+    <div class="filter-group">
+      <label>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"></circle>
+          <path d="m21 21-4.35-4.35"></path>
+        </svg>
+        Naziv projekta:
+      </label>
+      <input 
+        type="text" 
+        [(ngModel)]="filterNaziv" 
+        (ngModelChange)="applyFilters()"
+        placeholder="Pretraži po nazivu..."
+        class="filter-input" />
+    </div>
+
+    <div class="filter-group">
+      <label>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+        Klijent:
+      </label>
+      <select 
+        [(ngModel)]="filterKlijentId" 
+        (ngModelChange)="applyFilters()"
+        class="filter-select">
+        <option [ngValue]="null">Svi klijenti</option>
+        <option *ngFor="let klijent of uniqueKlijenti" [ngValue]="klijent.id">
+          {{ klijent.naziv }}
+        </option>
+      </select>
+    </div>
+
+    <button 
+      *ngIf="filterNaziv || filterKlijentId" 
+      class="btn-clear-filters" 
+      (click)="clearFilters()"
+      title="Očisti filtere">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+      </svg>
+      Očisti
+    </button>
+  </div>
+
   <div *ngIf="loading" class="loading">Učitavanje...</div>
 
   <div *ngIf="!loading && projekti.length === 0" class="no-data">
     Nema projekata. Kreirajte novi projekat.
   </div>
 
-  <div class="projekti-grid" *ngIf="!loading && projekti.length > 0">
+  <div *ngIf="!loading && projekti.length > 0 && filteredProjekti.length === 0" class="no-data">
+    Nema projekata koji zadovoljavaju filter kriterijume.
+  </div>
+
+  <div class="projekti-grid" *ngIf="!loading && filteredProjekti.length > 0">
     <div class="projekat-card" *ngFor="let projekat of projekti" [routerLink]="['/projekti', projekat.id]">
       <div class="card-header">
         <h3>{{ projekat.naziv }}</h3>
