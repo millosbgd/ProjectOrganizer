@@ -49,16 +49,7 @@ export class AktivnostModalComponent implements OnChanges {
   parsedTasks: ParsedTask[] = [];
 
   // Time fields
-  duration: string = ''; // Helper field for quick calculation
-  durationOptions = [
-    { label: '15 minuta', value: 15 },
-    { label: '30 minuta', value: 30 },
-    { label: '1 sat', value: 60 },
-    { label: '1.5 sata', value: 90 },
-    { label: '2 sata', value: 120 },
-    { label: '4 sata', value: 240 },
-    { label: '8 sati', value: 480 }
-  ];
+  readonly DURATION_STEP_MINUTES = 15; // 15 minutes per click
 
   // OCR properties
   selectedImageFile: File | null = null;
@@ -193,13 +184,72 @@ export class AktivnostModalComponent implements OnChanges {
     }
   }
 
-  onDurationChange(): void {
-    if (!this.duration || !this.aktivnost.startUtc) {
+  // Calculate current duration in minutes
+  getDurationMinutes(): number {
+    if (!this.aktivnost.startUtc || !this.aktivnost.endUtc) {
+      return 0;
+    }
+    const start = new Date(this.aktivnost.startUtc);
+    const end = new Date(this.aktivnost.endUtc);
+    const diffMs = end.getTime() - start.getTime();
+    return Math.round(diffMs / 60000); // Convert ms to minutes
+  }
+
+  // Get duration label for display
+  getDurationLabel(): string {
+    const minutes = this.getDurationMinutes();
+    if (minutes === 0) {
+      return '0 min';
+    }
+    if (minutes < 60) {
+      return `${minutes} min`;
+    }
+    const hours = Math.floor(minutes / 60);
+    const remainingMinutes = minutes % 60;
+    if (remainingMinutes === 0) {
+      return `${hours} ${hours === 1 ? 'sat' : 'sati'}`;
+    }
+    return `${hours}h ${remainingMinutes}min`;
+  }
+
+  // Increment duration by DURATION_STEP_MINUTES
+  incrementDuration(): void {
+    if (!this.aktivnost.startUtc) {
+      // If no start time, set default start time to now
+      const now = new Date();
+      const currentDatum = this.datumString || now.toISOString().split('T')[0];
+      const localDateTime = `${currentDatum}T${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:00`;
+      this.aktivnost.startUtc = new Date(localDateTime).toISOString();
+    }
+
+    if (!this.aktivnost.endUtc) {
+      // If no end time, set it to start + DURATION_STEP_MINUTES
+      const startDate = new Date(this.aktivnost.startUtc);
+      const endDate = new Date(startDate.getTime() + this.DURATION_STEP_MINUTES * 60000);
+      this.aktivnost.endUtc = endDate.toISOString();
+    } else {
+      // Add DURATION_STEP_MINUTES to end time
+      const endDate = new Date(this.aktivnost.endUtc);
+      endDate.setMinutes(endDate.getMinutes() + this.DURATION_STEP_MINUTES);
+      this.aktivnost.endUtc = endDate.toISOString();
+    }
+  }
+
+  // Decrement duration by DURATION_STEP_MINUTES
+  decrementDuration(): void {
+    if (!this.aktivnost.startUtc || !this.aktivnost.endUtc) {
       return;
     }
-    const durationMinutes = parseInt(this.duration);
-    const startDate = new Date(this.aktivnost.startUtc);
-    const endDate = new Date(startDate.getTime() + durationMinutes * 60000);
+
+    const currentDuration = this.getDurationMinutes();
+    if (currentDuration <= this.DURATION_STEP_MINUTES) {
+      // Don't go below DURATION_STEP_MINUTES
+      return;
+    }
+
+    // Subtract DURATION_STEP_MINUTES from end time
+    const endDate = new Date(this.aktivnost.endUtc);
+    endDate.setMinutes(endDate.getMinutes() - this.DURATION_STEP_MINUTES);
     this.aktivnost.endUtc = endDate.toISOString();
   }
 
