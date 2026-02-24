@@ -33,6 +33,7 @@ export class ProjektiListComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
+    console.log('ProjektiListComponent - ngOnInit called');
     this.loadCurrentUser();
     this.loadProjekti();
   }
@@ -49,8 +50,10 @@ export class ProjektiListComponent implements OnInit {
   }
 
   loadProjekti(): void {
+    console.log('loadProjekti called, showAllProjects:', this.showAllProjects);
     this.projekatService.getAll(!this.showAllProjects).subscribe({
       next: (data) => {
+        console.log('Projekti loaded:', data.length, 'projekata');
         this.projekti = data;
         this.extractUniqueKlijenti();
         this.applyFilters();
