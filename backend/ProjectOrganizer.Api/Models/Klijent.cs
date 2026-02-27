@@ -27,6 +27,12 @@ public class Klijent
     [MaxLength(100)]
     public string? Zemlja { get; set; }
 
+    [MaxLength(100)]
+    public string? PdvStatus { get; set; }
+
+    [MaxLength(50)]
+    public string? PdvRegistrationDate { get; set; }
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 

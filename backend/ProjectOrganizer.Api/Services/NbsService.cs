@@ -188,13 +188,20 @@ public class NbsService
 
     private CompanyInfo? ExtractCompanyData(XElement dataRow)
     {
+        // Log all available elements to see what NBS returns
+        _logger.LogInformation("All NBS elements: {Elements}", 
+            string.Join(", ", dataRow.Elements().Select(e => $"{e.Name.LocalName}={e.Value}")));
+        
         var naziv = dataRow.Element("CompanyName")?.Value;
         var pib = dataRow.Element("TaxIdentificationNumber")?.Value?.Trim();
         var maticniBroj = dataRow.Element("NationalIdentificationNumber")?.Value;
         var adresa = dataRow.Element("Address")?.Value;
         var grad = dataRow.Element("City")?.Value;
+        var pdvStatus = dataRow.Element("VATRegistrationStatusDate")?.Value; // PDV status
+        var pdvObveznik = dataRow.Element("VATRegistrationStatus")?.Value; // PDV obveznik status
 
-        _logger.LogInformation("Parsed company: {Naziv}, PIB: {PIB}, Maticni: {Maticni}", naziv, pib, maticniBroj);
+        _logger.LogInformation("Parsed company: {Naziv}, PIB: {PIB}, Maticni: {Maticni}, PDVStatus: {PDVStatus}, PDVObveznik: {PDVObveznik}", 
+            naziv, pib, maticniBroj, pdvStatus, pdvObveznik);
 
         if (string.IsNullOrWhiteSpace(naziv))
         {
@@ -208,7 +215,11 @@ public class NbsService
             Pib = pib ?? string.Empty,
             MaticniBroj = maticniBroj ?? string.Empty,
             Adresa = adresa ?? string.Empty,
-            Grad = grad ?? string.Empty,            Zemlja = "RS",            IsActive = true
+            Grad = grad ?? string.Empty,
+            Zemlja = "RS",
+            IsActive = true,
+            PdvStatus = pdvObveznik ?? string.Empty,
+            PdvRegistrationDate = pdvStatus ?? string.Empty
         };
     }
 }
@@ -222,4 +233,6 @@ public class CompanyInfo
     public string Grad { get; set; } = string.Empty;
     public string Zemlja { get; set; } = string.Empty;
     public bool IsActive { get; set; }
+    public string PdvStatus { get; set; } = string.Empty; // PDV Registration Status
+    public string PdvRegistrationDate { get; set; } = string.Empty; // PDV Registration Date
 }
