@@ -22,7 +22,9 @@ export class KlijentDetailComponent implements OnInit {
     maticniBroj: '',
     adresa: '',
     grad: '',
-    zemlja: ''
+    zemlja: '',
+    pdvStatus: '',
+    pdvRegistrationDate: ''
   };
   
   countries: CodebookEntry[] = [];
@@ -117,6 +119,8 @@ export class KlijentDetailComponent implements OnInit {
         this.klijent.adresa = data.adresa;
         this.klijent.grad = data.grad;
         this.klijent.zemlja = "RS"; // NBS = Narodna banka SRBIJE!
+        this.klijent.pdvStatus = data.pdvStatus;
+        this.klijent.pdvRegistrationDate = data.pdvRegistrationDate;
         this.isFetchingNbs = false;
         alert('Podaci uspešno preuzeti sa NBS!');
       },

@@ -6,4 +6,6 @@ export interface Klijent {
   adresa: string;
   grad: string;
   zemlja: string;
+  pdvStatus?: string;
+  pdvRegistrationDate?: string;
 }

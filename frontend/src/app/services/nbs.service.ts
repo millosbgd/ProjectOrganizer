@@ -11,6 +11,8 @@ export interface CompanyInfo {
   grad: string;
   zemlja: string;
   isActive: boolean;
+  pdvStatus: string;
+  pdvRegistrationDate: string;
 }
 
 @Injectable({

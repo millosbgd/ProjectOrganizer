@@ -29,6 +29,18 @@
         </div>
 
         <div class="form-group">
+          <label>PDV Status:</label>
+          <input type="text" [(ngModel)]="klijent.pdvStatus" name="pdvStatus" readonly 
+                 placeholder="Automatski se popunjava sa NBS" />
+        </div>
+
+        <div class="form-group">
+          <label>PDV Datum Registracije:</label>
+          <input type="text" [(ngModel)]="klijent.pdvRegistrationDate" name="pdvRegistrationDate" readonly 
+                 placeholder="Automatski se popunjava sa NBS" />
+        </div>
+
+        <div class="form-group">
           <label>Naziv:</label>
           <input type="text" [(ngModel)]="klijent.naziv" name="naziv" required />
         </div>
