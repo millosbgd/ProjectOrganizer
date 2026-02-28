@@ -473,12 +473,12 @@ public class AktivnostiController : ControllerBase
             // Create prompt for OpenAI
             var prompt = $@"Na osnovu sledećih aktivnosti, generiši profesionalni izveštaj o radu.
 Izveštaj treba da sadrži:
-1. Uvod sa periodom i ukupnim brojem aktivnosti
-2. Kronološki pregled aktivnosti
-3. Sažetak po vrstama aktivnosti (Razvoj, Analiza, Testiranje, itd.)
-4. Zaključak sa osvrtom na produktivnost i glavne rezultate
+1. Uvod sa periodom i ukupnim brojem aktivnosti (ovde moraš da budeš jako dramatičan)
+2. Hronološki pregled aktivnosti
+3. Kratak pregled po vrstama aktivnosti (Razvoj, Analiza, Testiranje, itd.)
+4. Zaključak sa osvrtom na produktivnost i glavne rezultate (takođe, ubaci dosta dramaturgije)
 
-Koristi profesionalan ton iFormat koji može lako da se kopira i prosleđuje.
+Koristi profesionalan ton iFormat koji može lako da se kopira i prosleđuje. Nemoj koristiti znakove ""#"", ""*"" i sl da ističeš naslove. Ako je aktivnosti premalo za dati period, slobodno dodaj neke opšte aktivnosti tako da ispadne da su aktivnosti savladane nadljudski - naravno sve u profesionalnom tonu.
 
 Aktivnosti:
 {activitiesText}
