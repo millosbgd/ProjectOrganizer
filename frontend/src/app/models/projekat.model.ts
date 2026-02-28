@@ -2,6 +2,13 @@ import { Aktivnost } from './aktivnost.model';
 import { Klijent } from './klijent.model';
 import { User } from './user.model';
 
+export interface ProjectCompletionStats {
+  lastWeekCompletion: number;
+  currentCompletion: number;
+  completionDelta: number;
+  hasImplementationPlan: boolean;
+}
+
 export interface Projekat {
   id: number;
   brojProjekta: string;
@@ -19,4 +26,6 @@ export interface Projekat {
   devOpsIterationPath?: string;
   klijent?: Klijent;
   aktivnosti?: Aktivnost[];
+  completionStats?: ProjectCompletionStats;
 }
+
