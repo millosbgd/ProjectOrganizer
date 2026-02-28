@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { UserSettings } from '../models/user-settings.model';
+import { UserSettings, UpdateUserSettings } from '../models/user-settings.model';
 
 @Injectable({
   providedIn: 'root'
@@ -16,7 +16,7 @@ export class UserSettingsService {
     return this.http.get<UserSettings>(this.apiUrl);
   }
 
-  update(settings: UserSettings): Observable<void> {
+  update(settings: UpdateUserSettings): Observable<void> {
     return this.http.put<void>(this.apiUrl, settings);
   }
 }

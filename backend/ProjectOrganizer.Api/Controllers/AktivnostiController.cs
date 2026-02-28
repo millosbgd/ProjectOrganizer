@@ -17,17 +17,20 @@ public class AktivnostiController : ControllerBase
     private readonly ILogger<AktivnostiController> _logger;
     private readonly OpenAIService _openAIService;
     private readonly UserService _userService;
+    private readonly EncryptionService _encryptionService;
 
     public AktivnostiController(
         ApplicationDbContext context, 
         ILogger<AktivnostiController> logger,
         OpenAIService openAIService,
-        UserService userService)
+        UserService userService,
+        EncryptionService encryptionService)
     {
         _context = context;
         _logger = logger;
         _openAIService = openAIService;
         _userService = userService;
+        _encryptionService = encryptionService;
     }
 
     // GET: api/Aktivnosti
@@ -194,8 +197,13 @@ public class AktivnostiController : ControllerBase
 
         try
         {
+            // Decrypt the API key before using it
+            var decryptedApiKey = _encryptionService.Decrypt(userSettings.OpenAiApiKey);
+            if (string.IsNullOrWhiteSpace(decryptedApiKey))
+                return BadRequest("OpenAI API ključ nije validan. Molimo ažurirajte ga u podešavanjima.");
+
             var zapisnik = await _openAIService.GenerateZapisnikAsync(
-                userSettings.OpenAiApiKey,
+                decryptedApiKey,
                 userSettings.OpenAiModel,
                 aktivnost.Projekat.Klijent.Naziv,
                 aktivnost.Projekat.Naziv,
@@ -242,8 +250,13 @@ public class AktivnostiController : ControllerBase
 
         try
         {
+            // Decrypt the API key before using it
+            var decryptedApiKey = _encryptionService.Decrypt(userSettings.OpenAiApiKey);
+            if (string.IsNullOrWhiteSpace(decryptedApiKey))
+                return BadRequest("OpenAI API ključ nije validan. Molimo ažurirajte ga u podešavanjima.");
+
             var tasks = await _openAIService.GenerateDevOpsTasks(
-                userSettings.OpenAiApiKey,
+                decryptedApiKey,
                 userSettings.OpenAiModel,
                 aktivnost.Projekat.Klijent.Naziv,
                 aktivnost.Projekat.Naziv,
