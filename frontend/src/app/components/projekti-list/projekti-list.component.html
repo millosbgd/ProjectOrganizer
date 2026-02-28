@@ -109,28 +109,20 @@
       <div class="completion-stats" *ngIf="projekat.completionStats?.hasImplementationPlan">
         <div class="completion-badge last-week">
           <span class="completion-value">{{ projekat.completionStats?.lastWeekCompletion }}%</span>
-          <span class="completion-label">Prošla</span>
         </div>
         <div class="completion-badge current" 
              [class.positive]="(projekat.completionStats?.completionDelta ?? 0) > 0"
              [class.negative]="(projekat.completionStats?.completionDelta ?? 0) < 0"
              [class.neutral]="(projekat.completionStats?.completionDelta ?? 0) === 0">
           <span class="completion-value">{{ projekat.completionStats?.currentCompletion }}%</span>
-          <span class="completion-label">Trenutno</span>
         </div>
         <div class="completion-trend" 
              [class.up]="(projekat.completionStats?.completionDelta ?? 0) > 0"
              [class.down]="(projekat.completionStats?.completionDelta ?? 0) < 0"
              [title]="'Trend: ' + ((projekat.completionStats?.completionDelta ?? 0) > 0 ? '+' : '') + (projekat.completionStats?.completionDelta ?? 0) + '%'">
-          <svg *ngIf="(projekat.completionStats?.completionDelta ?? 0) > 0" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-            <polyline points="18 15 12 9 6 15"></polyline>
-          </svg>
-          <svg *ngIf="(projekat.completionStats?.completionDelta ?? 0) < 0" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-            <polyline points="6 9 12 15 18 9"></polyline>
-          </svg>
-          <svg *ngIf="(projekat.completionStats?.completionDelta ?? 0) === 0" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-            <line x1="5" y1="12" x2="19" y2="12"></line>
-          </svg>
+          <span *ngIf="(projekat.completionStats?.completionDelta ?? 0) > 0" class="material-icons">trending_up</span>
+          <span *ngIf="(projekat.completionStats?.completionDelta ?? 0) < 0" class="material-icons">trending_down</span>
+          <span *ngIf="(projekat.completionStats?.completionDelta ?? 0) === 0" class="material-icons">trending_flat</span>
         </div>
       </div>
       
