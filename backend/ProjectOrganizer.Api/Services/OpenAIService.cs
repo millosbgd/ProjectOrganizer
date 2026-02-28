@@ -163,4 +163,27 @@ FORMAT ODGOVORA:
         var response = await chatClient.CompleteChatAsync(messages);
         return response.Value.Content[0].Text;
     }
+
+    /// <summary>
+    /// Generic method to generate text using OpenAI with a custom prompt
+    /// </summary>
+    public async Task<string> GenerateTextAsync(string apiKey, string prompt, string model = "gpt-4o")
+    {
+        if (string.IsNullOrWhiteSpace(apiKey))
+            throw new InvalidOperationException("OpenAI API key is not configured for this user.");
+
+        if (string.IsNullOrWhiteSpace(prompt))
+            throw new ArgumentException("Prompt is required.");
+
+        var openAiClient = new OpenAIClient(apiKey);
+        var chatClient = openAiClient.GetChatClient(model);
+
+        var messages = new List<ChatMessage>
+        {
+            new UserChatMessage(prompt)
+        };
+
+        var response = await chatClient.CompleteChatAsync(messages);
+        return response.Value.Content[0].Text;
+    }
 }
