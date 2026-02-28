@@ -52,4 +52,8 @@ export class AktivnostService {
   saveSelectedTasks(id: number, tasks: any[]): Observable<any> {
     return this.http.post(`${this.apiUrl}/${id}/save-selected-tasks`, { tasks });
   }
+
+  generateReport(aktivnosti: Aktivnost[]): Observable<string> {
+    return this.http.post(`${this.apiUrl}/generate-report`, aktivnosti, { responseType: 'text' });
+  }
 }

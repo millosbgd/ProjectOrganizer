@@ -428,6 +428,74 @@ public class AktivnostiController : ControllerBase
 
         return candidates;
     }
+
+    // POST: api/Aktivnosti/generate-report
+    [HttpPost("generate-report")]
+    public async Task<ActionResult<string>> GenerateReport([FromBody] List<Aktivnost> aktivnosti)
+    {
+        if (aktivnosti == null || !aktivnosti.Any())
+        {
+            return BadRequest("Molimo selektujte najmanje jednu aktivnost.");
+        }
+
+        try
+        {
+            // Get user's OpenAI API key
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized("Korisnik nije autentifikovan.");
+            }
+
+            var userSettings = await _context.UserSettings
+                .FirstOrDefaultAsync(us => us.UserId == userId);
+
+            if (userSettings == null || string.IsNullOrWhiteSpace(userSettings.OpenAiApiKey))
+            {
+                return BadRequest("OpenAI API ključ nije podešen. Molimo posetite Podešavanja i unesite vaš API ključ.");
+            }
+
+            // Decrypt the API key
+            var decryptedApiKey = _encryptionService.Decrypt(userSettings.OpenAiApiKey);
+
+            // Prepare activity data for the prompt
+            var activitiesText = string.Join("\n\n", aktivnosti.Select((a, index) => 
+                $"Aktivnost {index + 1}:\n" +
+                $"- Datum: {a.Datum:dd.MM.yyyy}\n" +
+                $"- Opis: {a.Opis}\n" +
+                $"- Detalji: {a.Detalji}\n" +
+                $"- Status: {a.Status}\n" +
+                $"- Vrsta: {a.Vrsta}" +
+                (a.ProjekatId.HasValue ? $"\n- Projekat ID: {a.ProjekatId}" : "") +
+                (a.Bau ? "\n- BAU aktivnost" : "")
+            ));
+
+            // Create prompt for OpenAI
+            var prompt = $@"Na osnovu sledećih aktivnosti, generiši profesionalni izveštaj o radu.
+Izveštaj treba da sadrži:
+1. Uvod sa periodom i ukupnim brojem aktivnosti
+2. Kronološki pregled aktivnosti
+3. Sažetak po vrstama aktivnosti (Razvoj, Analiza, Testiranje, itd.)
+4. Zaključak sa osvrtom na produktivnost i glavne rezultate
+
+Koristi profesionalan ton iFormat koji može lako da se kopira i prosleđuje.
+
+Aktivnosti:
+{activitiesText}
+
+Generiši izveštaj na srpskom jeziku (latinica):";
+
+            // Call OpenAI API
+            var report = await _openAIService.GenerateTextAsync(decryptedApiKey, prompt);
+
+            return Ok(report);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Greška prilikom generisanja izveštaja");
+            return StatusCode(500, $"Greška prilikom generisanja izveštaja: {ex.Message}");
+        }
+    }
 }
 
 // DTOs for new endpoints

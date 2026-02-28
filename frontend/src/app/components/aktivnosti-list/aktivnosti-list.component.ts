@@ -20,6 +20,12 @@ export class AktivnostiListComponent implements OnInit {
   showAllActivities = false;
   currentUser: User | null = null;
   
+  // Selection and report properties
+  selectedAktivnosti: number[] = [];
+  generatingReport = false;
+  generatedReport = '';
+  showReportModal = false;
+  
   // Modal properties
   isModalOpen = false;
   selectedAktivnost: Aktivnost = this.getEmptyAktivnost();
@@ -133,6 +139,66 @@ export class AktivnostiListComponent implements OnInit {
       month: '2-digit',
       year: 'numeric'
     });
+  }
+
+  // Selection methods
+  toggleSelection(id: number): void {
+    const index = this.selectedAktivnosti.indexOf(id);
+    if (index > -1) {
+      this.selectedAktivnosti.splice(index, 1);
+    } else {
+      this.selectedAktivnosti.push(id);
+    }
+  }
+
+  isSelected(id: number): boolean {
+    return this.selectedAktivnosti.includes(id);
+  }
+
+  toggleSelectAll(event: any): void {
+    if (event.target.checked) {
+      this.selectedAktivnosti = this.aktivnosti.map(a => a.id);
+    } else {
+      this.selectedAktivnosti = [];
+    }
+  }
+
+  // Report generation
+  generateReport(): void {
+    if (this.selectedAktivnosti.length === 0) {
+      alert('Molimo selektujte najmanje jednu aktivnost.');
+      return;
+    }
+
+    this.generatingReport = true;
+    const selectedActivities = this.aktivnosti.filter(a => this.selectedAktivnosti.includes(a.id));
+
+    this.aktivnostService.generateReport(selectedActivities).subscribe({
+      next: (report) => {
+        this.generatedReport = report;
+        this.showReportModal = true;
+        this.generatingReport = false;
+      },
+      error: (error) => {
+        console.error('Error generating report:', error);
+        alert('Greška prilikom generisanja izveštaja: ' + (error.error?.message || error.message));
+        this.generatingReport = false;
+      }
+    });
+  }
+
+  copyReportToClipboard(): void {
+    navigator.clipboard.writeText(this.generatedReport).then(() => {
+      alert('Izveštaj je kopiran u clipboard!');
+    }).catch(err => {
+      console.error('Error copying to clipboard:', err);
+      alert('Greška prilikom kopiranja u clipboard.');
+    });
+  }
+
+  closeReportModal(): void {
+    this.showReportModal = false;
+    this.generatedReport = '';
   }
 
   private getEmptyAktivnost(): Aktivnost {
