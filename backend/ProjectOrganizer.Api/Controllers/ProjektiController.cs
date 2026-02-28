@@ -15,18 +15,20 @@ public class ProjektiController : ControllerBase
 {
     private readonly ApplicationDbContext _context;
     private readonly UserService _userService;
+    private readonly CompletionService _completionService;
     private readonly ILogger<ProjektiController> _logger;
 
-    public ProjektiController(ApplicationDbContext context, UserService userService, ILogger<ProjektiController> logger)
+    public ProjektiController(ApplicationDbContext context, UserService userService, CompletionService completionService, ILogger<ProjektiController> logger)
     {
         _context = context;
         _userService = userService;
+        _completionService = completionService;
         _logger = logger;
     }
 
     // GET: api/Projekti
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<Projekat>>> GetProjekti(
+    public async Task<ActionResult<IEnumerable<ProjekatWithStatsDto>>> GetProjekti(
         [FromQuery] bool? aktivan = null,
         [FromQuery] string? status = null,
         [FromQuery] bool createdByMe = true)
@@ -68,7 +70,31 @@ public class ProjektiController : ControllerBase
             query = query.Where(p => p.Status == status);
 
         var projekti = await query.OrderByDescending(p => p.Datum).ToListAsync();
-        return Ok(projekti);
+        
+        // Calculate completion stats for all projects
+        var projektIds = projekti.Select(p => p.Id).ToList();
+        var completionStats = await _completionService.CalculateBatchCompletionAsync(projektIds);
+        
+        // Map to DTO with stats
+        var result = projekti.Select(p => new ProjekatWithStatsDto
+        {
+            Id = p.Id,
+            BrojProjekta = p.BrojProjekta,
+            Datum = p.Datum,
+            Naziv = p.Naziv,
+            Aktivan = p.Aktivan,
+            Status = p.Status,
+            KlijentId = p.KlijentId,
+            CreatedBy = p.CreatedBy,
+            ImplementationModelId = p.ImplementationModelId,
+            CreatedAt = p.CreatedAt,
+            UpdatedAt = p.UpdatedAt,
+            Klijent = p.Klijent,
+            CreatedByUser = p.CreatedByUser,
+            CompletionStats = completionStats.ContainsKey(p.Id) ? completionStats[p.Id] : null
+        }).ToList();
+        
+        return Ok(result);
     }
 
     // GET: api/Projekti/5

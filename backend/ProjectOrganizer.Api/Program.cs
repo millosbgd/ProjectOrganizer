@@ -51,6 +51,7 @@ builder.Services.AddAuthorization();
 
 // Register services
 builder.Services.AddSingleton<EncryptionService>();
+builder.Services.AddScoped<CompletionService>();
 builder.Services.AddScoped<OpenAIService>();
 builder.Services.AddScoped<UserService>();
 builder.Services.AddHttpClient<NbsService>();
