@@ -1,5 +1,6 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
 import { FullCalendarModule } from '@fullcalendar/angular';
 import { CalendarOptions, EventInput, EventChangeArg, EventClickArg, DateSelectArg } from '@fullcalendar/core';
 import dayGridPlugin from '@fullcalendar/daygrid';
@@ -47,7 +48,7 @@ const serbianLatinLocale = {
 @Component({
   selector: 'app-calendar',
   standalone: true,
-  imports: [CommonModule, FullCalendarModule, AktivnostModalComponent],
+  imports: [CommonModule, RouterModule, FullCalendarModule, AktivnostModalComponent],
   templateUrl: './calendar.component.html',
   styleUrls: ['./calendar.component.css']
 })

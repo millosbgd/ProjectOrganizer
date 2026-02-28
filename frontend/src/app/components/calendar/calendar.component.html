@@ -1,6 +1,11 @@
 <div class="calendar-container">
   <div class="header">
     <h2>Kalendar aktivnosti</h2>
+    <div class="header-actions">
+      <button class="btn-icon-minimal" routerLink="/aktivnosti" title="Prikaži listu aktivnosti">
+        <span class="material-icons">checklist</span>
+      </button>
+    </div>
   </div>
   
   <div *ngIf="error" class="error-message">
