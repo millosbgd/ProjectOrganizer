@@ -528,8 +528,6 @@ Generiši izveštaj na srpskom jeziku (latinica):";
 
             // Get selected activities with related data
             var aktivnosti = await _context.Aktivnosti
-                .Include(a => a.ProjectImplementationItem)
-                    .ThenInclude(pii => pii!.ImplementationItem)
                 .Include(a => a.Projekat)
                     .ThenInclude(p => p!.Klijent)
                 .Where(a => request.AktivnostIds.Contains(a.Id))
@@ -544,48 +542,34 @@ Generiši izveštaj na srpskom jeziku (latinica):";
             var projekat = aktivnosti.FirstOrDefault(a => a.Projekat != null)?.Projekat;
             var klijent = projekat?.Klijent;
 
-            // Group activities by implementation item and calculate hours and costs
+            // Calculate hours and costs for each activity
+            const decimal hourlyRate = 50m; // 50€ per hour
             var offerItems = aktivnosti
-                .Where(a => a.ProjectImplementationItemId != null && a.StartUtc != null && a.EndUtc != null)
-                .GroupBy(a => a.ProjectImplementationItemId)
-                .Select(g =>
+                .Where(a => a.StartUtc != null && a.EndUtc != null)
+                .Select(a =>
                 {
-                    var firstActivity = g.First();
-                    var naziv = firstActivity.ProjectImplementationItem?.ImplementationItem?.Naziv ?? "Stavka bez naziva";
-                    var detalji = firstActivity.ProjectImplementationItem?.ImplementationItem?.Detalji;
-                    
-                    double totalHours = 0;
-                    foreach (var activity in g)
-                    {
-                        if (activity.StartUtc.HasValue && activity.EndUtc.HasValue)
-                        {
-                            var duration = activity.EndUtc.Value - activity.StartUtc.Value;
-                            totalHours += duration.TotalHours;
-                        }
-                    }
-
-                    const decimal hourlyRate = 50m; // 50€ per hour
-                    var totalCost = (decimal)totalHours * hourlyRate;
+                    var duration = a.EndUtc!.Value - a.StartUtc!.Value;
+                    var hours = Math.Round(duration.TotalHours, 2);
+                    var cost = Math.Round((decimal)hours * hourlyRate, 2);
 
                     return new
                     {
-                        Naziv = naziv,
-                        Detalji = detalji,
-                        TotalHours = Math.Round(totalHours, 2),
+                        Opis = a.Opis,
+                        Detalji = a.Detalji,
+                        Hours = hours,
                         HourlyRate = hourlyRate,
-                        TotalCost = Math.Round(totalCost, 2),
-                        ActivityCount = g.Count()
+                        TotalCost = cost
                     };
                 })
                 .ToList();
 
             if (!offerItems.Any())
             {
-                return BadRequest("Selektovane aktivnosti nemaju dodeljene stavke implementacije ili nemaju vremena.");
+                return BadRequest("Selektovane aktivnosti nemaju uneta vremena (StartUtc i EndUtc).");
             }
 
             // Calculate grand totals
-            var grandTotalHours = offerItems.Sum(item => item.TotalHours);
+            var grandTotalHours = offerItems.Sum(item => item.Hours);
             var grandTotalCost = offerItems.Sum(item => item.TotalCost);
 
             // Build prompt for OpenAI
@@ -598,27 +582,27 @@ Generiši izveštaj na srpskom jeziku (latinica):";
                 : "";
 
             var itemsText = string.Join("\n", offerItems.Select(item =>
-                $"- {item.Naziv}" +
-                (string.IsNullOrEmpty(item.Detalji) ? "" : $" ({item.Detalji})") +
-                $": {item.TotalHours}h x {item.HourlyRate}€/h = {item.TotalCost}€"
+                $"- {item.Opis}" +
+                (!string.IsNullOrEmpty(item.Detalji) ? $"\n  Detalji: {item.Detalji}" : "") +
+                $"\n  Vreme: {item.Hours}h x {item.HourlyRate}€/h = {item.TotalCost}€"
             ));
 
             var prompt = $@"Kreiraj profesionalnu ponudu za softverske usluge na osnovu sledećih podataka:
 
 {klijentInfo}{projekatInfo}
-Stavke implementacije:
+Realizovane funkcionalnosti:
 {itemsText}
 
 UKUPNO: {grandTotalHours}h = {grandTotalCost}€
 
 Generiši profesionalnu ponudu u sledećem formatu:
 - Uvodni pasus koji predstavlja ponudu
-- Tabelarni prikaz stavki sa satima i cenama
+- Tabelarni prikaz funkcionalnosti sa satima i cenama
 - Ukupnu cenu
 - Završni profesionalni pasus
 
 Koristi profesionalan i prijatan ton.
-NE koristi markdаwn formatiranje (#, *, itd).
+NE koristi markdown formatiranje (#, *, itd).
 Koristi samo obični tekst sa novim redovima i razmacima.";
 
             // Generate offer using OpenAI
