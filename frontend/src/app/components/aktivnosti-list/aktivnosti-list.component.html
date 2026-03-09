@@ -12,6 +12,15 @@
         <span>{{ generatingReport ? 'Generisanje...' : 'Generiši izveštaj (' + selectedAktivnosti.length + ')' }}</span>
       </button>
       <button 
+        *ngIf="selectedAktivnosti.length > 0"
+        class="btn-success"
+        (click)="generateOffer()"
+        [disabled]="generatingOffer"
+        title="Generiši ponudu za klijenta iz selektovanih aktivnosti">
+        <span class="material-icons">euro</span>
+        <span>{{ generatingOffer ? 'Generisanje...' : 'Generiši ponudu (' + selectedAktivnosti.length + ')' }}</span>
+      </button>
+      <button 
         class="btn-filter" 
         (click)="toggleShowAll()" 
         [title]="showAllActivities ? 'Prikaži moje aktivnosti' : 'Prikaži sve aktivnosti'">
@@ -139,6 +148,30 @@
         <span>Kopiraj u Clipboard</span>
       </button>
       <button class="btn-secondary" (click)="closeReportModal()">Zatvori</button>
+    </div>
+  </div>
+</div>
+
+<!-- Offer Modal -->
+<div class="modal-overlay" *ngIf="showOfferModal" (click)="closeOfferModal()">
+  <div class="report-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Generisana Ponuda</h3>
+      <button class="btn-close" (click)="closeOfferModal()" title="Zatvori">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="report-content">
+        <pre>{{ generatedOffer }}</pre>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-primary" (click)="copyOfferToClipboard()">
+        <span class="material-icons">content_copy</span>
+        <span>Kopiraj u Clipboard</span>
+      </button>
+      <button class="btn-secondary" (click)="closeOfferModal()">Zatvori</button>
     </div>
   </div>
 </div>

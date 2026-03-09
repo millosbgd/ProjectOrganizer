@@ -496,6 +496,142 @@ Generiši izveštaj na srpskom jeziku (latinica):";
             return StatusCode(500, $"Greška prilikom generisanja izveštaja: {ex.Message}");
         }
     }
+
+    // POST: api/Aktivnosti/generate-offer
+    [HttpPost("generate-offer")]
+    public async Task<ActionResult<string>> GenerateOffer([FromBody] GenerateOfferRequest request)
+    {
+        try
+        {
+            if (request.AktivnostIds == null || !request.AktivnostIds.Any())
+            {
+                return BadRequest("Morate selektovati bar jednu aktivnost.");
+            }
+
+            // Get user's OpenAI API key
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized("Korisnik nije autentifikovan.");
+            }
+
+            var userSettings = await _context.UserSettings
+                .FirstOrDefaultAsync(us => us.UserId == userId);
+
+            if (userSettings == null || string.IsNullOrEmpty(userSettings.OpenAiApiKey))
+            {
+                return BadRequest("Morate uneti OpenAI API ključ u podešavanjima.");
+            }
+
+            // Decrypt the API key
+            var apiKey = _encryptionService.Decrypt(userSettings.OpenAiApiKey);
+
+            // Get selected activities with related data
+            var aktivnosti = await _context.Aktivnosti
+                .Include(a => a.ProjectImplementationItem)
+                    .ThenInclude(pii => pii!.ImplementationItem)
+                .Include(a => a.Projekat)
+                    .ThenInclude(p => p!.Klijent)
+                .Where(a => request.AktivnostIds.Contains(a.Id))
+                .ToListAsync();
+
+            if (!aktivnosti.Any())
+            {
+                return BadRequest("Nije pronađena nijedna aktivnost sa datim ID-jevima.");
+            }
+
+            // Get project and client info
+            var projekat = aktivnosti.FirstOrDefault(a => a.Projekat != null)?.Projekat;
+            var klijent = projekat?.Klijent;
+
+            // Group activities by implementation item and calculate hours and costs
+            var offerItems = aktivnosti
+                .Where(a => a.ProjectImplementationItemId != null && a.StartUtc != null && a.EndUtc != null)
+                .GroupBy(a => a.ProjectImplementationItemId)
+                .Select(g =>
+                {
+                    var firstActivity = g.First();
+                    var naziv = firstActivity.ProjectImplementationItem?.ImplementationItem?.Naziv ?? "Stavka bez naziva";
+                    var detalji = firstActivity.ProjectImplementationItem?.ImplementationItem?.Detalji;
+                    
+                    double totalHours = 0;
+                    foreach (var activity in g)
+                    {
+                        if (activity.StartUtc.HasValue && activity.EndUtc.HasValue)
+                        {
+                            var duration = activity.EndUtc.Value - activity.StartUtc.Value;
+                            totalHours += duration.TotalHours;
+                        }
+                    }
+
+                    const decimal hourlyRate = 50m; // 50€ per hour
+                    var totalCost = (decimal)totalHours * hourlyRate;
+
+                    return new
+                    {
+                        Naziv = naziv,
+                        Detalji = detalji,
+                        TotalHours = Math.Round(totalHours, 2),
+                        HourlyRate = hourlyRate,
+                        TotalCost = Math.Round(totalCost, 2),
+                        ActivityCount = g.Count()
+                    };
+                })
+                .ToList();
+
+            if (!offerItems.Any())
+            {
+                return BadRequest("Selektovane aktivnosti nemaju dodeljene stavke implementacije ili nemaju vremena.");
+            }
+
+            // Calculate grand totals
+            var grandTotalHours = offerItems.Sum(item => item.TotalHours);
+            var grandTotalCost = offerItems.Sum(item => item.TotalCost);
+
+            // Build prompt for OpenAI
+            var klijentInfo = klijent != null 
+                ? $"Klijent: {klijent.Naziv}\n" 
+                : "";
+            
+            var projekatInfo = projekat != null 
+                ? $"Projekat: {projekat.BrojProjekta} - {projekat.Naziv}\n" 
+                : "";
+
+            var itemsText = string.Join("\n", offerItems.Select(item =>
+                $"- {item.Naziv}" +
+                (string.IsNullOrEmpty(item.Detalji) ? "" : $" ({item.Detalji})") +
+                $": {item.TotalHours}h x {item.HourlyRate}€/h = {item.TotalCost}€"
+            ));
+
+            var prompt = $@"Kreiraj profesionalnu ponudu za softverske usluge na osnovu sledećih podataka:
+
+{klijentInfo}{projekatInfo}
+Stavke implementacije:
+{itemsText}
+
+UKUPNO: {grandTotalHours}h = {grandTotalCost}€
+
+Generiši profesionalnu ponudu u sledećem formatu:
+- Uvodni pasus koji predstavlja ponudu
+- Tabelarni prikaz stavki sa satima i cenama
+- Ukupnu cenu
+- Završni profesionalni pasus
+
+Koristi profesionalan i prijatan ton.
+NE koristi markdаwn formatiranje (#, *, itd).
+Koristi samo obični tekst sa novim redovima i razmacima.";
+
+            // Generate offer using OpenAI
+            var offer = await _openAIService.GenerateTextAsync(apiKey, prompt);
+
+            return Ok(offer);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Greška prilikom generisanja ponude");
+            return StatusCode(500, $"Greška prilikom generisanja ponude: {ex.Message}");
+        }
+    }
 }
 
 // DTOs for new endpoints
@@ -517,4 +653,9 @@ public class TaskDto
     public string? Priority { get; set; }
     public string? Estimation { get; set; }
     public int OrderIndex { get; set; }
+}
+
+public class GenerateOfferRequest
+{
+    public List<int> AktivnostIds { get; set; } = new();
 }

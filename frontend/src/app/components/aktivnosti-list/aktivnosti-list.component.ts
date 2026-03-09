@@ -26,6 +26,11 @@ export class AktivnostiListComponent implements OnInit {
   generatedReport = '';
   showReportModal = false;
   
+  // Offer properties
+  generatingOffer = false;
+  generatedOffer = '';
+  showOfferModal = false;
+  
   // Modal properties
   isModalOpen = false;
   selectedAktivnost: Aktivnost = this.getEmptyAktivnost();
@@ -199,6 +204,43 @@ export class AktivnostiListComponent implements OnInit {
   closeReportModal(): void {
     this.showReportModal = false;
     this.generatedReport = '';
+  }
+
+  // Offer generation
+  generateOffer(): void {
+    if (this.selectedAktivnosti.length === 0) {
+      alert('Molimo selektujte najmanje jednu aktivnost.');
+      return;
+    }
+
+    this.generatingOffer = true;
+
+    this.aktivnostService.generateOffer(this.selectedAktivnosti).subscribe({
+      next: (offer) => {
+        this.generatedOffer = offer;
+        this.showOfferModal = true;
+        this.generatingOffer = false;
+      },
+      error: (error) => {
+        console.error('Error generating offer:', error);
+        alert('Greška prilikom generisanja ponude: ' + (error.error || error.message));
+        this.generatingOffer = false;
+      }
+    });
+  }
+
+  copyOfferToClipboard(): void {
+    navigator.clipboard.writeText(this.generatedOffer).then(() => {
+      alert('Ponuda je kopirana u clipboard!');
+    }).catch(err => {
+      console.error('Error copying to clipboard:', err);
+      alert('Greška prilikom kopiranja u clipboard.');
+    });
+  }
+
+  closeOfferModal(): void {
+    this.showOfferModal = false;
+    this.generatedOffer = '';
   }
 
   private getEmptyAktivnost(): Aktivnost {

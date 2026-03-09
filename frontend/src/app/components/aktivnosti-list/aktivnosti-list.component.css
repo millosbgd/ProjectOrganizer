@@ -302,6 +302,35 @@
   font-size: 18px;
 }
 
+/* Success button (for offer generation) */
+.btn-success {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  background: #10b981;
+  border: none;
+  border-radius: 6px;
+  color: white;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.btn-success:hover {
+  background: #059669;
+}
+
+.btn-success:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+}
+
+.btn-success .material-icons {
+  font-size: 18px;
+}
+
 /* Report Modal */
 .modal-overlay {
   position: fixed;

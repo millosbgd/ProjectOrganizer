@@ -56,4 +56,8 @@ export class AktivnostService {
   generateReport(aktivnosti: Aktivnost[]): Observable<string> {
     return this.http.post(`${this.apiUrl}/generate-report`, aktivnosti, { responseType: 'text' });
   }
+
+  generateOffer(aktivnostIds: number[]): Observable<string> {
+    return this.http.post(`${this.apiUrl}/generate-offer`, { aktivnostIds }, { responseType: 'text' });
+  }
 }
