@@ -596,8 +596,8 @@ Realizovane funkcionalnosti:
 UKUPNO: {grandTotalHours}h = {grandTotalCost}€
 
 Generiši profesionalnu ponudu u sledećem formatu:
-- Uvodni pasus koji predstavlja ponudu
-- Tabelarni prikaz funkcionalnosti sa satima i cenama
+- Uvodni pasus koji predstavlja ponudu, što kraći, hladan i bez emocija
+- Tabelarni prikaz funkcionalnosti sa satima i cenama. Kada analiziraš sate, imaj u vidu rad programera, rad konsultanta za dogovaranje, rad testera za testiranje funkcionalnosti i neki procenat za amortizaciju. Cenu daješ ukupno, po funkcionalnosti bez analize
 - Ukupnu cenu
 - Završni profesionalni pasus
 
