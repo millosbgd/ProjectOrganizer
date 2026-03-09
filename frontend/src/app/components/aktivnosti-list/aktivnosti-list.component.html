@@ -117,6 +117,7 @@
   (save)="onModalSave($event)"
   (close)="onModalClose()"
   (delete)="onModalDelete($event)"
+  (refreshNeeded)="loadAktivnosti()"
 ></app-aktivnost-modal>
 <!-- Report Modal -->
 <div class="modal-overlay" *ngIf="showReportModal" (click)="closeReportModal()">

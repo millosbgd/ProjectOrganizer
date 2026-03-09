@@ -160,7 +160,9 @@
         {{ validationError }}
       </div>
       <div class="footer-buttons">
-        <button type="button" class="btn-primary" (click)="onSave()">Sačuvaj</button>
+        <button type="button" class="btn-primary" (click)="onSave()" [disabled]="isSaving">
+          {{ isSaving ? 'Čuvam...' : 'Sačuvaj' }}
+        </button>
         <button type="button" class="btn-secondary" (click)="onClose()">Otkaži</button>
       <button 
         type="button" 
@@ -174,6 +176,15 @@
         </svg>
       </button>
     </div>
+  </div>
+
+  <!-- Success Message -->
+  <div class="success-toast" *ngIf="showSuccessMessage">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+      <polyline points="22 4 12 14.01 9 11.01"></polyline>
+    </svg>
+    <span>Uspešno ste sačuvali aktivnost</span>
   </div>
 </div>
 

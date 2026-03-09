@@ -268,6 +268,11 @@ export class CalendarComponent implements OnInit {
     };
   }
 
+  refreshCalendar(): void {
+    // Refresh calendar events
+    window.location.reload();
+  }
+
   onAktivnostDeleted(id: number): void {
     // Activity was deleted from modal, refresh the calendar
     window.location.reload();

@@ -385,6 +385,13 @@ export class ProjekatDetailComponent implements OnInit {
     this.loadAktivnosti(this.projekat.id);
   }
 
+  refreshAktivnosti(): void {
+    // Refresh aktivnosti for current project
+    if (this.projekat && this.projekat.id) {
+      this.loadAktivnosti(this.projekat.id);
+    }
+  }
+
   toggleDropdown(aktivnostId: number): void {
     this.openDropdownId = this.openDropdownId === aktivnostId ? null : aktivnostId;
   }

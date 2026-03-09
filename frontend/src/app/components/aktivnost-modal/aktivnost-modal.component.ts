@@ -37,6 +37,7 @@ export class AktivnostModalComponent implements OnChanges {
   @Output() save = new EventEmitter<Aktivnost>();
   @Output() close = new EventEmitter<void>();
   @Output() delete = new EventEmitter<number>();
+  @Output() refreshNeeded = new EventEmitter<void>();
 
   projekti: Projekat[] = [];
   implementationItems: ProjectImplementationItem[] = [];
@@ -48,6 +49,8 @@ export class AktivnostModalComponent implements OnChanges {
   showDevOpsTasksPreviewModal: boolean = false;
   parsedTasks: ParsedTask[] = [];
   validationError: string = ''; // Validation error message
+  showSuccessMessage: boolean = false;
+  isSaving: boolean = false;
 
   // Time fields
   readonly DURATION_STEP_MINUTES = 15; // 15 minutes per click
@@ -304,7 +307,48 @@ export class AktivnostModalComponent implements OnChanges {
       return;
     }
 
-    this.save.emit(this.aktivnost);
+    this.isSaving = true;
+
+    if (this.aktivnost.id && this.aktivnost.id > 0) {
+      // Update existing
+      this.aktivnostService.update(this.aktivnost.id, this.aktivnost).subscribe({
+        next: () => {
+          this.isSaving = false;
+          this.showSuccessMessageAndRefresh();
+        },
+        error: (error) => {
+          this.isSaving = false;
+          console.error('Error updating aktivnost:', error);
+          this.validationError = '⚠️ Greška prilikom ažuriranja aktivnosti.';
+        }
+      });
+    } else {
+      // Create new
+      this.aktivnostService.create(this.aktivnost).subscribe({
+        next: (created) => {
+          this.isSaving = false;
+          this.aktivnost = created;
+          this.showSuccessMessageAndRefresh();
+        },
+        error: (error) => {
+          this.isSaving = false;
+          console.error('Error creating aktivnost:', error);
+          this.validationError = '⚠️ Greška prilikom kreiranja aktivnosti.';
+        }
+      });
+    }
+  }
+
+  showSuccessMessageAndRefresh(): void {
+    this.showSuccessMessage = true;
+    
+    // Hide success message after 3 seconds
+    setTimeout(() => {
+      this.showSuccessMessage = false;
+    }, 3000);
+
+    // Notify parent to refresh the list
+    this.refreshNeeded.emit();
   }
 
   onClose(): void {

@@ -24,5 +24,6 @@
   [isProjectLocked]="false"
   (save)="saveAktivnost($event)"
   (close)="closeAktivnostModal()"
-  (delete)="onAktivnostDeleted($event)">
+  (delete)="onAktivnostDeleted($event)"
+  (refreshNeeded)="refreshCalendar()">
 </app-aktivnost-modal>
