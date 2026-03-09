@@ -581,11 +581,12 @@ Generiši izveštaj na srpskom jeziku (latinica):";
                 ? $"Projekat: {projekat.BrojProjekta} - {projekat.Naziv}\n" 
                 : "";
 
-            var itemsText = string.Join("\n", offerItems.Select(item =>
-                $"- {item.Opis}" +
-                (!string.IsNullOrEmpty(item.Detalji) ? $"\n  Detalji: {item.Detalji}" : "") +
-                $"\n  Vreme: {item.Hours}h x {item.HourlyRate}€/h = {item.TotalCost}€"
-            ));
+            var itemsText = string.Join("\n", offerItems.Select((item, index) =>
+            {
+                var opis = item.Opis;
+                var detalji = !string.IsNullOrEmpty(item.Detalji) ? $" - {item.Detalji}" : "";
+                return $"{index + 1}. {opis}{detalji} | {item.Hours}h | {item.TotalCost}€";
+            }));
 
             var prompt = $@"Kreiraj profesionalnu ponudu za softverske usluge na osnovu sledećih podataka:
 
