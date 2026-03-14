@@ -1,17 +1,14 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
-import { OverlayPanelModule } from 'primeng/overlaypanel';
-import { BadgeModule } from 'primeng/badge';
-import { ButtonModule } from 'primeng/button';
 import { NotificationService } from '../../services/notification.service';
 import { Notification } from '../../models/notification.model';
 
 @Component({
   selector: 'app-notifications',
   standalone: true,
-  imports: [CommonModule, RouterModule, OverlayPanelModule, BadgeModule, ButtonModule],
+  imports: [CommonModule, RouterModule],
   templateUrl: './notifications.component.html',
   styleUrls: ['./notifications.component.css']
 })
@@ -19,25 +16,28 @@ export class NotificationsComponent implements OnInit, OnDestroy {
   notifications: Notification[] = [];
   unreadCount = 0;
   loading = false;
+  isOpen = false;
 
   private subscriptions = new Subscription();
 
   constructor(private notificationService: NotificationService) {}
 
+  @HostListener('document:click')
+  onDocumentClick(): void {
+    this.isOpen = false;
+  }
+
   ngOnInit(): void {
-    // Učitaj inicijalni broj nepročitanih
     this.notificationService.getUnreadCount().subscribe(count => {
       this.notificationService.setUnreadCount(count);
     });
 
-    // Prati promene broja nepročitanih
     this.subscriptions.add(
       this.notificationService.unreadCount$.subscribe(count => {
         this.unreadCount = count;
       })
     );
 
-    // Dodaj novu real-time notifikaciju na vrh liste
     this.subscriptions.add(
       this.notificationService.newNotification$.subscribe(notification => {
         if (notification) {
@@ -51,8 +51,9 @@ export class NotificationsComponent implements OnInit, OnDestroy {
     this.subscriptions.unsubscribe();
   }
 
-  onPanelOpen(): void {
-    if (this.notifications.length === 0) {
+  togglePanel(): void {
+    this.isOpen = !this.isOpen;
+    if (this.isOpen && this.notifications.length === 0) {
       this.loadNotifications();
     }
   }

@@ -1,47 +1,48 @@
-<div class="notification-bell">
+<div class="notification-bell" (click)="$event.stopPropagation()">
   <button
     class="btn-bell"
-    (click)="op.toggle($event); onPanelOpen()"
+    (click)="togglePanel()"
     title="Notifikacije">
     <span class="material-icons">notifications</span>
     <span *ngIf="unreadCount > 0" class="badge">{{ unreadCount > 99 ? '99+' : unreadCount }}</span>
   </button>
+
+  <div *ngIf="isOpen" class="notification-panel">
+    <div class="panel-header">
+      <span>Notifikacije</span>
+      <button
+        *ngIf="unreadCount > 0"
+        class="btn-mark-all"
+        (click)="markAllAsRead()">
+        Označi sve kao pročitano
+      </button>
+    </div>
+
+    <div *ngIf="loading" class="panel-empty">Učitavanje...</div>
+
+    <div *ngIf="!loading && notifications.length === 0" class="panel-empty">
+      Nema notifikacija.
+    </div>
+
+    <ul *ngIf="!loading && notifications.length > 0" class="notification-list">
+      <li
+        *ngFor="let n of notifications"
+        class="notification-item"
+        [class.unread]="!n.isRead"
+        (click)="markAsRead(n, $event)">
+
+        <span class="notif-icon material-icons" [ngClass]="getTypeClass(n.type)">
+          {{ getTypeIcon(n.type) }}
+        </span>
+
+        <div class="notif-body">
+          <span class="notif-message">{{ n.message }}</span>
+          <span class="notif-time">{{ n.createdAt | date:'dd.MM.yyyy HH:mm' }}</span>
+        </div>
+
+        <span *ngIf="!n.isRead" class="unread-dot"></span>
+      </li>
+    </ul>
+  </div>
 </div>
 
-<p-overlayPanel #op styleClass="notification-panel">
-  <div class="panel-header">
-    <span>Notifikacije</span>
-    <button
-      *ngIf="unreadCount > 0"
-      class="btn-mark-all"
-      (click)="markAllAsRead()">
-      Označi sve kao pročitano
-    </button>
-  </div>
-
-  <div *ngIf="loading" class="panel-empty">Učitavanje...</div>
-
-  <div *ngIf="!loading && notifications.length === 0" class="panel-empty">
-    Nema notifikacija.
-  </div>
-
-  <ul *ngIf="!loading && notifications.length > 0" class="notification-list">
-    <li
-      *ngFor="let n of notifications"
-      class="notification-item"
-      [class.unread]="!n.isRead"
-      (click)="markAsRead(n, $event)">
-
-      <span class="notif-icon material-icons" [ngClass]="getTypeClass(n.type)">
-        {{ getTypeIcon(n.type) }}
-      </span>
-
-      <div class="notif-body">
-        <span class="notif-message">{{ n.message }}</span>
-        <span class="notif-time">{{ n.createdAt | date:'dd.MM.yyyy HH:mm' }}</span>
-      </div>
-
-      <span *ngIf="!n.isRead" class="unread-dot"></span>
-    </li>
-  </ul>
-</p-overlayPanel>
