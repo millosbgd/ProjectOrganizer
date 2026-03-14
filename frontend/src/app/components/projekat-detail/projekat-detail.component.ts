@@ -33,6 +33,7 @@ export class ProjekatDetailComponent implements OnInit {
     datum: new Date(),
     naziv: '',
     aktivan: true,
+    aiPracen: false,
     status: 'U pripremi',
     klijentId: 0
   };

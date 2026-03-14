@@ -15,7 +15,7 @@ export interface Projekat {
   datum: Date | string;
   naziv: string;
   aktivan: boolean;
-  aiPracen: boolean;
+  aiPracen?: boolean;
   status: string;
   klijentId: number;
   createdBy?: number;
