@@ -90,13 +90,13 @@
   </div>
 
   <div class="projekti-grid" *ngIf="!loading && filteredProjekti.length > 0">
-    <div class="projekat-card" *ngFor="let projekat of filteredProjekti" [routerLink]="['/projekti', projekat.id]">
+    <div class="projekat-card" *ngFor="let projekat of filteredProjekti" [class.ai-tracked]="projekat.aiPracen" [routerLink]="['/projekti', projekat.id]">
       <div class="card-header">
         <h3>{{ projekat.naziv }}</h3>
         <div class="card-header-actions">
           <span *ngIf="projekat.aiPracen" class="ai-badge" title="AI praćenje aktivno">
-            <span class="material-icons">psychology</span>
-            AI
+            <span class="material-icons">auto_awesome</span>
+            AI praćen
           </span>
           <div class="status-checkbox" [class.checked]="projekat.aktivan" [title]="projekat.aktivan ? 'Aktivan' : 'Neaktivan'">
             <span class="material-icons">{{ projekat.aktivan ? 'check_box' : 'check_box_outline_blank' }}</span>
