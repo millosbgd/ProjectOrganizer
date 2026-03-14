@@ -93,8 +93,14 @@
     <div class="projekat-card" *ngFor="let projekat of filteredProjekti" [routerLink]="['/projekti', projekat.id]">
       <div class="card-header">
         <h3>{{ projekat.naziv }}</h3>
-        <div class="status-checkbox" [class.checked]="projekat.aktivan" [title]="projekat.aktivan ? 'Aktivan' : 'Neaktivan'">
-          <span class="material-icons">{{ projekat.aktivan ? 'check_box' : 'check_box_outline_blank' }}</span>
+        <div class="card-header-actions">
+          <span *ngIf="projekat.aiPracen" class="ai-badge" title="AI praćenje aktivno">
+            <span class="material-icons">psychology</span>
+            AI
+          </span>
+          <div class="status-checkbox" [class.checked]="projekat.aktivan" [title]="projekat.aktivan ? 'Aktivan' : 'Neaktivan'">
+            <span class="material-icons">{{ projekat.aktivan ? 'check_box' : 'check_box_outline_blank' }}</span>
+          </div>
         </div>
       </div>
       <div class="card-body">
