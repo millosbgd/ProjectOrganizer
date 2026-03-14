@@ -18,7 +18,9 @@ public class NotificationBackgroundService : BackgroundService
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILogger<NotificationBackgroundService> _logger;
 
-    private static readonly TimeSpan CheckInterval = TimeSpan.FromHours(1);
+    // AI reminderi se proveravaju svaki minut; teže provjere jednom na sat
+    private static readonly TimeSpan TickInterval       = TimeSpan.FromMinutes(1);
+    private static readonly TimeSpan HeavyCheckInterval = TimeSpan.FromHours(1);
 
     // Konfigurabilni pragovi – lako proširivo u appsettings.json u budućnosti
     private const int BlockedThresholdDays      = 7;
@@ -37,32 +39,44 @@ public class NotificationBackgroundService : BackgroundService
     {
         _logger.LogInformation("NotificationBackgroundService pokrenut.");
 
+        var lastHeavyCheck = DateTime.MinValue;
+
         while (!stoppingToken.IsCancellationRequested)
         {
             try
             {
-                await RunChecksAsync();
+                var now = DateTime.UtcNow;
+                var runHeavy = (now - lastHeavyCheck) >= HeavyCheckInterval;
+
+                await RunChecksAsync(runHeavy);
+
+                if (runHeavy) lastHeavyCheck = now;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Greška u NotificationBackgroundService.");
             }
 
-            await Task.Delay(CheckInterval, stoppingToken);
+            await Task.Delay(TickInterval, stoppingToken);
         }
     }
 
-    private async Task RunChecksAsync()
+    private async Task RunChecksAsync(bool runHeavyChecks)
     {
         using var scope = _scopeFactory.CreateScope();
         var context             = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         var notificationService = scope.ServiceProvider.GetRequiredService<NotificationService>();
-        var today               = DateTime.UtcNow.Date;
 
+        // AI reminderi se proveravaju pri svakom tiku (svaki minut)
+        await CheckAiRemindersAsync(context, notificationService);
+
+        // Teže provjere samo jednom na sat
+        if (!runHeavyChecks) return;
+
+        var today = DateTime.UtcNow.Date;
         await CheckBlockedProjectsAsync(context, notificationService, today);
         await CheckInactiveProjectsAsync(context, notificationService, today);
         await CheckDeadlineApproachingAsync(context, notificationService, today);
-        await CheckAiRemindersAsync(context, notificationService);
     }
 
     // -----------------------------------------------------------------
