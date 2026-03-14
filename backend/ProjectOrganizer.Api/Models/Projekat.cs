@@ -21,6 +21,11 @@ public class Projekat
 
     public bool Aktivan { get; set; } = true;
 
+    /// <summary>
+    /// Označava da li AI prati ovaj projekat (background reminder notifikacije).
+    /// </summary>
+    public bool AIPracen { get; set; } = false;
+
     [Required]
     [MaxLength(50)]
     public string Status { get; set; } = string.Empty;

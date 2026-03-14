@@ -72,6 +72,13 @@
           </label>
         </div>
 
+        <div class="form-group checkbox">
+          <label>
+            <input type="checkbox" [(ngModel)]="projekat.aiPracen" name="aiPracen" />
+            AI praćenje (reminder notifikacije)
+          </label>
+        </div>
+
         <div class="form-section-header">
           <h4>🔗 DevOps Integracija</h4>
         </div>
@@ -125,6 +132,14 @@
           <span class="value">
             <span class="badge" [class.active]="projekat.aktivan" [class.inactive]="!projekat.aktivan">
               {{ projekat.aktivan ? 'Da' : 'Ne' }}
+            </span>
+          </span>
+        </div>
+        <div class="detail-row">
+          <span class="label">AI praćenje:</span>
+          <span class="value">
+            <span class="badge" [class.active]="projekat.aiPracen" [class.inactive]="!projekat.aiPracen">
+              {{ projekat.aiPracen ? 'Da' : 'Ne' }}
             </span>
           </span>
         </div>

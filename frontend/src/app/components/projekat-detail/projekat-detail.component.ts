@@ -249,6 +249,7 @@ export class ProjekatDetailComponent implements OnInit {
         naziv: this.projekat.naziv,
         datum: datumForServer,
         aktivan: this.projekat.aktivan,
+        aiPracen: this.projekat.aiPracen ?? false,
         status: this.projekat.status,
         klijentId: this.projekat.klijentId,
         implementationModelId: this.projekat.implementationModelId
@@ -275,6 +276,7 @@ export class ProjekatDetailComponent implements OnInit {
         datum: datumForServer,
         naziv: this.projekat.naziv,
         aktivan: this.projekat.aktivan,
+        aiPracen: this.projekat.aiPracen ?? false,
         status: this.projekat.status,
         klijentId: this.projekat.klijentId,
         implementationModelId: this.projekat.implementationModelId

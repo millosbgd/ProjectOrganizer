@@ -233,6 +233,7 @@ public class ProjektiController : ControllerBase
         existingProjekat.Datum = projekat.Datum;
         existingProjekat.Naziv = projekat.Naziv;
         existingProjekat.Aktivan = projekat.Aktivan;
+        existingProjekat.AIPracen = projekat.AIPracen;
         existingProjekat.Status = projekat.Status;
         existingProjekat.KlijentId = projekat.KlijentId;
         existingProjekat.DevOpsOrganization = projekat.DevOpsOrganization;

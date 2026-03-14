@@ -75,7 +75,7 @@ public class NotificationBackgroundService : BackgroundService
         var threshold = today.AddDays(-BlockedThresholdDays);
 
         var projects = await context.Projekti
-            .Where(p => p.Aktivan && p.Status == "Blocked" && p.UpdatedAt < threshold)
+            .Where(p => p.AIPracen && p.Aktivan && p.Status == "Blocked" && p.UpdatedAt < threshold)
             .Select(p => new { p.Id, p.Naziv, p.CreatedBy })
             .ToListAsync();
 
@@ -103,7 +103,7 @@ public class NotificationBackgroundService : BackgroundService
         var threshold = today.AddDays(-InactiveThresholdDays);
 
         var projects = await context.Projekti
-            .Where(p => p.Aktivan && p.Status != "Blocked" && p.Status != "Completed")
+            .Where(p => p.AIPracen && p.Aktivan && p.Status != "Blocked" && p.Status != "Completed")
             .Where(p => !p.Aktivnosti.Any(a => a.Datum >= threshold))
             .Select(p => new { p.Id, p.Naziv, p.CreatedBy })
             .ToListAsync();
@@ -132,7 +132,7 @@ public class NotificationBackgroundService : BackgroundService
         var deadlineWindow = today.AddDays(DeadlineApproachingDays);
 
         var projects = await context.Projekti
-            .Where(p => p.Aktivan && p.Status != "Completed")
+            .Where(p => p.AIPracen && p.Aktivan && p.Status != "Completed")
             .Where(p => p.Aktivnosti.Any(a =>
                 a.EndUtc != null &&
                 a.EndUtc >= today &&
