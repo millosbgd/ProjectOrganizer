@@ -37,6 +37,7 @@ public class ProjekatWithStatsDto
     public DateOnly Datum { get; set; }
     public string Naziv { get; set; } = string.Empty;
     public bool Aktivan { get; set; }
+    public bool AIPracen { get; set; }
     public string Status { get; set; } = string.Empty;
     public int KlijentId { get; set; }
     public int? CreatedBy { get; set; }

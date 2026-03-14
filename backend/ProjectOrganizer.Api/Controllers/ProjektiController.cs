@@ -85,6 +85,7 @@ public class ProjektiController : ControllerBase
             Datum = p.Datum,
             Naziv = p.Naziv,
             Aktivan = p.Aktivan,
+            AIPracen = p.AIPracen,
             Status = p.Status,
             KlijentId = p.KlijentId,
             CreatedBy = p.CreatedBy,
