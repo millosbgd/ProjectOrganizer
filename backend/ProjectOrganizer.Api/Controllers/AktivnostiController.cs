@@ -18,19 +18,22 @@ public class AktivnostiController : ControllerBase
     private readonly OpenAIService _openAIService;
     private readonly UserService _userService;
     private readonly EncryptionService _encryptionService;
+    private readonly IServiceScopeFactory _scopeFactory;
 
     public AktivnostiController(
         ApplicationDbContext context, 
         ILogger<AktivnostiController> logger,
         OpenAIService openAIService,
         UserService userService,
-        EncryptionService encryptionService)
+        EncryptionService encryptionService,
+        IServiceScopeFactory scopeFactory)
     {
         _context = context;
         _logger = logger;
         _openAIService = openAIService;
         _userService = userService;
         _encryptionService = encryptionService;
+        _scopeFactory = scopeFactory;
     }
 
     // GET: api/Aktivnosti
@@ -361,14 +364,19 @@ public class AktivnostiController : ControllerBase
         {
             if (!projekatId.HasValue) return;
 
-            var projekat = await _context.Projekti.FindAsync(projekatId.Value);
+            // Koristimo novi scope jer originalni DbContext bude disposed kad HTTP request završi
+            using var scope = _scopeFactory.CreateScope();
+            var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var encryptionService = scope.ServiceProvider.GetRequiredService<EncryptionService>();
+
+            var projekat = await context.Projekti.FindAsync(projekatId.Value);
             if (projekat == null || !projekat.AIPracen) return;
 
-            var userSettings = await _context.UserSettings
+            var userSettings = await context.UserSettings
                 .FirstOrDefaultAsync(s => s.UserId == auth0UserId);
             if (userSettings == null || string.IsNullOrWhiteSpace(userSettings.OpenAiApiKey)) return;
 
-            var apiKey = _encryptionService.Decrypt(userSettings.OpenAiApiKey);
+            var apiKey = encryptionService.Decrypt(userSettings.OpenAiApiKey);
             if (string.IsNullOrWhiteSpace(apiKey)) return;
 
             var result = await _openAIService.ExtractReminderAsync(
@@ -377,12 +385,12 @@ public class AktivnostiController : ControllerBase
             if (!result.HasReminder || result.RemindAt == null) return;
 
             // Ukloni postojeće neposlate podsetnike za ovu aktivnost
-            var existing = await _context.AiReminders
+            var existing = await context.AiReminders
                 .Where(r => r.AktivnostId == aktivnostId && !r.Sent)
                 .ToListAsync();
-            _context.AiReminders.RemoveRange(existing);
+            context.AiReminders.RemoveRange(existing);
 
-            _context.AiReminders.Add(new AiReminder
+            context.AiReminders.Add(new AiReminder
             {
                 AktivnostId = aktivnostId,
                 ProjekatId  = projekatId,
@@ -392,7 +400,7 @@ public class AktivnostiController : ControllerBase
                 CreatedAt   = DateTime.UtcNow
             });
 
-            await _context.SaveChangesAsync();
+            await context.SaveChangesAsync();
             _logger.LogInformation("AI reminder zakazan za aktivnost {Id} u {RemindAt}", aktivnostId, result.RemindAt);
         }
         catch (Exception ex)
