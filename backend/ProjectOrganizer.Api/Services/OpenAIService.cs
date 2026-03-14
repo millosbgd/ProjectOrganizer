@@ -28,10 +28,10 @@ public class OpenAIService
         var systemPrompt = "Ti si asistent koji ekstrahuje podsetnike iz teksta aktivnosti. Odgovaraš isključivo validnim JSON-om, bez ikakvog dodatnog teksta ili formatiranja.";
 
         var userPrompt = $$"""
-            Danas je {{today:yyyy-MM-dd}}. Vremenski pojas: UTC+1.
-            Analiziraj sledeći tekst. Ako sadrži zahtev za podsetnik ("podseti me", "setiti me", "podsetiti", "remind me"), vrati JSON:
+            Trenutno tačno vreme je {{today:yyyy-MM-ddTHH:mm:ss}} (UTC).
+            Analiziraj sledeći tekst. Ako sadrži zahtev za podsetnik ("podseti me", "setiti me", "podsetiti", "remind me"), izračunaj RemindAt kao trenutno vreme plus naznačeni interval i vrati JSON:
             {"hasReminder": true, "remindAt": "2026-03-17T08:00:00", "message": "Kratak opis podsetnike (max 150 znakova)"}
-            Ako ne sadrži zahtev za podsetnik, vrati:
+            Polje remindAt mora biti ISO 8601 format u UTC. Ako ne sadrži zahtev za podsetnik, vrati:
             {"hasReminder": false}
 
             Tekst: {{text}}
@@ -64,7 +64,10 @@ public class OpenAIService
         string? message = null;
 
         if (root.TryGetProperty("remindAt", out var remindAtEl))
-            remindAt = DateTime.Parse(remindAtEl.GetString()!);
+        {
+            var parsed = DateTime.Parse(remindAtEl.GetString()!, null, System.Globalization.DateTimeStyles.RoundtripKind);
+            remindAt = parsed.Kind == DateTimeKind.Utc ? parsed : DateTime.SpecifyKind(parsed, DateTimeKind.Utc);
+        }
 
         if (root.TryGetProperty("message", out var messageEl))
             message = messageEl.GetString();
