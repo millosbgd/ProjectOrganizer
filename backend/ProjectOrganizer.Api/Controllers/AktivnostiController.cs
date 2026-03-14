@@ -101,6 +101,9 @@ public class AktivnostiController : ControllerBase
         _context.Aktivnosti.Add(aktivnost);
         await _context.SaveChangesAsync();
 
+        // AI reminder ekstrakcija (fire-and-forget sa try/catch, ne blokira odgovor)
+        _ = TryScheduleAiReminderAsync(aktivnost.Id, aktivnost.ProjekatId, currentUser.Auth0Id, currentUser.Id, aktivnost.Opis, aktivnost.Detalji);
+
         return CreatedAtAction(nameof(GetAktivnost), new { id = aktivnost.Id }, aktivnost);
     }
 
@@ -136,6 +139,10 @@ public class AktivnostiController : ControllerBase
                 return NotFound();
             throw;
         }
+
+        // AI reminder ekstrakcija (fire-and-forget sa try/catch, ne blokira odgovor)
+        var updater = await _userService.EnsureUserExistsAsync(User);
+        _ = TryScheduleAiReminderAsync(id, existingAktivnost.ProjekatId, updater.Auth0Id, updater.Id, existingAktivnost.Opis, existingAktivnost.Detalji);
 
         return NoContent();
     }
@@ -339,6 +346,58 @@ public class AktivnostiController : ControllerBase
         {
             _logger.LogError(ex, "Error saving selected tasks for aktivnost {AktivnostId}", id);
             return StatusCode(500, "Greška prilikom čuvanja taskova.");
+        }
+    }
+
+    private async Task TryScheduleAiReminderAsync(
+        int aktivnostId,
+        int? projekatId,
+        string auth0UserId,
+        int internalUserId,
+        string opis,
+        string detalji)
+    {
+        try
+        {
+            if (!projekatId.HasValue) return;
+
+            var projekat = await _context.Projekti.FindAsync(projekatId.Value);
+            if (projekat == null || !projekat.AIPracen) return;
+
+            var userSettings = await _context.UserSettings
+                .FirstOrDefaultAsync(s => s.UserId == auth0UserId);
+            if (userSettings == null || string.IsNullOrWhiteSpace(userSettings.OpenAiApiKey)) return;
+
+            var apiKey = _encryptionService.Decrypt(userSettings.OpenAiApiKey);
+            if (string.IsNullOrWhiteSpace(apiKey)) return;
+
+            var result = await _openAIService.ExtractReminderAsync(
+                apiKey, userSettings.OpenAiModel, opis, detalji, DateTime.UtcNow);
+
+            if (!result.HasReminder || result.RemindAt == null) return;
+
+            // Ukloni postojeće neposlate podsetnike za ovu aktivnost
+            var existing = await _context.AiReminders
+                .Where(r => r.AktivnostId == aktivnostId && !r.Sent)
+                .ToListAsync();
+            _context.AiReminders.RemoveRange(existing);
+
+            _context.AiReminders.Add(new AiReminder
+            {
+                AktivnostId = aktivnostId,
+                ProjekatId  = projekatId,
+                UserId      = internalUserId,
+                RemindAt    = result.RemindAt.Value,
+                Message     = result.Message ?? "Podsetnik za aktivnost",
+                CreatedAt   = DateTime.UtcNow
+            });
+
+            await _context.SaveChangesAsync();
+            _logger.LogInformation("AI reminder zakazan za aktivnost {Id} u {RemindAt}", aktivnostId, result.RemindAt);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Nije moguće ekstrahovati AI reminder za aktivnost {Id}", aktivnostId);
         }
     }
 

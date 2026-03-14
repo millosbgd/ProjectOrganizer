@@ -29,6 +29,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<ImplementationItemCheckListItem> ImplementationItemCheckListItems { get; set; }
     public DbSet<ProjectImplementationItemCheckList> ProjectImplementationItemCheckLists { get; set; }
     public DbSet<Notification> Notifications { get; set; }
+    public DbSet<AiReminder> AiReminders { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -213,6 +214,29 @@ public class ApplicationDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(n => n.ProjekatId)
                 .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        // AiReminder configuration
+        modelBuilder.Entity<AiReminder>(entity =>
+        {
+            entity.ToTable("AiReminders");
+            entity.HasIndex(e => new { e.RemindAt, e.Sent });
+            entity.HasIndex(e => e.AktivnostId);
+
+            entity.HasOne(r => r.User)
+                .WithMany()
+                .HasForeignKey(r => r.UserId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            entity.HasOne(r => r.Projekat)
+                .WithMany()
+                .HasForeignKey(r => r.ProjekatId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasOne(r => r.Aktivnost)
+                .WithMany()
+                .HasForeignKey(r => r.AktivnostId)
+                .OnDelete(DeleteBehavior.NoAction);
         });
     }
 

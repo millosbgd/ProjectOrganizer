@@ -62,6 +62,7 @@ public class NotificationBackgroundService : BackgroundService
         await CheckBlockedProjectsAsync(context, notificationService, today);
         await CheckInactiveProjectsAsync(context, notificationService, today);
         await CheckDeadlineApproachingAsync(context, notificationService, today);
+        await CheckAiRemindersAsync(context, notificationService);
     }
 
     // -----------------------------------------------------------------
@@ -151,5 +152,33 @@ public class NotificationBackgroundService : BackgroundService
                 projekatId:   p.Id,
                 referenceKey: $"DeadlineApproaching:{p.Id}:{today:yyyy-MM-dd}");
         }
+    }
+
+    // -----------------------------------------------------------------
+    // Pravilo 4: AI podsetnike iz teksta aktivnosti (scan-on-write)
+    // -----------------------------------------------------------------
+    private async Task CheckAiRemindersAsync(
+        ApplicationDbContext context,
+        NotificationService notificationService)
+    {
+        var now = DateTime.UtcNow;
+        var dueReminders = await context.AiReminders
+            .Where(r => !r.Sent && r.RemindAt <= now)
+            .ToListAsync();
+
+        foreach (var reminder in dueReminders)
+        {
+            await notificationService.CreateAndSendAsync(
+                userId:       reminder.UserId,
+                type:         "AiReminder",
+                message:      reminder.Message,
+                projekatId:   reminder.ProjekatId,
+                referenceKey: $"AiReminder:{reminder.Id}");
+
+            reminder.Sent = true;
+        }
+
+        if (dueReminders.Count > 0)
+            await context.SaveChangesAsync();
     }
 }

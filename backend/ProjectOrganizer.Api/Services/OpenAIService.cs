@@ -1,10 +1,77 @@
 using OpenAI;
 using OpenAI.Chat;
+using System.Text.Json;
 
 namespace ProjectOrganizer.Api.Services;
 
+public record ReminderExtraction(bool HasReminder, DateTime? RemindAt, string? Message);
+
 public class OpenAIService
 {
+    public async Task<ReminderExtraction> ExtractReminderAsync(
+        string apiKey,
+        string model,
+        string opis,
+        string detalji,
+        DateTime today)
+    {
+        if (string.IsNullOrWhiteSpace(apiKey))
+            return new ReminderExtraction(false, null, null);
+
+        var text = $"{opis}\n{detalji}".Trim();
+        if (string.IsNullOrWhiteSpace(text))
+            return new ReminderExtraction(false, null, null);
+
+        var openAiClient = new OpenAIClient(apiKey);
+        var chatClient = openAiClient.GetChatClient(model);
+
+        var systemPrompt = "Ti si asistent koji ekstrahuje podsetnike iz teksta aktivnosti. Odgovaraš isključivo validnim JSON-om, bez ikakvog dodatnog teksta ili formatiranja.";
+
+        var userPrompt = $$"""
+            Danas je {{today:yyyy-MM-dd}}. Vremenski pojas: UTC+1.
+            Analiziraj sledeći tekst. Ako sadrži zahtev za podsetnik ("podseti me", "setiti me", "podsetiti", "remind me"), vrati JSON:
+            {"hasReminder": true, "remindAt": "2026-03-17T08:00:00", "message": "Kratak opis podsetnike (max 150 znakova)"}
+            Ako ne sadrži zahtev za podsetnik, vrati:
+            {"hasReminder": false}
+
+            Tekst: {{text}}
+            """;
+
+        var messages = new List<ChatMessage>
+        {
+            new SystemChatMessage(systemPrompt),
+            new UserChatMessage(userPrompt)
+        };
+
+        var response = await chatClient.CompleteChatAsync(messages);
+        var raw = response.Value.Content[0].Text.Trim();
+
+        // Ukloni markdown code block ako postoji
+        if (raw.StartsWith("```"))
+        {
+            var end = raw.LastIndexOf("```");
+            raw = raw[3..end].Trim();
+            if (raw.StartsWith("json")) raw = raw[4..].Trim();
+        }
+
+        using var doc = JsonDocument.Parse(raw);
+        var root = doc.RootElement;
+
+        if (!root.TryGetProperty("hasReminder", out var hasEl) || !hasEl.GetBoolean())
+            return new ReminderExtraction(false, null, null);
+
+        DateTime? remindAt = null;
+        string? message = null;
+
+        if (root.TryGetProperty("remindAt", out var remindAtEl))
+            remindAt = DateTime.Parse(remindAtEl.GetString()!);
+
+        if (root.TryGetProperty("message", out var messageEl))
+            message = messageEl.GetString();
+
+        return new ReminderExtraction(true, remindAt, message);
+    }
+
     public async Task<string> GenerateZapisnikAsync(
         string apiKey,
         string model,
