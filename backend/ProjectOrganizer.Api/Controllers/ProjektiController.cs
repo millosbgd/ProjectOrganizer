@@ -16,13 +16,15 @@ public class ProjektiController : ControllerBase
     private readonly ApplicationDbContext _context;
     private readonly UserService _userService;
     private readonly CompletionService _completionService;
+    private readonly NotificationService _notificationService;
     private readonly ILogger<ProjektiController> _logger;
 
-    public ProjektiController(ApplicationDbContext context, UserService userService, CompletionService completionService, ILogger<ProjektiController> logger)
+    public ProjektiController(ApplicationDbContext context, UserService userService, CompletionService completionService, NotificationService notificationService, ILogger<ProjektiController> logger)
     {
         _context = context;
         _userService = userService;
         _completionService = completionService;
+        _notificationService = notificationService;
         _logger = logger;
     }
 
@@ -225,6 +227,8 @@ public class ProjektiController : ControllerBase
         }
 
         // Update properties
+        var previousStatus = existingProjekat.Status;
+
         existingProjekat.BrojProjekta = projekat.BrojProjekta;
         existingProjekat.Datum = projekat.Datum;
         existingProjekat.Naziv = projekat.Naziv;
@@ -268,6 +272,22 @@ public class ProjektiController : ControllerBase
             if (!await _context.Projekti.AnyAsync(p => p.Id == id))
                 return NotFound();
             throw;
+        }
+
+        // Notifikacija za promenu statusa (posle uspešnog čuvanja)
+        if (existingProjekat.CreatedBy.HasValue && previousStatus != existingProjekat.Status)
+        {
+            var referenceKey = $"StatusChange:{id}:{existingProjekat.Status}:{DateTime.UtcNow:yyyy-MM-dd}";
+            var message = existingProjekat.Status == "Blocked"
+                ? $"Projekat \"{existingProjekat.Naziv}\" je blokiran."
+                : $"Status projekta \"{existingProjekat.Naziv}\" promenjen na \"{existingProjekat.Status}\"";
+
+            await _notificationService.CreateAndSendAsync(
+                userId:       existingProjekat.CreatedBy.Value,
+                type:         existingProjekat.Status == "Blocked" ? "Blocked" : "StatusChange",
+                message:      message,
+                projekatId:   id,
+                referenceKey: referenceKey);
         }
 
         return NoContent();

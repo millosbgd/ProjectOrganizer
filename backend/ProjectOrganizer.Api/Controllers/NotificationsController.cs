@@ -1,0 +1,83 @@
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using ProjectOrganizer.Api.Data;
+using ProjectOrganizer.Api.Services;
+
+namespace ProjectOrganizer.Api.Controllers;
+
+[ApiController]
+[Route("api/[controller]")]
+[Authorize]
+public class NotificationsController : ControllerBase
+{
+    private readonly ApplicationDbContext _context;
+    private readonly UserService _userService;
+
+    public NotificationsController(ApplicationDbContext context, UserService userService)
+    {
+        _context = context;
+        _userService = userService;
+    }
+
+    // GET: api/Notifications
+    [HttpGet]
+    public async Task<IActionResult> GetNotifications(
+        [FromQuery] int page     = 1,
+        [FromQuery] int pageSize = 20)
+    {
+        var currentUser = await _userService.EnsureUserExistsAsync(User);
+
+        var notifications = await _context.Notifications
+            .Where(n => n.UserId == currentUser.Id)
+            .OrderByDescending(n => n.CreatedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return Ok(notifications);
+    }
+
+    // GET: api/Notifications/unread-count
+    [HttpGet("unread-count")]
+    public async Task<IActionResult> GetUnreadCount()
+    {
+        var currentUser = await _userService.EnsureUserExistsAsync(User);
+
+        var count = await _context.Notifications
+            .CountAsync(n => n.UserId == currentUser.Id && !n.IsRead);
+
+        return Ok(count);
+    }
+
+    // PUT: api/Notifications/5/read
+    [HttpPut("{id}/read")]
+    public async Task<IActionResult> MarkAsRead(int id)
+    {
+        var currentUser = await _userService.EnsureUserExistsAsync(User);
+
+        var notification = await _context.Notifications
+            .FirstOrDefaultAsync(n => n.Id == id && n.UserId == currentUser.Id);
+
+        if (notification == null)
+            return NotFound();
+
+        notification.IsRead = true;
+        await _context.SaveChangesAsync();
+
+        return NoContent();
+    }
+
+    // PUT: api/Notifications/read-all
+    [HttpPut("read-all")]
+    public async Task<IActionResult> MarkAllAsRead()
+    {
+        var currentUser = await _userService.EnsureUserExistsAsync(User);
+
+        await _context.Notifications
+            .Where(n => n.UserId == currentUser.Id && !n.IsRead)
+            .ExecuteUpdateAsync(s => s.SetProperty(n => n.IsRead, true));
+
+        return NoContent();
+    }
+}

@@ -6,6 +6,7 @@
     
     <div class="header-right">
       <div *ngIf="auth.isAuthenticated$ | async; else loggedOut">
+        <app-notifications></app-notifications>
         <span class="user-name">{{ (auth.user$ | async)?.name }}</span>
         <button class="btn-logout" (click)="logout()" title="Odjavi se">
           <span class="material-icons">logout</span>

@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using ProjectOrganizer.Api.Data;
+using ProjectOrganizer.Api.Hubs;
 using ProjectOrganizer.Api.Services;
 using System.Security.Claims;
 
@@ -32,6 +33,9 @@ builder.Services.AddCors(options =>
     });
 });
 
+// SignalR
+builder.Services.AddSignalR();
+
 // Configure Auth0 authentication
 var domain = builder.Configuration["Auth0:Domain"];
 var audience = builder.Configuration["Auth0:Audience"];
@@ -55,6 +59,8 @@ builder.Services.AddScoped<CompletionService>();
 builder.Services.AddScoped<OpenAIService>();
 builder.Services.AddScoped<UserService>();
 builder.Services.AddHttpClient<NbsService>();
+builder.Services.AddScoped<NotificationService>();
+builder.Services.AddHostedService<NotificationBackgroundService>();
 
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
@@ -83,5 +89,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHub<NotificationHub>("/hubs/notifications");
 
 app.Run();

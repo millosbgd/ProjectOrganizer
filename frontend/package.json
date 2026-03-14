@@ -25,6 +25,7 @@
     "@fullcalendar/daygrid": "^6.1.20",
     "@fullcalendar/interaction": "^6.1.20",
     "@fullcalendar/timegrid": "^6.1.20",
+    "@microsoft/signalr": "^8.0.17",
     "@primeng/themes": "^21.0.4",
     "@swimlane/ngx-charts": "^23.1.0",
     "primeicons": "^7.0.0",

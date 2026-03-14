@@ -28,6 +28,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<CheckListItem> CheckListItems { get; set; }
     public DbSet<ImplementationItemCheckListItem> ImplementationItemCheckListItems { get; set; }
     public DbSet<ProjectImplementationItemCheckList> ProjectImplementationItemCheckLists { get; set; }
+    public DbSet<Notification> Notifications { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -192,6 +193,26 @@ public class ApplicationDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(pic => pic.CheckListItemId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // Notification configuration
+        modelBuilder.Entity<Notification>(entity =>
+        {
+            entity.ToTable("Notifications");
+            entity.HasIndex(e => e.UserId);
+            entity.HasIndex(e => new { e.UserId, e.IsRead });
+            entity.HasIndex(e => e.ReferenceKey)
+                  .HasFilter("[ReferenceKey] IS NOT NULL");
+
+            entity.HasOne(n => n.User)
+                .WithMany()
+                .HasForeignKey(n => n.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(n => n.Projekat)
+                .WithMany()
+                .HasForeignKey(n => n.ProjekatId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
     }
 
