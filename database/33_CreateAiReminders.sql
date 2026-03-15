@@ -15,7 +15,7 @@ CREATE TABLE AiReminders (
     CONSTRAINT FK_AiReminders_Aktivnosti FOREIGN KEY (AktivnostId)
         REFERENCES Aktivnosti(Id) ON DELETE CASCADE,
     CONSTRAINT FK_AiReminders_Projekti FOREIGN KEY (ProjekatId)
-        REFERENCES Projekti(Id) ON DELETE SET NULL,
+        REFERENCES Projekti(Id) ON DELETE NO ACTION,
     CONSTRAINT FK_AiReminders_Users FOREIGN KEY (UserId)
         REFERENCES Users(Id) ON DELETE NO ACTION
 );

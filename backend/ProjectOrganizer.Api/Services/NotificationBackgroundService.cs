@@ -11,7 +11,6 @@ namespace ProjectOrganizer.Api.Services;
 /// Pravila koja se proveravaju:
 ///   - Blocked:              Projekat je u statusu "Blocked" duže od 7 dana
 ///   - Inactive:             Aktivan projekat nema aktivnosti poslednjih 14 dana
-///   - DeadlineApproaching:  Aktivnost projekta ističe u sledećih 7 dana
 /// </summary>
 public class NotificationBackgroundService : BackgroundService
 {
@@ -25,7 +24,6 @@ public class NotificationBackgroundService : BackgroundService
     // Konfigurabilni pragovi – lako proširivo u appsettings.json u budućnosti
     private const int BlockedThresholdDays      = 7;
     private const int InactiveThresholdDays     = 14;
-    private const int DeadlineApproachingDays   = 7;
 
     public NotificationBackgroundService(
         IServiceScopeFactory scopeFactory,
@@ -76,7 +74,6 @@ public class NotificationBackgroundService : BackgroundService
         var today = DateTime.UtcNow.Date;
         await CheckBlockedProjectsAsync(context, notificationService, today);
         await CheckInactiveProjectsAsync(context, notificationService, today);
-        await CheckDeadlineApproachingAsync(context, notificationService, today);
     }
 
     // -----------------------------------------------------------------
@@ -137,39 +134,7 @@ public class NotificationBackgroundService : BackgroundService
     }
 
     // -----------------------------------------------------------------
-    // Pravilo 3: Projekat ima aktivnost čiji rok ističe uskoro
-    // -----------------------------------------------------------------
-    private async Task CheckDeadlineApproachingAsync(
-        ApplicationDbContext context,
-        NotificationService notificationService,
-        DateTime today)
-    {
-        var deadlineWindow = today.AddDays(DeadlineApproachingDays);
-
-        var projects = await context.Projekti
-            .Where(p => p.AIPracen && p.Aktivan && p.Status != "Completed")
-            .Where(p => p.Aktivnosti.Any(a =>
-                a.EndUtc != null &&
-                a.EndUtc >= today &&
-                a.EndUtc <= deadlineWindow))
-            .Select(p => new { p.Id, p.Naziv, p.CreatedBy })
-            .ToListAsync();
-
-        foreach (var p in projects)
-        {
-            if (p.CreatedBy == null) continue;
-
-            await notificationService.CreateAndSendAsync(
-                userId:       p.CreatedBy.Value,
-                type:         "DeadlineApproaching",
-                message:      $"Projekat \"{p.Naziv}\" ima aktivnosti koje ističu u sledećih {DeadlineApproachingDays} dana.",
-                projekatId:   p.Id,
-                referenceKey: $"DeadlineApproaching:{p.Id}:{today:yyyy-MM-dd}");
-        }
-    }
-
-    // -----------------------------------------------------------------
-    // Pravilo 4: AI podsetnike iz teksta aktivnosti (scan-on-write)
+    // Pravilo 3: AI podsetnike iz teksta aktivnosti (scan-on-write)
     // -----------------------------------------------------------------
     private async Task CheckAiRemindersAsync(
         ApplicationDbContext context,
