@@ -4,7 +4,13 @@ using System.Text.Json;
 
 namespace ProjectOrganizer.Api.Services;
 
-public record ReminderExtraction(bool HasReminder, DateTime? RemindAt, string? Message);
+public record ReminderExtraction(
+    bool HasReminder,
+    DateTime? RemindAt,
+    string? Message,
+    bool HasNotifyUser = false,
+    string? NotifyUserName = null,
+    string? NotifyMessage = null);
 
 public class OpenAIService
 {
@@ -25,23 +31,36 @@ public class OpenAIService
         var openAiClient = new OpenAIClient(apiKey);
         var chatClient = openAiClient.GetChatClient(model);
 
-        var systemPrompt = "Ti si asistent koji ekstrahuje podsetnike iz teksta aktivnosti. Odgovaraš isključivo validnim JSON-om, bez ikakvog dodatnog teksta ili formatiranja.";
+        var systemPrompt = "Ti si asistent koji analizira tekst aktivnosti i ekstrahuje podsetnike i zahteve za obaveštavanje korisnika. Odgovaraš isključivo validnim JSON-om, bez ikakvog dodatnog teksta ili formatiranja.";
 
         var userPrompt = $$"""
             Trenutno tačno vreme je {{today:yyyy-MM-ddTHH:mm:ss}} (UTC).
 
-            Analiziraj sledeći tekst i postavi hasReminder=true ako tekst sadrži BILO ŠTA od sledećeg:
+            Analiziraj sledeći tekst i odredi da li postoji PODSETNIK i/ili OBAVEŠTENJE KORISNIKU.
+
+            === PODSETNIK (hasReminder) ===
+            Postavi hasReminder=true ako tekst sadrži BILO ŠTA od sledećeg:
             - eksplicitno traži podsetnik: "podseti me", "setiti me", "remind me", "podsetiti"
             - pominje da nešto TREBA da se uradi za određeno vreme: "za 10 minuta", "za sat vremena", "do 15h", "sutra ujutru", "sledećeg ponedeljka"
             - pominje rok ili deadline za neku akciju: "mora biti gotovo do", "treba poslati do", "rok je"
             - opisuje buduću akciju sa vremenskim okvirom: "pozvaću za", "treba upisati za", "biće gotovo za"
+            Ako je hasReminder=true, popuni remindAt (ISO 8601 UTC, izračunaj od trenutnog vremena) i message (max 150 znakova).
 
-            Ako je hasReminder=true, RemindAt izračunaj kao trenutno vreme plus naznačeni interval (ili apsolutni datum/vreme) i vrati JSON u formatu:
-            {"hasReminder": true, "remindAt": "2026-03-17T08:00:00", "message": "Kratak opis (max 150 znakova)"}
-            Polje remindAt mora biti ISO 8601 format u UTC.
+            === OBAVEŠTENJE KORISNIKU (hasNotifyUser) ===
+            Postavi hasNotifyUser=true ako tekst EKSPLICITNO traži da se neko obavesti, npr:
+            - "Obavesti Marka da..."
+            - "Javi Ani o..."
+            - "Reci Petru da..."
+            - "Pošalji poruku Jovanu..."
+            Ako je hasNotifyUser=true, popuni:
+            - notifyUser: ime korisnika u NOMINATIVU (osnovna forma, npr. "Marko" ne "Marka", "Ana" ne "Ani", "Petar" ne "Petru")
+            - notifyMessage: šta treba da zna taj korisnik (max 200 znakova)
 
-            Ako tekst nema nikakvu vremensku referencu ili buduću akciju, vrati:
-            {"hasReminder": false}
+            Vrati ISKLJUČIVO validan JSON bez ikakvog dodatnog teksta. Primeri:
+            Samo podsetnik: {"hasReminder": true, "remindAt": "2026-03-15T16:00:00", "message": "Poziv klijentu", "hasNotifyUser": false}
+            Samo obaveštenje: {"hasReminder": false, "hasNotifyUser": true, "notifyUser": "Marko", "notifyMessage": "Treba da pregleda dokumentaciju"}
+            Oboje: {"hasReminder": true, "remindAt": "2026-03-15T16:00:00", "message": "Poziv", "hasNotifyUser": true, "notifyUser": "Marko", "notifyMessage": "Prisustvuje pozivu"}
+            Ništa: {"hasReminder": false, "hasNotifyUser": false}
 
             Tekst: {{text}}
             """;
@@ -66,22 +85,35 @@ public class OpenAIService
         using var doc = JsonDocument.Parse(raw);
         var root = doc.RootElement;
 
-        if (!root.TryGetProperty("hasReminder", out var hasEl) || !hasEl.GetBoolean())
-            return new ReminderExtraction(false, null, null);
+        bool hasReminder = root.TryGetProperty("hasReminder", out var hasEl) && hasEl.GetBoolean();
 
         DateTime? remindAt = null;
         string? message = null;
 
-        if (root.TryGetProperty("remindAt", out var remindAtEl))
+        if (hasReminder)
         {
-            var parsed = DateTime.Parse(remindAtEl.GetString()!, null, System.Globalization.DateTimeStyles.RoundtripKind);
-            remindAt = parsed.Kind == DateTimeKind.Utc ? parsed : DateTime.SpecifyKind(parsed, DateTimeKind.Utc);
+            if (root.TryGetProperty("remindAt", out var remindAtEl))
+            {
+                var parsed = DateTime.Parse(remindAtEl.GetString()!, null, System.Globalization.DateTimeStyles.RoundtripKind);
+                remindAt = parsed.Kind == DateTimeKind.Utc ? parsed : DateTime.SpecifyKind(parsed, DateTimeKind.Utc);
+            }
+            if (root.TryGetProperty("message", out var messageEl))
+                message = messageEl.GetString();
         }
 
-        if (root.TryGetProperty("message", out var messageEl))
-            message = messageEl.GetString();
+        bool hasNotifyUser = root.TryGetProperty("hasNotifyUser", out var hasNotifyEl) && hasNotifyEl.GetBoolean();
+        string? notifyUserName = null;
+        string? notifyMessage = null;
 
-        return new ReminderExtraction(true, remindAt, message);
+        if (hasNotifyUser)
+        {
+            if (root.TryGetProperty("notifyUser", out var notifyUserEl))
+                notifyUserName = notifyUserEl.GetString();
+            if (root.TryGetProperty("notifyMessage", out var notifyMsgEl))
+                notifyMessage = notifyMsgEl.GetString();
+        }
+
+        return new ReminderExtraction(hasReminder, remindAt, message, hasNotifyUser, notifyUserName, notifyMessage);
     }
 
     public async Task<string> GenerateZapisnikAsync(

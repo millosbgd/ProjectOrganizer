@@ -400,30 +400,60 @@ public class AktivnostiController : ControllerBase
             var result = await _openAIService.ExtractReminderAsync(
                 apiKey, userSettings.OpenAiModel, opis, detalji, DateTime.UtcNow);
 
-            if (!result.HasReminder || result.RemindAt == null)
+            if (!result.HasReminder && !result.HasNotifyUser)
             {
-                _logger.LogInformation("AI reminder preskočen za aktivnost {Id}: OpenAI nije detektovao podsetnik u tekstu", aktivnostId);
+                _logger.LogInformation("AI reminder preskočen za aktivnost {Id}: OpenAI nije detektovao podsetnik niti obaveštenje u tekstu", aktivnostId);
                 return;
             }
 
-            // Ukloni postojeće neposlate podsetnike za ovu aktivnost
-            var existing = await context.AiReminders
-                .Where(r => r.AktivnostId == aktivnostId && !r.Sent)
-                .ToListAsync();
-            context.AiReminders.RemoveRange(existing);
-
-            context.AiReminders.Add(new AiReminder
+            // --- Podsetnik ---
+            if (result.HasReminder && result.RemindAt != null)
             {
-                AktivnostId = aktivnostId,
-                ProjekatId  = projekatId,
-                UserId      = internalUserId,
-                RemindAt    = result.RemindAt.Value,
-                Message     = result.Message ?? "Podsetnik za aktivnost",
-                CreatedAt   = DateTime.UtcNow
-            });
+                // Ukloni postojeće neposlate podsetnike za ovu aktivnost
+                var existing = await context.AiReminders
+                    .Where(r => r.AktivnostId == aktivnostId && !r.Sent)
+                    .ToListAsync();
+                context.AiReminders.RemoveRange(existing);
 
-            await context.SaveChangesAsync();
-            _logger.LogInformation("AI reminder zakazan za aktivnost {Id} u {RemindAt}", aktivnostId, result.RemindAt);
+                context.AiReminders.Add(new AiReminder
+                {
+                    AktivnostId = aktivnostId,
+                    ProjekatId  = projekatId,
+                    UserId      = internalUserId,
+                    RemindAt    = result.RemindAt.Value,
+                    Message     = result.Message ?? "Podsetnik za aktivnost",
+                    CreatedAt   = DateTime.UtcNow
+                });
+
+                await context.SaveChangesAsync();
+                _logger.LogInformation("AI reminder zakazan za aktivnost {Id} u {RemindAt}", aktivnostId, result.RemindAt);
+            }
+
+            // --- Obaveštenje korisniku ---
+            if (result.HasNotifyUser && !string.IsNullOrWhiteSpace(result.NotifyUserName))
+            {
+                var searchName = result.NotifyUserName.Trim();
+                var targetUser = await context.Users
+                    .Where(u => u.IsActive && u.Name != null && u.Name.Contains(searchName))
+                    .FirstOrDefaultAsync();
+
+                if (targetUser != null)
+                {
+                    var notificationService = scope.ServiceProvider.GetRequiredService<NotificationService>();
+                    await notificationService.CreateAndSendAsync(
+                        userId:       targetUser.Id,
+                        type:         "AiUserNotification",
+                        message:      result.NotifyMessage ?? $"Imaš obaveštenje u aktivnosti",
+                        projekatId:   projekatId,
+                        referenceKey: $"AiNotify:{aktivnostId}:{targetUser.Id}",
+                        aktivnostId:  aktivnostId);
+                    _logger.LogInformation("AI obaveštenje poslato korisniku '{TargetUser}' (ID={TargetUserId}) za aktivnost {AktivnostId}", targetUser.Name, targetUser.Id, aktivnostId);
+                }
+                else
+                {
+                    _logger.LogInformation("AI obaveštenje: korisnik '{NotifyUser}' nije pronađen u bazi za aktivnost {AktivnostId}", result.NotifyUserName, aktivnostId);
+                }
+            }
         }
         catch (Exception ex)
         {
