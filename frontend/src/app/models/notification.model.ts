@@ -2,7 +2,8 @@ export interface Notification {
   id: number;
   userId: number;
   projekatId?: number;
-  type: 'StatusChange' | 'Blocked' | 'Inactive' | 'DeadlineApproaching' | string;
+  aktivnostId?: number;
+  type: 'StatusChange' | 'Blocked' | 'Inactive' | 'DeadlineApproaching' | 'AiReminder' | string;
   message: string;
   isRead: boolean;
   dismissed: boolean;

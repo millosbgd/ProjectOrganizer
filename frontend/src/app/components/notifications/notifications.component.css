@@ -184,3 +184,16 @@
 .btn-dismiss .material-icons {
   font-size: 16px;
 }
+
+.notif-link {
+  display: inline-block;
+  margin-top: 4px;
+  font-size: 11px;
+  color: #3498db;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.notif-link:hover {
+  text-decoration: underline;
+}

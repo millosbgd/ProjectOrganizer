@@ -152,7 +152,8 @@ public class NotificationBackgroundService : BackgroundService
                 type:         "AiReminder",
                 message:      reminder.Message,
                 projekatId:   reminder.ProjekatId,
-                referenceKey: $"AiReminder:{reminder.Id}");
+                referenceKey: $"AiReminder:{reminder.Id}",
+                aktivnostId:  reminder.AktivnostId);
 
             reminder.Sent = true;
         }

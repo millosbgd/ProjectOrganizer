@@ -38,6 +38,12 @@
         <div class="notif-body">
           <span class="notif-message">{{ n.message }}</span>
           <span class="notif-time">{{ n.createdAt | date:'dd.MM.yyyy HH:mm' }}</span>
+          <a
+            *ngIf="n.aktivnostId && n.projekatId"
+            class="notif-link"
+            [routerLink]="['/projekti', n.projekatId]"
+            [queryParams]="{aktivnost: n.aktivnostId}"
+            (click)="markAsRead(n, $event)">Idi na aktivnost</a>
         </div>
 
         <span *ngIf="!n.isRead" class="unread-dot"></span>

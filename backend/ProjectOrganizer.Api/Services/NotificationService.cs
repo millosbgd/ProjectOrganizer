@@ -36,7 +36,8 @@ public class NotificationService
         string type,
         string message,
         int? projekatId = null,
-        string? referenceKey = null)
+        string? referenceKey = null,
+        int? aktivnostId = null)
     {
         // --- Deduplicija ---
         // Ako već postoji nepročitana notifikacija sa istim referenceKey, preskočiti.
@@ -57,6 +58,7 @@ public class NotificationService
         {
             UserId = userId,
             ProjekatId = projekatId,
+            AktivnostId = aktivnostId,
             Type = type,
             Message = message,
             ReferenceKey = referenceKey,
@@ -83,6 +85,7 @@ public class NotificationService
                     notification.Type,
                     notification.Message,
                     notification.ProjekatId,
+                    notification.AktivnostId,
                     notification.IsRead,
                     notification.CreatedAt
                 };

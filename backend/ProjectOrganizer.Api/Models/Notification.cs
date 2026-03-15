@@ -28,6 +28,8 @@ public class Notification
 
     public bool Dismissed { get; set; } = false;
 
+    public int? AktivnostId { get; set; }
+
     /// <summary>
     /// Koristi se za sprečavanje duplikata za isti događaj.
     /// Format: "{Type}:{ProjekatId}:{yyyy-MM-dd}"
@@ -43,4 +45,7 @@ public class Notification
 
     [ForeignKey("ProjekatId")]
     public Projekat? Projekat { get; set; }
+
+    [ForeignKey("AktivnostId")]
+    public Aktivnost? Aktivnost { get; set; }
 }
