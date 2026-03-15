@@ -4,13 +4,14 @@ using System.Text.Json;
 
 namespace ProjectOrganizer.Api.Services;
 
+public record NotifyUserEntry(string Name, string Message);
+
 public record ReminderExtraction(
     bool HasReminder,
     DateTime? RemindAt,
     string? Message,
     bool HasNotifyUser = false,
-    string? NotifyUserName = null,
-    string? NotifyMessage = null);
+    List<NotifyUserEntry>? NotifyUsers = null);
 
 public class OpenAIService
 {
@@ -46,21 +47,23 @@ public class OpenAIService
             - opisuje buduću akciju sa vremenskim okvirom: "pozvaću za", "treba upisati za", "biće gotovo za"
             Ako je hasReminder=true, popuni remindAt (ISO 8601 UTC, izračunaj od trenutnog vremena) i message (max 150 znakova).
 
-            === OBAVEŠTENJE KORISNIKU (hasNotifyUser) ===
+            === OBAVEŠTENJE KORISNICIMA (hasNotifyUser) ===
             Postavi hasNotifyUser=true ako tekst EKSPLICITNO traži da se neko obavesti, npr:
             - "Obavesti Marka da..."
             - "Javi Ani o..."
             - "Reci Petru da..."
-            - "Pošalji poruku Jovanu..."
-            Ako je hasNotifyUser=true, popuni:
-            - notifyUser: ime korisnika u NOMINATIVU (osnovna forma, npr. "Marko" ne "Marka", "Ana" ne "Ani", "Petar" ne "Petru")
-            - notifyMessage: šta treba da zna taj korisnik (max 200 znakova)
+            - "Obavesti Milicu i Marka da..."
+            Može biti JEDAN ILI VIŠE korisnika.
+            Ako je hasNotifyUser=true, popuni notifyUsers kao NIZ objekata, svaki sa:
+            - name: ime korisnika u NOMINATIVU (osnovna forma, npr. "Marko" ne "Marka", "Ana" ne "Ani", "Petar" ne "Petru")
+            - message: šta treba da zna taj korisnik (max 200 znakova)
 
             Vrati ISKLJUČIVO validan JSON bez ikakvog dodatnog teksta. Primeri:
-            Samo podsetnik: {"hasReminder": true, "remindAt": "2026-03-15T16:00:00", "message": "Poziv klijentu", "hasNotifyUser": false}
-            Samo obaveštenje: {"hasReminder": false, "hasNotifyUser": true, "notifyUser": "Marko", "notifyMessage": "Treba da pregleda dokumentaciju"}
-            Oboje: {"hasReminder": true, "remindAt": "2026-03-15T16:00:00", "message": "Poziv", "hasNotifyUser": true, "notifyUser": "Marko", "notifyMessage": "Prisustvuje pozivu"}
-            Ništa: {"hasReminder": false, "hasNotifyUser": false}
+            Samo podsetnik: {"hasReminder": true, "remindAt": "2026-03-15T16:00:00", "message": "Poziv klijentu", "hasNotifyUser": false, "notifyUsers": []}
+            Jedan korisnik: {"hasReminder": false, "hasNotifyUser": true, "notifyUsers": [{"name": "Marko", "message": "Treba da pregleda dokumentaciju"}]}
+            Više korisnika: {"hasReminder": false, "hasNotifyUser": true, "notifyUsers": [{"name": "Milica", "message": "Sastanak sutra"}, {"name": "Marko", "message": "Sastanak sutra"}]}
+            Oboje: {"hasReminder": true, "remindAt": "2026-03-15T16:00:00", "message": "Poziv", "hasNotifyUser": true, "notifyUsers": [{"name": "Marko", "message": "Prisustvuje pozivu"}]}
+            Ništa: {"hasReminder": false, "hasNotifyUser": false, "notifyUsers": []}
 
             Tekst: {{text}}
             """;
@@ -102,18 +105,21 @@ public class OpenAIService
         }
 
         bool hasNotifyUser = root.TryGetProperty("hasNotifyUser", out var hasNotifyEl) && hasNotifyEl.GetBoolean();
-        string? notifyUserName = null;
-        string? notifyMessage = null;
+        var notifyUsers = new List<NotifyUserEntry>();
 
-        if (hasNotifyUser)
+        if (hasNotifyUser && root.TryGetProperty("notifyUsers", out var notifyUsersEl)
+            && notifyUsersEl.ValueKind == JsonValueKind.Array)
         {
-            if (root.TryGetProperty("notifyUser", out var notifyUserEl))
-                notifyUserName = notifyUserEl.GetString();
-            if (root.TryGetProperty("notifyMessage", out var notifyMsgEl))
-                notifyMessage = notifyMsgEl.GetString();
+            foreach (var item in notifyUsersEl.EnumerateArray())
+            {
+                var name = item.TryGetProperty("name", out var nameEl) ? nameEl.GetString() : null;
+                var msg  = item.TryGetProperty("message", out var msgEl) ? msgEl.GetString() : null;
+                if (!string.IsNullOrWhiteSpace(name))
+                    notifyUsers.Add(new NotifyUserEntry(name, msg ?? "Imaš obaveštenje u aktivnosti"));
+            }
         }
 
-        return new ReminderExtraction(hasReminder, remindAt, message, hasNotifyUser, notifyUserName, notifyMessage);
+        return new ReminderExtraction(hasReminder, remindAt, message, hasNotifyUser || notifyUsers.Count > 0, notifyUsers);
     }
 
     public async Task<string> GenerateZapisnikAsync(

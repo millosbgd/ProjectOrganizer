@@ -429,29 +429,32 @@ public class AktivnostiController : ControllerBase
                 _logger.LogInformation("AI reminder zakazan za aktivnost {Id} u {RemindAt}", aktivnostId, result.RemindAt);
             }
 
-            // --- Obaveštenje korisniku ---
-            if (result.HasNotifyUser && !string.IsNullOrWhiteSpace(result.NotifyUserName))
+            // --- Obaveštenje korisnicima ---
+            if (result.HasNotifyUser && result.NotifyUsers != null && result.NotifyUsers.Count > 0)
             {
-                var searchName = result.NotifyUserName.Trim();
-                var targetUser = await context.Users
-                    .Where(u => u.IsActive && u.Name != null && u.Name.Contains(searchName))
-                    .FirstOrDefaultAsync();
+                var notificationService = scope.ServiceProvider.GetRequiredService<NotificationService>();
+                foreach (var entry in result.NotifyUsers)
+                {
+                    var searchName = entry.Name.Trim();
+                    var targetUser = await context.Users
+                        .Where(u => u.IsActive && u.Name != null && u.Name.Contains(searchName))
+                        .FirstOrDefaultAsync();
 
-                if (targetUser != null)
-                {
-                    var notificationService = scope.ServiceProvider.GetRequiredService<NotificationService>();
-                    await notificationService.CreateAndSendAsync(
-                        userId:       targetUser.Id,
-                        type:         "AiUserNotification",
-                        message:      result.NotifyMessage ?? $"Imaš obaveštenje u aktivnosti",
-                        projekatId:   projekatId,
-                        referenceKey: $"AiNotify:{aktivnostId}:{targetUser.Id}",
-                        aktivnostId:  aktivnostId);
-                    _logger.LogInformation("AI obaveštenje poslato korisniku '{TargetUser}' (ID={TargetUserId}) za aktivnost {AktivnostId}", targetUser.Name, targetUser.Id, aktivnostId);
-                }
-                else
-                {
-                    _logger.LogInformation("AI obaveštenje: korisnik '{NotifyUser}' nije pronađen u bazi za aktivnost {AktivnostId}", result.NotifyUserName, aktivnostId);
+                    if (targetUser != null)
+                    {
+                        await notificationService.CreateAndSendAsync(
+                            userId:       targetUser.Id,
+                            type:         "AiUserNotification",
+                            message:      entry.Message,
+                            projekatId:   projekatId,
+                            referenceKey: $"AiNotify:{aktivnostId}:{targetUser.Id}",
+                            aktivnostId:  aktivnostId);
+                        _logger.LogInformation("AI obaveštenje poslato korisniku '{TargetUser}' (ID={TargetUserId}) za aktivnost {AktivnostId}", targetUser.Name, targetUser.Id, aktivnostId);
+                    }
+                    else
+                    {
+                        _logger.LogInformation("AI obaveštenje: korisnik '{NotifyUser}' nije pronađen u bazi za aktivnost {AktivnostId}", entry.Name, aktivnostId);
+                    }
                 }
             }
         }
