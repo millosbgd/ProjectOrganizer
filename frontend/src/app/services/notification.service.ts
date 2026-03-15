@@ -32,6 +32,11 @@ export class NotificationService implements OnDestroy {
 
   /** Poziva se jednom po prijavi korisnika (npr. u AppComponent). */
   startConnection(): void {
+    if (this.hubConnection?.state === signalR.HubConnectionState.Connected ||
+        this.hubConnection?.state === signalR.HubConnectionState.Connecting) {
+      return;
+    }
+
     this.auth.getAccessTokenSilently().subscribe({
       next: token => {
         this.hubConnection = new signalR.HubConnectionBuilder()

@@ -14,10 +14,10 @@ import { NotificationService } from '../../services/notification.service';
 })
 export class HeaderComponent {
   constructor(public auth: AuthService, private notificationService: NotificationService) {
-    // Pokretanje SignalR konekcije kada je korisnik ulogovan
+    // SignalR se pokreće odloženo (nakon inicijalnog rendera) da ne blokira first paint
     this.auth.isAuthenticated$.subscribe(isAuth => {
       if (isAuth) {
-        this.notificationService.startConnection();
+        setTimeout(() => this.notificationService.startConnection(), 500);
       } else {
         this.notificationService.stopConnection();
       }
