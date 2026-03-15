@@ -143,6 +143,12 @@
   line-height: 1.4;
 }
 
+.notif-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
 .notif-time {
   font-size: 11px;
   color: #aaa;
@@ -172,7 +178,8 @@
   opacity: 0;
 }
 
-.notification-item:hover .btn-dismiss {
+.notification-item:hover .btn-dismiss,
+.notif-footer:hover .btn-dismiss {
   opacity: 1;
 }
 

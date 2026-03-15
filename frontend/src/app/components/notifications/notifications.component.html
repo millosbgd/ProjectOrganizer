@@ -37,7 +37,12 @@
 
         <div class="notif-body">
           <span class="notif-message">{{ n.message }}</span>
-          <span class="notif-time">{{ n.createdAt | date:'dd.MM.yyyy HH:mm' }}</span>
+          <div class="notif-footer">
+            <span class="notif-time">{{ n.createdAt | date:'dd.MM.yyyy HH:mm' }}</span>
+            <button class="btn-dismiss" (click)="dismiss(n, $event)" title="Skloni">
+              <span class="material-icons">close</span>
+            </button>
+          </div>
           <a
             *ngIf="n.aktivnostId && n.projekatId"
             class="notif-link"
@@ -47,10 +52,6 @@
         </div>
 
         <span *ngIf="!n.isRead" class="unread-dot"></span>
-
-        <button class="btn-dismiss" (click)="dismiss(n, $event)" title="Skloni">
-          <span class="material-icons">close</span>
-        </button>
       </li>
     </ul>
   </div>
