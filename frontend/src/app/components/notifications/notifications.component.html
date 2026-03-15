@@ -38,17 +38,19 @@
         <div class="notif-body">
           <span class="notif-message">{{ n.message }}</span>
           <div class="notif-footer">
-            <span class="notif-time">{{ n.createdAt | date:'dd.MM.yyyy HH:mm' }}</span>
+            <div class="notif-footer-left">
+              <span class="notif-time">{{ n.createdAt | date:'dd.MM.yyyy HH:mm' }}</span>
+              <a
+                *ngIf="n.aktivnostId && n.projekatId"
+                class="notif-link"
+                [routerLink]="['/projekti', n.projekatId]"
+                [queryParams]="{aktivnost: n.aktivnostId}"
+                (click)="markAsRead(n, $event)">Idi na aktivnost</a>
+            </div>
             <button class="btn-dismiss" (click)="dismiss(n, $event)" title="Skloni">
               <span class="material-icons">close</span>
             </button>
           </div>
-          <a
-            *ngIf="n.aktivnostId && n.projekatId"
-            class="notif-link"
-            [routerLink]="['/projekti', n.projekatId]"
-            [queryParams]="{aktivnost: n.aktivnostId}"
-            (click)="markAsRead(n, $event)">Idi na aktivnost</a>
         </div>
 
         <span *ngIf="!n.isRead" class="unread-dot"></span>
