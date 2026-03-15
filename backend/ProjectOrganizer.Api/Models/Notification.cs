@@ -26,6 +26,8 @@ public class Notification
 
     public bool IsRead { get; set; } = false;
 
+    public bool Dismissed { get; set; } = false;
+
     /// <summary>
     /// Koristi se za sprečavanje duplikata za isti događaj.
     /// Format: "{Type}:{ProjekatId}:{yyyy-MM-dd}"

@@ -79,6 +79,10 @@ export class NotificationService implements OnDestroy {
     return this.http.put<void>(`${this.apiUrl}/${id}/read`, {});
   }
 
+  dismiss(id: number): Observable<void> {
+    return this.http.put<void>(`${this.apiUrl}/${id}/dismiss`, {});
+  }
+
   markAllAsRead(): Observable<void> {
     return this.http.put<void>(`${this.apiUrl}/read-all`, {});
   }

@@ -29,7 +29,7 @@ public class NotificationsController : ControllerBase
         var currentUser = await _userService.EnsureUserExistsAsync(User);
 
         var notifications = await _context.Notifications
-            .Where(n => n.UserId == currentUser.Id)
+            .Where(n => n.UserId == currentUser.Id && !n.Dismissed)
             .OrderByDescending(n => n.CreatedAt)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
@@ -45,7 +45,7 @@ public class NotificationsController : ControllerBase
         var currentUser = await _userService.EnsureUserExistsAsync(User);
 
         var count = await _context.Notifications
-            .CountAsync(n => n.UserId == currentUser.Id && !n.IsRead);
+            .CountAsync(n => n.UserId == currentUser.Id && !n.IsRead && !n.Dismissed);
 
         return Ok(count);
     }
@@ -63,6 +63,28 @@ public class NotificationsController : ControllerBase
             return NotFound();
 
         notification.IsRead = true;
+        await _context.SaveChangesAsync();
+
+        return NoContent();
+    }
+
+    // PUT: api/Notifications/5/dismiss
+    [HttpPut("{id}/dismiss")]
+    public async Task<IActionResult> Dismiss(int id)
+    {
+        var currentUser = await _userService.EnsureUserExistsAsync(User);
+
+        var notification = await _context.Notifications
+            .FirstOrDefaultAsync(n => n.Id == id && n.UserId == currentUser.Id);
+
+        if (notification == null)
+            return NotFound();
+
+        notification.Dismissed = true;
+        if (!notification.IsRead)
+        {
+            notification.IsRead = true;
+        }
         await _context.SaveChangesAsync();
 
         return NoContent();

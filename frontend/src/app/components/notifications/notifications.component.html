@@ -41,6 +41,10 @@
         </div>
 
         <span *ngIf="!n.isRead" class="unread-dot"></span>
+
+        <button class="btn-dismiss" (click)="dismiss(n, $event)" title="Skloni">
+          <span class="material-icons">close</span>
+        </button>
       </li>
     </ul>
   </div>

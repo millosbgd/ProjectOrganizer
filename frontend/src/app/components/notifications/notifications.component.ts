@@ -86,6 +86,16 @@ export class NotificationsComponent implements OnInit, OnDestroy {
     });
   }
 
+  dismiss(notification: Notification, event: Event): void {
+    event.stopPropagation();
+    this.notificationService.dismiss(notification.id).subscribe(() => {
+      this.notifications = this.notifications.filter(n => n.id !== notification.id);
+      if (!notification.isRead) {
+        this.notificationService.setUnreadCount(Math.max(0, this.unreadCount - 1));
+      }
+    });
+  }
+
   getTypeIcon(type: string): string {
     switch (type) {
       case 'Blocked':             return 'block';
