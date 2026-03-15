@@ -140,8 +140,9 @@
         <div class="detail-row">
           <span class="label">AI praćenje:</span>
           <span class="value">
-            <span class="badge" [class.active]="projekat.aiPracen" [class.inactive]="!projekat.aiPracen">
-              {{ projekat.aiPracen ? 'Da' : 'Ne' }}
+            <span class="ai-pracen-detail" [class.ai-pracen-detail--active]="projekat.aiPracen">
+              <span *ngIf="projekat.aiPracen" class="material-icons ai-pracen-icon-detail">auto_awesome</span>
+              {{ projekat.aiPracen ? 'Aktivno' : 'Ne' }}
             </span>
           </span>
         </div>
