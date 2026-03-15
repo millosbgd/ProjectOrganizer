@@ -362,7 +362,11 @@ public class AktivnostiController : ControllerBase
     {
         try
         {
-            if (!projekatId.HasValue) return;
+            if (!projekatId.HasValue)
+            {
+                _logger.LogDebug("AI reminder preskočen za aktivnost {Id}: BAU aktivnost bez projekta", aktivnostId);
+                return;
+            }
 
             // Koristimo novi scope jer originalni DbContext bude disposed kad HTTP request završi
             using var scope = _scopeFactory.CreateScope();
@@ -370,19 +374,37 @@ public class AktivnostiController : ControllerBase
             var encryptionService = scope.ServiceProvider.GetRequiredService<EncryptionService>();
 
             var projekat = await context.Projekti.FindAsync(projekatId.Value);
-            if (projekat == null || !projekat.AIPracen) return;
+            if (projekat == null || !projekat.AIPracen)
+            {
+                _logger.LogDebug("AI reminder preskočen za aktivnost {Id}: projekat {ProjId} ne postoji ili nema AIPracen=true", aktivnostId, projekatId);
+                return;
+            }
 
             var userSettings = await context.UserSettings
                 .FirstOrDefaultAsync(s => s.UserId == auth0UserId);
-            if (userSettings == null || string.IsNullOrWhiteSpace(userSettings.OpenAiApiKey)) return;
+            if (userSettings == null || string.IsNullOrWhiteSpace(userSettings.OpenAiApiKey))
+            {
+                _logger.LogDebug("AI reminder preskočen za aktivnost {Id}: korisnik {UserId} nema podešen OpenAI API ključ", aktivnostId, auth0UserId);
+                return;
+            }
 
             var apiKey = encryptionService.Decrypt(userSettings.OpenAiApiKey);
-            if (string.IsNullOrWhiteSpace(apiKey)) return;
+            if (string.IsNullOrWhiteSpace(apiKey))
+            {
+                _logger.LogWarning("AI reminder preskočen za aktivnost {Id}: OpenAI API ključ nije mogao biti dekriptovan", aktivnostId);
+                return;
+            }
+
+            _logger.LogDebug("AI reminder: pozivam OpenAI za aktivnost {Id}, model={Model}, tekst={Tekst}", aktivnostId, userSettings.OpenAiModel, $"{opis} {detalji}".Trim()[..Math.Min(100, $"{opis} {detalji}".Trim().Length)]);
 
             var result = await _openAIService.ExtractReminderAsync(
                 apiKey, userSettings.OpenAiModel, opis, detalji, DateTime.UtcNow);
 
-            if (!result.HasReminder || result.RemindAt == null) return;
+            if (!result.HasReminder || result.RemindAt == null)
+            {
+                _logger.LogDebug("AI reminder preskočen za aktivnost {Id}: OpenAI nije detektovao podsetnik u tekstu", aktivnostId);
+                return;
+            }
 
             // Ukloni postojeće neposlate podsetnike za ovu aktivnost
             var existing = await context.AiReminders

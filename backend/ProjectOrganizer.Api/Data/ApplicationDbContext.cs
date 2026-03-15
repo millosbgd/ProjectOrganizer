@@ -214,6 +214,11 @@ public class ApplicationDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(n => n.ProjekatId)
                 .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasOne(n => n.Aktivnost)
+                .WithMany()
+                .HasForeignKey(n => n.AktivnostId)
+                .OnDelete(DeleteBehavior.NoAction);
         });
 
         // AiReminder configuration
