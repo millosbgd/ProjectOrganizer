@@ -30,18 +30,18 @@ public class OpenAIService
         var userPrompt = $$"""
             Trenutno tačno vreme je {{today:yyyy-MM-ddTHH:mm:ss}} (UTC).
 
-            Analiziraj sledeći tekst i postavi hasReminder=true ako tekst BILO ŠTA od sledećeg:
-            - eksplicitno traži podsetnik: "podseti me", "setiti me", "remind me", "podsetiti"  
+            Analiziraj sledeći tekst i postavi hasReminder=true ako tekst sadrži BILO ŠTA od sledećeg:
+            - eksplicitno traži podsetnik: "podseti me", "setiti me", "remind me", "podsetiti"
             - pominje da nešto TREBA da se uradi za određeno vreme: "za 10 minuta", "za sat vremena", "do 15h", "sutra ujutru", "sledećeg ponedeljka"
             - pominje rok ili deadline za neku akciju: "mora biti gotovo do", "treba poslati do", "rok je"
             - opisuje buduću akciju sa vremenskim okvirom: "pozvaću za", "treba upisati za", "biće gotovo za"
 
-            Ako je hasReminder=true, RemindAt izračunaj kao trenutno vreme plus naznačeni interval (ili kao naznačeni apsolutni datum/vreme), i vrati:
-            {{"hasReminder": true, "remindAt": "2026-03-17T08:00:00", "message": "Kratak opis podsetnike (max 150 znakova)"}}
+            Ako je hasReminder=true, RemindAt izračunaj kao trenutno vreme plus naznačeni interval (ili apsolutni datum/vreme) i vrati JSON u formatu:
+            {"hasReminder": true, "remindAt": "2026-03-17T08:00:00", "message": "Kratak opis (max 150 znakova)"}
             Polje remindAt mora biti ISO 8601 format u UTC.
-            
+
             Ako tekst nema nikakvu vremensku referencu ili buduću akciju, vrati:
-            {{"hasReminder": false}}
+            {"hasReminder": false}
 
             Tekst: {{text}}
             """;
