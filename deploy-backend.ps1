@@ -81,10 +81,12 @@ Write-Host "  Resource Group: $ResourceGroup" -ForegroundColor Cyan
 Write-Host "  App Name: $AppName" -ForegroundColor Cyan
 Write-Host ""
 
-az webapp deployment source config-zip `
+az webapp deploy `
     --resource-group $ResourceGroup `
     --name $AppName `
-    --src app.zip
+    --src-path app.zip `
+    --type zip `
+    --async false
 
 if ($LASTEXITCODE -ne 0) {
     Write-Host "❌ Deployment failed!" -ForegroundColor Red
