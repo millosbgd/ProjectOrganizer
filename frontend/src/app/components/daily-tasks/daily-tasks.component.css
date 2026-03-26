@@ -1,0 +1,288 @@
+.daily-tasks-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Trigger button */
+.btn-tasks {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: inherit;
+  position: relative;
+  border-radius: 50%;
+  transition: background 0.2s;
+}
+
+.btn-tasks:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.btn-tasks .material-icons {
+  font-size: 24px;
+}
+
+.badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: #e67e22;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  min-width: 16px;
+  height: 16px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  line-height: 1;
+  pointer-events: none;
+}
+
+/* Panel */
+.tasks-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 380px;
+  background: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+  z-index: 9999;
+  overflow: hidden;
+}
+
+/* Panel header */
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid #eee;
+  font-weight: 600;
+  font-size: 14px;
+  background: #fafafa;
+}
+
+.btn-add {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #3498db;
+  display: flex;
+  align-items: center;
+  padding: 2px;
+  border-radius: 4px;
+  transition: background 0.15s;
+}
+
+.btn-add:hover {
+  background: rgba(52, 152, 219, 0.1);
+}
+
+.btn-add .material-icons {
+  font-size: 20px;
+}
+
+/* Add form */
+.add-form {
+  padding: 10px 16px;
+  border-bottom: 1px solid #eee;
+  background: #f7fbff;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.add-input {
+  flex: 1;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 6px 10px;
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.add-input:focus {
+  border-color: #3498db;
+}
+
+.add-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.btn-save,
+.btn-cancel {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 4px;
+  border-radius: 4px;
+  transition: background 0.15s;
+}
+
+.btn-save {
+  color: #27ae60;
+}
+
+.btn-save:hover:not(:disabled) {
+  background: rgba(39, 174, 96, 0.1);
+}
+
+.btn-save:disabled {
+  color: #b0b0b0;
+  cursor: not-allowed;
+}
+
+.btn-cancel {
+  color: #e74c3c;
+}
+
+.btn-cancel:hover {
+  background: rgba(231, 76, 60, 0.1);
+}
+
+.btn-save .material-icons,
+.btn-cancel .material-icons {
+  font-size: 18px;
+}
+
+/* Empty state */
+.panel-empty {
+  padding: 24px 16px;
+  text-align: center;
+  color: #999;
+  font-size: 14px;
+}
+
+/* Task list */
+.task-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 420px;
+  overflow-y: auto;
+}
+
+.task-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  border-bottom: 1px solid #f0f0f0;
+  gap: 8px;
+  transition: background 0.15s;
+}
+
+.task-item:last-child {
+  border-bottom: none;
+}
+
+.task-item:hover {
+  background: #f9f9f9;
+}
+
+.task-item.pinned {
+  background: #fffdf0;
+}
+
+.task-item.pinned:hover {
+  background: #fff9d6;
+}
+
+/* Task body */
+.task-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.task-opis {
+  font-size: 13px;
+  color: #222;
+  word-break: break-word;
+  line-height: 1.4;
+  transition: color 0.2s;
+}
+
+/* Green text when solved */
+.task-item.solved .task-opis {
+  color: #27ae60;
+}
+
+.task-datum {
+  font-size: 11px;
+  color: #999;
+}
+
+/* Action buttons */
+.task-actions {
+  display: flex;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.btn-action {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-radius: 4px;
+  color: #aaa;
+  transition: background 0.15s, color 0.15s;
+}
+
+.btn-action:hover {
+  background: rgba(0, 0, 0, 0.06);
+  color: #555;
+}
+
+.btn-action.active {
+  color: #27ae60;
+}
+
+.btn-action.active .material-icons[data-icon="push_pin"],
+.btn-action.active:has(.material-icons) {
+  color: #e67e22;
+}
+
+/* Pinned icon active color override */
+.btn-action[title*="Ukloni pin"],
+.btn-action[title*="pin"].active {
+  color: #e67e22;
+}
+
+/* Solved button active */
+.btn-action.active:first-child {
+  color: #27ae60;
+}
+
+.btn-delete {
+  color: #ccc;
+}
+
+.btn-delete:hover {
+  color: #e74c3c;
+  background: rgba(231, 76, 60, 0.08);
+}
+
+.btn-action .material-icons {
+  font-size: 18px;
+}

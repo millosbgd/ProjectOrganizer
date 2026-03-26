@@ -30,6 +30,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<ProjectImplementationItemCheckList> ProjectImplementationItemCheckLists { get; set; }
     public DbSet<Notification> Notifications { get; set; }
     public DbSet<AiReminder> AiReminders { get; set; }
+    public DbSet<DailyTask> DailyTasks { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -242,6 +243,19 @@ public class ApplicationDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(r => r.AktivnostId)
                 .OnDelete(DeleteBehavior.NoAction);
+        });
+
+        // DailyTask configuration
+        modelBuilder.Entity<DailyTask>(entity =>
+        {
+            entity.ToTable("DailyTasks");
+            entity.HasIndex(e => e.KorisnikKreirao);
+            entity.HasIndex(e => new { e.KorisnikKreirao, e.Datum });
+
+            entity.HasOne(t => t.User)
+                .WithMany()
+                .HasForeignKey(t => t.KorisnikKreirao)
+                .OnDelete(DeleteBehavior.Cascade);
         });
     }
 

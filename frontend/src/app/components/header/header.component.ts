@@ -4,11 +4,12 @@ import { RouterModule } from '@angular/router';
 import { AuthService } from '@auth0/auth0-angular';
 import { NotificationsComponent } from '../notifications/notifications.component';
 import { NotificationService } from '../../services/notification.service';
+import { DailyTasksComponent } from '../daily-tasks/daily-tasks.component';
 
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [CommonModule, RouterModule, NotificationsComponent],
+  imports: [CommonModule, RouterModule, NotificationsComponent, DailyTasksComponent],
   templateUrl: './header.component.html',
   styleUrls: ['./header.component.css']
 })

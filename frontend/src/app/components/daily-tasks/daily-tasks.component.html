@@ -1,0 +1,89 @@
+<div class="daily-tasks-wrapper" (click)="$event.stopPropagation()">
+
+  <!-- Trigger button -->
+  <button class="btn-tasks" (click)="togglePanel()" title="Dnevni taskovi">
+    <span class="material-icons">checklist</span>
+    <span *ngIf="pendingCount > 0" class="badge">{{ pendingCount > 99 ? '99+' : pendingCount }}</span>
+  </button>
+
+  <!-- Dropdown panel -->
+  <div *ngIf="isOpen" class="tasks-panel">
+
+    <!-- Header -->
+    <div class="panel-header">
+      <span>Dnevni taskovi</span>
+      <button class="btn-add" (click)="toggleAddForm($event)" title="Dodaj task">
+        <span class="material-icons">add</span>
+      </button>
+    </div>
+
+    <!-- Add form -->
+    <div *ngIf="showAddForm" class="add-form" (click)="$event.stopPropagation()">
+      <input
+        type="text"
+        class="add-input"
+        placeholder="Opis taska..."
+        [(ngModel)]="newTaskOpis"
+        (keyup.enter)="submitNewTask($event)"
+        (keyup.escape)="cancelAdd($event)"
+        autofocus
+        maxlength="500" />
+      <div class="add-actions">
+        <button class="btn-save" (click)="submitNewTask($event)" [disabled]="saving || !newTaskOpis.trim()">
+          <span class="material-icons">check</span>
+        </button>
+        <button class="btn-cancel" (click)="cancelAdd($event)">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="loading" class="panel-empty">Učitavanje...</div>
+
+    <!-- Empty state -->
+    <div *ngIf="!loading && tasks.length === 0" class="panel-empty">
+      Nema taskova.
+    </div>
+
+    <!-- Task list -->
+    <ul *ngIf="!loading && tasks.length > 0" class="task-list">
+      <li
+        *ngFor="let t of tasks"
+        class="task-item"
+        [class.solved]="t.solved"
+        [class.pinned]="t.pinned">
+
+        <div class="task-body">
+          <span class="task-opis">{{ t.opis }}</span>
+          <span class="task-datum">{{ t.datum | date:'dd.MM.yyyy' }}</span>
+        </div>
+
+        <div class="task-actions">
+          <button
+            class="btn-action"
+            [class.active]="t.solved"
+            (click)="toggleSolved(t, $event)"
+            title="{{ t.solved ? 'Označi kao nerešen' : 'Označi kao rešen' }}">
+            <span class="material-icons">{{ t.solved ? 'check_circle' : 'radio_button_unchecked' }}</span>
+          </button>
+          <button
+            class="btn-action"
+            [class.active]="t.pinned"
+            (click)="togglePinned(t, $event)"
+            title="{{ t.pinned ? 'Ukloni pin' : 'Zakači' }}">
+            <span class="material-icons">push_pin</span>
+          </button>
+          <button
+            class="btn-action btn-delete"
+            (click)="deleteTask(t, $event)"
+            title="Obriši">
+            <span class="material-icons">delete_outline</span>
+          </button>
+        </div>
+
+      </li>
+    </ul>
+
+  </div>
+</div>
