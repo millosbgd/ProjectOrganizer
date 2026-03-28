@@ -1,5 +1,13 @@
-<app-header></app-header>
-<app-sidebar-nav></app-sidebar-nav>
-<main>
-  <router-outlet />
-</main>
+<ng-container *ngIf="auth.isLoading$ | async; else appReady">
+  <div class="app-loading">
+    <span class="material-icons app-loading-icon">autorenew</span>
+  </div>
+</ng-container>
+
+<ng-template #appReady>
+  <app-header></app-header>
+  <app-sidebar-nav></app-sidebar-nav>
+  <main>
+    <router-outlet />
+  </main>
+</ng-template>

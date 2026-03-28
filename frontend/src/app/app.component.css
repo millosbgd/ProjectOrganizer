@@ -1,2 +1,21 @@
 /* App component styles moved to global styles.css */
 
+.app-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  background-color: #f5f5f5;
+}
+
+.app-loading-icon {
+  font-size: 48px;
+  color: #00a1ff;
+  animation: app-spin 1s linear infinite;
+}
+
+@keyframes app-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
