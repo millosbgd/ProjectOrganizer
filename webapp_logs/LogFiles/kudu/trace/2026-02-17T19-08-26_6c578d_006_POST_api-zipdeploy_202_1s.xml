@@ -1,0 +1,17 @@
+<step title="Incoming Request" date="2026-02-17T19:08:26.628" instance="6c578d" url="/api/zipdeploy?isAsync=true" method="POST" type="request" pid="831,1,25" Accept="*/*" Host="projectorganizer-bxcdcbbuhxayacbb.scm.westeurope-01.azurewebsites.net" User-Agent="AZURECLI/2.80.0 (MSI)" Accept-Encoding="gzip, deflate" Authorization="Bea..." Cache-Control="no-cache" Content-Type="application/octet-stream" Content-Length="8377635" x-ms-client-request-id="0565190c-0c34-11f1-bbab-60452ea571f6" x-ms-artifact-checksum="4b264ba0d60896368bb407b704c44324934195eb5373e824938d36f7e2b7a9a0" X-ARR-LOG-ID="0565190c-0c34-11f1-bbab-60452ea571f6" CLIENT-IP="24.135.75.103:34200" X-SITE-DEPLOYMENT-ID="ProjectOrganizer" WAS-DEFAULT-HOSTNAME="projectorganizer-bxcdcbbuhxayacbb.scm.westeurope-01.azurewebsites.net" X-Forwarded-Proto="https" X-AppService-Proto="https" X-Forwarded-TlsVersion="1.3" X-WAWS-Unencoded-URL="/api/zipdeploy?isAsync=true" X-Client-IP="24.135.75.103" X-Client-Port="34200" >
+  <step title="Cleanup Xml Logs" date="2026-02-17T19:08:26.634" >
+    <step title="Cleanup Infos" date="2026-02-17T19:08:26.663" totalFiles="417" totalCleanup="257" /><!-- duration: 15ms -->
+  </step><!-- duration: 47ms -->
+  <step title="ZipPushDeploy" date="2026-02-17T19:08:26.808" >
+    <step title="ZipDeploy. Extract zip." date="2026-02-17T19:08:26.815" /><!-- duration: 3ms -->
+    <step title="Starting PushDeployAsync" date="2026-02-17T19:08:26.823" /><!-- duration: 3ms -->
+    <step title="Writing artifact to /tmp/zipdeploy/004c7243-fc31-4718-b470-e459b98513b2.zip" date="2026-02-17T19:08:26.842" >
+      <step title="Writing multipart request body to /tmp/zipdeploy/004c7243-fc31-4718-b470-e459b98513b2.zip" date="2026-02-17T19:08:26.845" /><!-- duration: 3ms -->
+    </step><!-- duration: 407ms -->
+    <step title="Start deployment in the background" date="2026-02-17T19:08:27.260" >
+      <step title="Acquiring Deployment Lock" date="2026-02-17T19:08:27.277" /><!-- duration: 5ms -->
+      <step title="Acquired Deployment Lock" date="2026-02-17T19:08:27.340" /><!-- duration: 3ms -->
+    </step><!-- duration: 202ms -->
+  </step><!-- duration: 662ms -->
+  <step title="Outgoing response" date="2026-02-17T19:08:27.475" type="response" statusCode="202" statusText="Accepted" /><!-- duration: 3ms -->
+</step><!-- duration: 851ms -->

@@ -1,0 +1,52 @@
+<step title="Incoming Request" date="2026-02-14T07:38:13.338" instance="c21d5f" url="/api/publish?type=zip" method="POST" type="request" pid="831,1,14" Accept="*/*" Host="projectorganizer-bxcdcbbuhxayacbb.scm.westeurope-01.azurewebsites.net" User-Agent="AZURECLI/2.80.0 (MSI)" Accept-Encoding="gzip, deflate" Authorization="Bea..." Cache-Control="no-cache" Content-Type="application/octet-stream" Cookie="ARRAffinity=c21d5f1565df5810320f5e0f8d25fbc83c00d98436fd9ba2c324e2b78b831be6; ARRAffinitySameSite=c21d5f1565df5810320f5e0f8d25fbc83c00d98436fd9ba2c324e2b78b831be6" Content-Length="8457935" x-ms-client-request-id="0b574889-0978-11f1-be52-60452ea571f6" x-ms-artifact-checksum="d2ef9a314dff2b3629731549ba7bc70d686fd80331f972ec3508d865f8c5087c" X-ARR-LOG-ID="0b574889-0978-11f1-be52-60452ea571f6" CLIENT-IP="24.135.79.3:7879" X-SITE-DEPLOYMENT-ID="ProjectOrganizer" WAS-DEFAULT-HOSTNAME="projectorganizer-bxcdcbbuhxayacbb.scm.westeurope-01.azurewebsites.net" X-Forwarded-Proto="https" X-AppService-Proto="https" X-Forwarded-TlsVersion="1.3" X-WAWS-Unencoded-URL="/api/publish?type=zip" X-Client-IP="24.135.79.3" X-Client-Port="7879" >
+  <step title="Cleanup Xml Logs" date="2026-02-14T07:38:13.347" >
+    <step title="Cleanup Infos" date="2026-02-14T07:38:13.375" totalFiles="321" totalCleanup="161" /><!-- duration: 13ms -->
+  </step><!-- duration: 49ms -->
+  <step title="OneDeploy" date="2026-02-14T07:38:13.435" >
+    <step title="None repository commit" date="2026-02-14T07:38:13.455" >
+      <step title="Commit id: 3436acff-6ae3-4fe9-be96-d424d3861964" date="2026-02-14T07:38:13.465" Message="N/A" AuthorName="N/A" AuthorEmail="N/A" /><!-- duration: 9ms -->
+    </step><!-- duration: 26ms -->
+    <step title="Starting PushDeployAsync" date="2026-02-14T07:38:13.525" /><!-- duration: 9ms -->
+    <step title="Writing artifact to /tmp/zipdeploy/b4d8c430-1797-4e32-b455-f0e179dda3a2.zip" date="2026-02-14T07:38:13.560" >
+      <step title="Writing multipart request body to /tmp/zipdeploy/b4d8c430-1797-4e32-b455-f0e179dda3a2.zip" date="2026-02-14T07:38:13.568" /><!-- duration: 8ms -->
+    </step><!-- duration: 720ms -->
+    <step title="Attempting to fetch target branch HEAD" date="2026-02-14T07:38:14.304" /><!-- duration: 7ms -->
+    <step title="Acquiring Deployment Lock" date="2026-02-14T07:38:14.319" /><!-- duration: 7ms -->
+    <step title="Acquired Deployment Lock" date="2026-02-14T07:38:14.377" /><!-- duration: 12ms -->
+    <step title="Performing fetch based deployment" date="2026-02-14T07:38:14.408" >
+      <step title="Creating temporary deployment" date="2026-02-14T07:38:14.415" /><!-- duration: 74ms -->
+      <step title="Releasing Deployment Lock" date="2026-02-14T07:38:15.687" /><!-- duration: 13ms -->
+      <step title="Cleaning up temp folders from previous zip deployments and extracting pushed zip file /tmp/zipdeploy/b4d8c430-1797-4e32-b455-f0e179dda3a2.zip (8.07 MB) to /tmp/zipdeploy/extracted" date="2026-02-14T07:38:15.751" >
+        <step title="ChmodRecursive Process exited with total time taken in ms: 78" date="2026-02-14T07:38:16.857" /><!-- duration: 14ms -->
+      </step><!-- duration: 1128ms -->
+      <step title="None repository commit" date="2026-02-14T07:38:16.887" >
+        <step title="Commit id: 3436acff-6ae3-4fe9-be96-d424d3861964" date="2026-02-14T07:38:16.894" Message="OneDeploy" AuthorName="N/A" AuthorEmail="N/A" /><!-- duration: 8ms -->
+      </step><!-- duration: 30ms -->
+      <step title="Deployment timer started" date="2026-02-14T07:38:18.926" >
+        <step title="DeploymentManager.Deploy(id:3436acff-6ae3-4fe9-be96-d424d3861964)" date="2026-02-14T07:38:18.937" >
+          <step title="Collecting changeset information" date="2026-02-14T07:38:18.960" /><!-- duration: 111ms -->
+          <step title="Updating submodules" date="2026-02-14T07:38:19.084" /><!-- duration: 1184ms -->
+          <step title="Determining deployment builder" date="2026-02-14T07:38:20.591" >
+            <step title="Builder is OneDeployBuilder" date="2026-02-14T07:38:20.615" /><!-- duration: 7ms -->
+          </step><!-- duration: 40ms -->
+          <step title="PreDeployment: context.CleanOutputPath False" date="2026-02-14T07:38:20.697" >
+            <step title="PreDeployment: context.OutputPath /home/site/wwwroot" date="2026-02-14T07:38:20.873" >
+              <step title="Building" date="2026-02-14T07:38:21.045" >
+                <step title="Executing external process" date="2026-02-14T07:38:21.791" type="process" path="starter.sh" arguments="/opt/Kudu/Scripts/parallel_rsync.sh /tmp/zipdeploy/extracted /home/site/wwwroot 8 /tmp/ False False  " /><!-- duration: 4372ms -->
+                <step title="Modified file to trigger a restart of the app container." date="2026-02-14T07:38:26.709" /><!-- duration: 7ms -->
+                <step title="Skip function trigger and logicapp sync because function is not enabled." date="2026-02-14T07:38:26.725" /><!-- duration: 9ms -->
+                <step title="Purge deployment items" date="2026-02-14T07:38:28.104" >
+                  <step title="Remove 582a06e0-, Success, received at 01/28/2026 21:47:14" date="2026-02-14T07:38:28.246" /><!-- duration: 7ms -->
+                </step><!-- duration: 158ms -->
+              </step><!-- duration: 7313ms -->
+            </step><!-- duration: 7501ms -->
+            <step title="Cleaning up temp files" date="2026-02-14T07:38:28.380" /><!-- duration: 7ms -->
+            <step title="Cleaning up temp files" date="2026-02-14T07:38:28.394" /><!-- duration: 509ms -->
+            <step title="Reloading status file with latest updates" date="2026-02-14T07:38:28.944" >
+              <step title="WebHooksManager.PublishEventAsync: PostDeployment" date="2026-02-14T07:38:28.952" /><!-- duration: 45ms -->
+            </step><!-- duration: 61ms -->
+            <step title="Cleaning up temporary deployment - fetch deployment was successful" date="2026-02-14T07:38:29.016" /><!-- duration: 9ms -->
+          </step><!-- duration: 8444ms -->
+        </step><!-- duration: 10220ms -->
+        <step title="Outgoing response" date="2026-02-14T07:38:29.168" type="response" statusCode="200" statusText="OK" /><!-- duration: 7ms -->
+      </step><!-- duration: 10255ms -->

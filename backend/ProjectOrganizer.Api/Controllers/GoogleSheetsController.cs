@@ -33,6 +33,8 @@ public class GoogleSheetsController : ControllerBase
 
             var items = await _context.ProjectImplementationItems
                 .Include(pi => pi.ImplementationItem)
+                .Include(pi => pi.CheckLists)
+                    .ThenInclude(cl => cl.CheckListItem)
                 .Where(pi => pi.ProjectId == projekatId)
                 .OrderBy(pi => pi.Id)
                 .ToListAsync();
@@ -42,7 +44,7 @@ public class GoogleSheetsController : ControllerBase
 
             var existingSheetId = projekat.GoogleSheetId;
 
-            var spreadsheetId = await _googleSheetsService.CreateOrUpdateSheetAsync(
+            var (spreadsheetId, _) = await _googleSheetsService.CreateOrUpdateSheetAsync(
                 projekat, items, existingSheetId);
 
             if (string.IsNullOrEmpty(existingSheetId))
@@ -76,26 +78,23 @@ public class GoogleSheetsController : ControllerBase
         if (string.IsNullOrEmpty(projekat.GoogleSheetId))
             return BadRequest("Projekat nema generisan Sheet. Najpre generiši Sheet.");
 
-        var items = await _context.ProjectImplementationItems
+        var checkLists = await _context.ProjectImplementationItems
             .Where(pi => pi.ProjectId == projekatId)
-            .OrderBy(pi => pi.Id)
+            .SelectMany(pi => pi.CheckLists)
             .ToListAsync();
 
         var sheetData = await _googleSheetsService.ReadSheetDataAsync(projekat.GoogleSheetId);
 
         int synced = 0;
-        foreach (var (itemIndex, datum, potvrdeno) in sheetData)
+        foreach (var (checkListItemId, potvrdeno) in sheetData)
         {
-            if (itemIndex >= items.Count) break;
+            var cl = checkLists.FirstOrDefault(c => c.Id == checkListItemId);
+            if (cl == null) continue;
 
-            var item = items[itemIndex];
-            item.KlijentPotvrdio = potvrdeno;
-
-            if (potvrdeno && !item.KlijentPotvrdioDatum.HasValue)
-                item.KlijentPotvrdioDatum = DateOnly.FromDateTime(DateTime.UtcNow);
-            else if (!potvrdeno)
-                item.KlijentPotvrdioDatum = null;
-
+            cl.KlijentPotvrdio = potvrdeno;
+            cl.KlijentPotvrdioDatum = potvrdeno
+                ? (cl.KlijentPotvrdioDatum ?? DateOnly.FromDateTime(DateTime.UtcNow))
+                : null;
             synced++;
         }
 

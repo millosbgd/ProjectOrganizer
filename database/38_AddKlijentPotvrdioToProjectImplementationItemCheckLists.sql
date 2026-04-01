@@ -11,7 +11,7 @@ ELSE
 
 IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[ProjectImplementationItemCheckLists]') AND name = 'KlijentPotvrdioDatum')
 BEGIN
-    ALTER TABLE [ProjectImplementationItemCheckLists] ADD [KlijentPotvrdioDatum] datetime2 NULL;
+    ALTER TABLE [ProjectImplementationItemCheckLists] ADD [KlijentPotvrdioDatum] date NULL;
     PRINT 'Column KlijentPotvrdioDatum added.';
 END
 ELSE

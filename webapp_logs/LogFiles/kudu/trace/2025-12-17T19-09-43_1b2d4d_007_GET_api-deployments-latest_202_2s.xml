@@ -1,0 +1,9 @@
+<step title="Incoming Request" date="2025-12-17T19:09:43.378" instance="1b2d4d" url="/api/deployments/latest?deployer=ms-azuretools-vscode&amp;time=2025-12-17_19-09-38Z" method="GET" type="request" pid="831,1,24" Host="projectorganizer-bxcdcbbuhxayacbb.scm.westeurope-01.azurewebsites.net" User-Agent="vscode-azureappservice/0.26.4 core-rest-pipeline/1.20.0 Node/22.21.1 OS/(x64-Windows_NT-10.0.26100)" Accept-Encoding="gzip,deflate" Accept-Language="en" Authorization="Bea..." x-ms-correlation-request-id="26b64d64-8e83-4ac7-99eb-869d67e9fbeb" x-ms-client-request-id="55b66116-bb75-4219-92eb-51db5b78921a" X-ARR-LOG-ID="55b66116-bb75-4219-92eb-51db5b78921a" CLIENT-IP="24.135.67.131:7815" X-SITE-DEPLOYMENT-ID="ProjectOrganizer" WAS-DEFAULT-HOSTNAME="projectorganizer-bxcdcbbuhxayacbb.scm.westeurope-01.azurewebsites.net" X-Forwarded-Proto="https" X-AppService-Proto="https" X-Forwarded-TlsVersion="1.3" X-WAWS-Unencoded-URL="/api/deployments/latest?deployer=ms-azuretools-vscode&amp;time=2025-12-17_19-09-38Z" X-Client-IP="24.135.67.131" X-Client-Port="7815" >
+  <step title="Cleanup Xml Logs" date="2025-12-17T19:09:43.380" /><!-- duration: 7ms -->
+  <step title="DeploymentService.GetResult" date="2025-12-17T19:09:43.393" >
+    <step title="DeploymentService.GetLatestDeployment" date="2025-12-17T19:09:43.398" >
+      <step title="DeploymentManager.GetResults" date="2025-12-17T19:09:43.401" /><!-- duration: 2175ms -->
+    </step><!-- duration: 2190ms -->
+  </step><!-- duration: 2201ms -->
+  <step title="Outgoing response" date="2025-12-17T19:09:45.601" type="response" statusCode="202" statusText="Accepted" /><!-- duration: 7ms -->
+</step><!-- duration: 2238ms -->
