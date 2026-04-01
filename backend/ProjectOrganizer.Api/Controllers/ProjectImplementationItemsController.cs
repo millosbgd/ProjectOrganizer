@@ -48,7 +48,9 @@ public class ProjectImplementationItemsController : ControllerBase
                     CheckListItemKompleksnost = cl.CheckListItem != null ? cl.CheckListItem.Kompleksnost : null,
                     cl.Procenat,
                     cl.Zavrsen,
-                    cl.ZavrsenDatum
+                    cl.ZavrsenDatum,
+                    cl.KlijentPotvrdio,
+                    cl.KlijentPotvrdioDatum
                 }).ToList()
             })
             .ToListAsync();
@@ -85,7 +87,9 @@ public class ProjectImplementationItemsController : ControllerBase
                     CheckListItemKompleksnost = cl.CheckListItem != null ? cl.CheckListItem.Kompleksnost : null,
                     cl.Procenat,
                     cl.Zavrsen,
-                    cl.ZavrsenDatum
+                    cl.ZavrsenDatum,
+                    cl.KlijentPotvrdio,
+                    cl.KlijentPotvrdioDatum
                 }).ToList()
             })
             .FirstOrDefaultAsync();
@@ -153,8 +157,17 @@ public class ProjectImplementationItemsController : ControllerBase
         if (checkList == null)
             return NotFound(new { message = "Stavka čekliste nije pronađena." });
 
-        checkList.Zavrsen = dto.Zavrsen;
-        checkList.ZavrsenDatum = dto.Zavrsen ? (dto.ZavrsenDatum ?? DateTime.UtcNow) : null;
+        if (dto.Zavrsen.HasValue)
+        {
+            checkList.Zavrsen = dto.Zavrsen.Value;
+            checkList.ZavrsenDatum = dto.Zavrsen.Value ? (dto.ZavrsenDatum ?? DateTime.UtcNow) : null;
+        }
+
+        if (dto.KlijentPotvrdio.HasValue)
+        {
+            checkList.KlijentPotvrdio = dto.KlijentPotvrdio.Value;
+            checkList.KlijentPotvrdioDatum = dto.KlijentPotvrdio.Value ? (dto.KlijentPotvrdioDatum ?? DateTime.UtcNow) : null;
+        }
 
         await _context.SaveChangesAsync();
 
@@ -164,6 +177,8 @@ public class ProjectImplementationItemsController : ControllerBase
 
 public class UpdateCheckListDto
 {
-    public bool Zavrsen { get; set; }
+    public bool? Zavrsen { get; set; }
     public DateTime? ZavrsenDatum { get; set; }
+    public bool? KlijentPotvrdio { get; set; }
+    public DateTime? KlijentPotvrdioDatum { get; set; }
 }

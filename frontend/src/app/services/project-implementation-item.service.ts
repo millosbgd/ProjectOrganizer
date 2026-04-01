@@ -30,4 +30,11 @@ export class ProjectImplementationItemService {
       zavrsenDatum: zavrsen ? new Date().toISOString() : null
     });
   }
+
+  updateCheckListKlijentPotvrdio(itemId: number, checklistId: number, klijentPotvrdio: boolean): Observable<void> {
+    return this.http.put<void>(`${this.apiUrl}/${itemId}/checklist/${checklistId}`, {
+      klijentPotvrdio: klijentPotvrdio,
+      klijentPotvrdioDatum: klijentPotvrdio ? new Date().toISOString() : null
+    });
+  }
 }

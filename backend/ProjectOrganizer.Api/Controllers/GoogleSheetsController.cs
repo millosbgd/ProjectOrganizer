@@ -1,3 +1,4 @@
+using Google;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -24,32 +25,44 @@ public class GoogleSheetsController : ControllerBase
     [HttpPost("projekat/{projekatId}/generate")]
     public async Task<IActionResult> GenerateSheet(int projekatId)
     {
-        var projekat = await _context.Projekti.FindAsync(projekatId);
-        if (projekat == null)
-            return NotFound("Projekat nije pronađen.");
-
-        var items = await _context.ProjectImplementationItems
-            .Include(pi => pi.ImplementationItem)
-            .Where(pi => pi.ProjectId == projekatId)
-            .OrderBy(pi => pi.Id)
-            .ToListAsync();
-
-        if (!items.Any())
-            return BadRequest("Projekat nema stavke implementacije.");
-
-        var existingSheetId = projekat.GoogleSheetId;
-
-        var spreadsheetId = await _googleSheetsService.CreateOrUpdateSheetAsync(
-            projekat, items, existingSheetId);
-
-        if (string.IsNullOrEmpty(existingSheetId))
+        try
         {
-            projekat.GoogleSheetId = spreadsheetId;
-            await _context.SaveChangesAsync();
-        }
+            var projekat = await _context.Projekti.FindAsync(projekatId);
+            if (projekat == null)
+                return NotFound("Projekat nije pronađen.");
 
-        var url = $"https://docs.google.com/spreadsheets/d/{spreadsheetId}";
-        return Ok(new { spreadsheetId, url });
+            var items = await _context.ProjectImplementationItems
+                .Include(pi => pi.ImplementationItem)
+                .Where(pi => pi.ProjectId == projekatId)
+                .OrderBy(pi => pi.Id)
+                .ToListAsync();
+
+            if (!items.Any())
+                return BadRequest("Projekat nema stavke implementacije.");
+
+            var existingSheetId = projekat.GoogleSheetId;
+
+            var spreadsheetId = await _googleSheetsService.CreateOrUpdateSheetAsync(
+                projekat, items, existingSheetId);
+
+            if (string.IsNullOrEmpty(existingSheetId))
+            {
+                projekat.GoogleSheetId = spreadsheetId;
+                await _context.SaveChangesAsync();
+            }
+
+            var url = $"https://docs.google.com/spreadsheets/d/{spreadsheetId}";
+            return Ok(new { spreadsheetId, url });
+        }
+        catch (GoogleApiException gex)
+        {
+            var reasons = gex.Error?.Errors?.Select(e => new { e.Domain, e.Message, e.Reason }).ToList();
+            return StatusCode(500, new { error = "GoogleApiException", httpStatus = gex.HttpStatusCode.ToString(), message = gex.Message, reasons });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { error = ex.GetType().Name, message = ex.Message, inner = ex.InnerException?.Message });
+        }
     }
 
     // POST: api/GoogleSheets/projekat/5/sync

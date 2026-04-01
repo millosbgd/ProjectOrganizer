@@ -50,6 +50,22 @@ export class ImplementationItemModalComponent {
     });
   }
 
+  onCheckListKlijentPotvrdioToggle(checkListItem: ProjectImplementationCheckListItem): void {
+    if (!this.item) return;
+
+    const newStatus = !checkListItem.klijentPotvrdio;
+    this.implementationItemService.updateCheckListKlijentPotvrdio(this.item.id, checkListItem.id, newStatus).subscribe({
+      next: () => {
+        checkListItem.klijentPotvrdio = newStatus;
+        checkListItem.klijentPotvrdioDatum = newStatus ? new Date() : undefined;
+      },
+      error: (error) => {
+        console.error('Error updating checklist klijent potvrda:', error);
+        alert('Greška pri ažuriranju potvrde klijenta');
+      }
+    });
+  }
+
   onZavrsenoChange(): void {
     if (this.item) {
       if (!this.item.zavrseno) {

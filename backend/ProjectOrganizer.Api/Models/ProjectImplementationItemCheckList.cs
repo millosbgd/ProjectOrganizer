@@ -33,6 +33,10 @@ namespace ProjectOrganizer.Api.Models
         [Column(TypeName = "decimal(5,2)")]
         public decimal? Procenat { get; set; }
 
+        public bool KlijentPotvrdio { get; set; } = false;
+
+        public DateTime? KlijentPotvrdioDatum { get; set; }
+
         // Navigation properties
         [ForeignKey("ProjectImplementationItemId")]
         public ProjectImplementationItem? ProjectImplementationItem { get; set; }

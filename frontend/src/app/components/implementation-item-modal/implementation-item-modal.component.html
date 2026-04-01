@@ -32,6 +32,8 @@
                 <th style="width: 100px;">Kompleksnost</th>
                 <th style="width: 80px;">Procenat</th>
                 <th style="width: 150px;">Završeno</th>
+                <th style="width: 50px;">Klijent</th>
+                <th style="width: 150px;">Klijent potvrdio</th>
               </tr>
             </thead>
             <tbody>
@@ -49,6 +51,18 @@
                 <td>
                   <span *ngIf="checkList.zavrsenDatum">
                     {{ checkList.zavrsenDatum | date: 'dd.MM.yyyy HH:mm' }}
+                  </span>
+                </td>
+                <td>
+                  <input 
+                    type="checkbox" 
+                    [checked]="checkList.klijentPotvrdio"
+                    (change)="onCheckListKlijentPotvrdioToggle(checkList)"
+                  />
+                </td>
+                <td>
+                  <span *ngIf="checkList.klijentPotvrdioDatum">
+                    {{ checkList.klijentPotvrdioDatum | date: 'dd.MM.yyyy HH:mm' }}
                   </span>
                 </td>
               </tr>

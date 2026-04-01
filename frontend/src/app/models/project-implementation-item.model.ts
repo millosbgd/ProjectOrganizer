@@ -20,4 +20,6 @@ export interface ProjectImplementationCheckListItem {
   procenat?: number | null;
   zavrsen: boolean;
   zavrsenDatum?: Date;
+  klijentPotvrdio: boolean;
+  klijentPotvrdioDatum?: Date;
 }

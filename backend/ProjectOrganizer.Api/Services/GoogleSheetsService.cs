@@ -1,6 +1,8 @@
 using Azure.Identity;
 using Azure.Security.KeyVault.Secrets;
 using Google.Apis.Auth.OAuth2;
+using Google.Apis.Auth.OAuth2.Flows;
+using Google.Apis.Auth.OAuth2.Responses;
 using Google.Apis.Drive.v3;
 using Google.Apis.Services;
 using Google.Apis.Sheets.v4;
@@ -15,6 +17,12 @@ public class GoogleSheetsService
     private readonly ILogger<GoogleSheetsService> _logger;
     private SheetsService? _sheetsService;
     private DriveService? _driveService;
+
+    private record OAuthCredentials(
+        [property: System.Text.Json.Serialization.JsonPropertyName("client_id")] string ClientId,
+        [property: System.Text.Json.Serialization.JsonPropertyName("client_secret")] string ClientSecret,
+        [property: System.Text.Json.Serialization.JsonPropertyName("refresh_token")] string RefreshToken
+    );
 
     public GoogleSheetsService(IConfiguration configuration, ILogger<GoogleSheetsService> logger)
     {
@@ -36,20 +44,32 @@ public class GoogleSheetsService
                 ?? throw new InvalidOperationException("KeyVault:Url nije podešen.");
 
             var client = new SecretClient(new Uri(keyVaultUrl), new DefaultAzureCredential());
-            var secret = await client.GetSecretAsync("GoogleSheetsServiceAccount");
+            var secret = await client.GetSecretAsync("GoogleOAuthCredentials");
             json = secret.Value.Value;
         }
         else
         {
-            // Lokalno: čitaj direktno iz fajla
-            var keyPath = _configuration["GoogleSheets:LocalKeyPath"]
-                ?? Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "google", "key.json");
+            var keyPath = _configuration["GoogleSheets:LocalOAuthPath"]
+                ?? Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "google", "oauth_creds.json");
             json = await File.ReadAllTextAsync(keyPath);
         }
 
-        var credential = GoogleCredential
-            .FromJson(json)
-            .CreateScoped(SheetsService.Scope.Spreadsheets, DriveService.Scope.Drive);
+        var oauthData = System.Text.Json.JsonSerializer.Deserialize<OAuthCredentials>(json)
+            ?? throw new InvalidOperationException("Nije moguće parsirati OAuth credentials.");
+
+        var flowInitializer = new GoogleAuthorizationCodeFlow.Initializer
+        {
+            ClientSecrets = new ClientSecrets
+            {
+                ClientId = oauthData.ClientId,
+                ClientSecret = oauthData.ClientSecret
+            },
+            Scopes = new[] { SheetsService.Scope.Spreadsheets, DriveService.Scope.Drive }
+        };
+
+        var flow = new GoogleAuthorizationCodeFlow(flowInitializer);
+        var tokenResponse = new TokenResponse { RefreshToken = oauthData.RefreshToken };
+        var credential = new UserCredential(flow, "user", tokenResponse);
 
         _sheetsService = new SheetsService(new BaseClientService.Initializer
         {
@@ -81,6 +101,7 @@ public class GoogleSheetsService
         else
         {
             spreadsheetId = await CreateSpreadsheetAsync(projekat.Naziv);
+            await SetPublicAccessAsync(spreadsheetId);
         }
 
         await WriteDataAsync(spreadsheetId, projekat, items);
@@ -107,6 +128,16 @@ public class GoogleSheetsService
 
         var created = await _sheetsService!.Spreadsheets.Create(spreadsheet).ExecuteAsync();
         return created.SpreadsheetId;
+    }
+
+    private async Task SetPublicAccessAsync(string spreadsheetId)
+    {
+        var permission = new Google.Apis.Drive.v3.Data.Permission
+        {
+            Type = "anyone",
+            Role = "writer"
+        };
+        await _driveService!.Permissions.Create(permission, spreadsheetId).ExecuteAsync();
     }
 
     private async Task ClearSheetAsync(string spreadsheetId)
