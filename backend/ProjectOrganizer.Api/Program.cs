@@ -75,6 +75,7 @@ builder.Services.AddScoped<UserService>();
 builder.Services.AddHttpClient<NbsService>();
 builder.Services.AddScoped<NotificationService>();
 builder.Services.AddHostedService<NotificationBackgroundService>();
+builder.Services.AddScoped<GoogleSheetsService>();
 
 builder.Services.AddControllers()
     .AddJsonOptions(options =>

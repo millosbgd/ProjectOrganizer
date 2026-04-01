@@ -18,6 +18,7 @@ import { ImplementationModel } from '../../models/implementation-model.model';
 import { ProjectImplementationItem } from '../../models/project-implementation-item.model';
 import { AktivnostModalComponent } from '../aktivnost-modal/aktivnost-modal.component';
 import { ImplementationItemModalComponent } from '../implementation-item-modal/implementation-item-modal.component';
+import { GoogleSheetsService } from '../../services/google-sheets.service';
 
 @Component({
   selector: 'app-projekat-detail',
@@ -69,6 +70,9 @@ export class ProjekatDetailComponent implements OnInit {
   currentNote: string = '';
   editingNoteId: number | null = null;
 
+  generatingSheet = false;
+  syncingSheet = false;
+
   constructor(
     private projekatService: ProjekatService,
     private noteService: NoteService,
@@ -77,6 +81,7 @@ export class ProjekatDetailComponent implements OnInit {
     private aktivnostService: AktivnostService,
     private implementationModelService: ImplementationModelService,
     private implementationItemService: ProjectImplementationItemService,
+    private googleSheetsService: GoogleSheetsService,
     private route: ActivatedRoute,
     private router: Router
   ) {}
@@ -309,6 +314,12 @@ export class ProjekatDetailComponent implements OnInit {
         }
       });
     }
+  }
+
+  getImplementationModelNaziv(): string {
+    if (!this.projekat.implementationModelId) return 'Bez modela';
+    const model = this.implementationModels.find(m => m.id === this.projekat.implementationModelId);
+    return model?.naziv || 'Bez modela';
   }
 
   cancel(): void {
@@ -594,5 +605,36 @@ export class ProjekatDetailComponent implements OnInit {
   truncateText(text: string, maxLength: number = 30): string {
     if (text.length <= maxLength) return text;
     return text.substring(0, maxLength) + '...';
+  }
+
+  generateSheet(): void {
+    this.generatingSheet = true;
+    this.googleSheetsService.generateSheet(this.projekat.id).subscribe({
+      next: (data) => {
+        this.generatingSheet = false;
+        this.projekat.googleSheetId = data.spreadsheetId;
+        window.open(data.url, '_blank');
+      },
+      error: (error) => {
+        this.generatingSheet = false;
+        const msg = error?.error || 'Greška pri generisanju Sheet-a.';
+        alert(typeof msg === 'string' ? msg : 'Greška pri generisanju Sheet-a.');
+      }
+    });
+  }
+
+  syncSheet(): void {
+    this.syncingSheet = true;
+    this.googleSheetsService.syncFromSheet(this.projekat.id).subscribe({
+      next: (data) => {
+        this.syncingSheet = false;
+        this.loadImplementationItems(this.projekat.id);
+        alert(`Sinhronizacija završena. Ažurirano stavki: ${data.synced}`);
+      },
+      error: (error) => {
+        this.syncingSheet = false;
+        alert('Greška pri sinhronizaciji.');
+      }
+    });
   }
 }

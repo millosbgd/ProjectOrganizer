@@ -53,6 +53,9 @@ public class Projekat
     [MaxLength(500)]
     public string? DevOpsIterationPath { get; set; }
 
+    [MaxLength(100)]
+    public string? GoogleSheetId { get; set; }
+
     // Navigation properties
     [ForeignKey("KlijentId")]
     public Klijent? Klijent { get; set; }
