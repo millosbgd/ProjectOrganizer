@@ -129,9 +129,9 @@ public class ProjectImplementationItemsController : ControllerBase
 
         existingItem.Napomena = item.Napomena;
         existingItem.Zavrseno = item.Zavrseno;
-        existingItem.ZavrsenoDatum = item.Zavrseno ? (item.ZavrsenoDatum ?? DateTime.UtcNow) : null;
+        existingItem.ZavrsenoDatum = item.Zavrseno ? (item.ZavrsenoDatum ?? DateOnly.FromDateTime(DateTime.UtcNow)) : null;
         existingItem.KlijentPotvrdio = item.KlijentPotvrdio;
-        existingItem.KlijentPotvrdioDatum = item.KlijentPotvrdio ? (item.KlijentPotvrdioDatum ?? DateTime.UtcNow) : null;
+        existingItem.KlijentPotvrdioDatum = item.KlijentPotvrdio ? (item.KlijentPotvrdioDatum ?? DateOnly.FromDateTime(DateTime.UtcNow)) : null;
 
         try
         {
@@ -160,13 +160,13 @@ public class ProjectImplementationItemsController : ControllerBase
         if (dto.Zavrsen.HasValue)
         {
             checkList.Zavrsen = dto.Zavrsen.Value;
-            checkList.ZavrsenDatum = dto.Zavrsen.Value ? (dto.ZavrsenDatum ?? DateTime.UtcNow) : null;
+            checkList.ZavrsenDatum = dto.Zavrsen.Value ? (dto.ZavrsenDatum ?? DateOnly.FromDateTime(DateTime.UtcNow)) : null;
         }
 
         if (dto.KlijentPotvrdio.HasValue)
         {
             checkList.KlijentPotvrdio = dto.KlijentPotvrdio.Value;
-            checkList.KlijentPotvrdioDatum = dto.KlijentPotvrdio.Value ? (dto.KlijentPotvrdioDatum ?? DateTime.UtcNow) : null;
+            checkList.KlijentPotvrdioDatum = dto.KlijentPotvrdio.Value ? (dto.KlijentPotvrdioDatum ?? DateOnly.FromDateTime(DateTime.UtcNow)) : null;
         }
 
         await _context.SaveChangesAsync();
@@ -178,7 +178,7 @@ public class ProjectImplementationItemsController : ControllerBase
 public class UpdateCheckListDto
 {
     public bool? Zavrsen { get; set; }
-    public DateTime? ZavrsenDatum { get; set; }
+    public DateOnly? ZavrsenDatum { get; set; }
     public bool? KlijentPotvrdio { get; set; }
-    public DateTime? KlijentPotvrdioDatum { get; set; }
+    public DateOnly? KlijentPotvrdioDatum { get; set; }
 }

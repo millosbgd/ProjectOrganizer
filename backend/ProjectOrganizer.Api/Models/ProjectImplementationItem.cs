@@ -22,11 +22,11 @@ namespace ProjectOrganizer.Api.Models
 
         public bool Zavrseno { get; set; } = false;
 
-        public DateTime? ZavrsenoDatum { get; set; }
+        public DateOnly? ZavrsenoDatum { get; set; }
 
         public bool KlijentPotvrdio { get; set; } = false;
 
-        public DateTime? KlijentPotvrdioDatum { get; set; }
+        public DateOnly? KlijentPotvrdioDatum { get; set; }
 
         // Navigation properties
         [ForeignKey("ImplementationModelId")]

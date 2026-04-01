@@ -3,12 +3,12 @@ export interface ProjectImplementationItem {
   projectId: number;
   implementationModelId: number;
   implementationItemId: number;
-  implementationItemNaziv?: string; // From joined data
+  implementationItemNaziv?: string;
   napomena?: string;
   zavrseno: boolean;
-  zavrsenoDatum?: Date;
+  zavrsenoDatum?: string;
   klijentPotvrdio: boolean;
-  klijentPotvrdioDatum?: Date;
+  klijentPotvrdioDatum?: string;
   checkLists?: ProjectImplementationCheckListItem[];
 }
 
@@ -19,7 +19,7 @@ export interface ProjectImplementationCheckListItem {
   checkListItemKompleksnost?: number | null;
   procenat?: number | null;
   zavrsen: boolean;
-  zavrsenDatum?: Date;
+  zavrsenDatum?: string;
   klijentPotvrdio: boolean;
-  klijentPotvrdioDatum?: Date;
+  klijentPotvrdioDatum?: string;
 }

@@ -50,7 +50,7 @@
                 <td>{{ checkList.procenat ? (checkList.procenat | number:'1.2-2') + '%' : '-' }}</td>
                 <td>
                   <span *ngIf="checkList.zavrsenDatum">
-                    {{ checkList.zavrsenDatum | date: 'dd.MM.yyyy HH:mm' }}
+                    {{ checkList.zavrsenDatum | date: 'dd.MM.yyyy' }}
                   </span>
                 </td>
                 <td>
@@ -62,7 +62,7 @@
                 </td>
                 <td>
                   <span *ngIf="checkList.klijentPotvrdioDatum">
-                    {{ checkList.klijentPotvrdioDatum | date: 'dd.MM.yyyy HH:mm' }}
+                    {{ checkList.klijentPotvrdioDatum | date: 'dd.MM.yyyy' }}
                   </span>
                 </td>
               </tr>

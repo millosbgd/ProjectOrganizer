@@ -60,7 +60,7 @@ public class CompletionService
         }
 
         var totalItems = allCheckListItems.Count;
-        var lastWeekDate = DateTime.UtcNow.AddDays(-7);
+        var lastWeekDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-7));
 
         // Calculate completion as of last week
         // Count items that were completed by last week date
@@ -109,7 +109,7 @@ public class CompletionService
                 .ThenInclude(cl => cl.CheckListItem)
             .ToListAsync();
 
-        var lastWeekDate = DateTime.UtcNow.AddDays(-7);
+        var lastWeekDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-7));
 
         // Group by project ID and calculate stats
         foreach (var projektId in projektIds)

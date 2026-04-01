@@ -41,7 +41,7 @@ export class ImplementationItemModalComponent {
     this.implementationItemService.updateCheckList(this.item.id, checkListItem.id, newStatus).subscribe({
       next: () => {
         checkListItem.zavrsen = newStatus;
-        checkListItem.zavrsenDatum = newStatus ? new Date() : undefined;
+        checkListItem.zavrsenDatum = newStatus ? new Date().toISOString().split('T')[0] : undefined;
       },
       error: (error) => {
         console.error('Error updating checklist item:', error);
@@ -57,7 +57,7 @@ export class ImplementationItemModalComponent {
     this.implementationItemService.updateCheckListKlijentPotvrdio(this.item.id, checkListItem.id, newStatus).subscribe({
       next: () => {
         checkListItem.klijentPotvrdio = newStatus;
-        checkListItem.klijentPotvrdioDatum = newStatus ? new Date() : undefined;
+        checkListItem.klijentPotvrdioDatum = newStatus ? new Date().toISOString().split('T')[0] : undefined;
       },
       error: (error) => {
         console.error('Error updating checklist klijent potvrda:', error);
@@ -114,26 +114,22 @@ export class ImplementationItemModalComponent {
   }
 
   get zavrsenoDatumString(): string {
-    if (!this.item?.zavrsenoDatum) return '';
-    const date = new Date(this.item.zavrsenoDatum);
-    return date.toISOString().split('T')[0];
+    return this.item?.zavrsenoDatum ?? '';
   }
 
   set zavrsenoDatumString(value: string) {
     if (this.item) {
-      this.item.zavrsenoDatum = value ? new Date(value) : undefined;
+      this.item.zavrsenoDatum = value || undefined;
     }
   }
 
   get klijentPotvrdioDatumString(): string {
-    if (!this.item?.klijentPotvrdioDatum) return '';
-    const date = new Date(this.item.klijentPotvrdioDatum);
-    return date.toISOString().split('T')[0];
+    return this.item?.klijentPotvrdioDatum ?? '';
   }
 
   set klijentPotvrdioDatumString(value: string) {
     if (this.item) {
-      this.item.klijentPotvrdioDatum = value ? new Date(value) : undefined;
+      this.item.klijentPotvrdioDatum = value || undefined;
     }
   }
 }

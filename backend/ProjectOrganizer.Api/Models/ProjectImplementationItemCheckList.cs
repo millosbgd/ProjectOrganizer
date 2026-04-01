@@ -23,7 +23,7 @@ namespace ProjectOrganizer.Api.Models
         /// </summary>
         public bool Zavrsen { get; set; } = false;
 
-        public DateTime? ZavrsenDatum { get; set; }
+        public DateOnly? ZavrsenDatum { get; set; }
 
         /// <summary>
         /// Percentage weight based on CheckListItem Kompleksnost
@@ -35,7 +35,7 @@ namespace ProjectOrganizer.Api.Models
 
         public bool KlijentPotvrdio { get; set; } = false;
 
-        public DateTime? KlijentPotvrdioDatum { get; set; }
+        public DateOnly? KlijentPotvrdioDatum { get; set; }
 
         // Navigation properties
         [ForeignKey("ProjectImplementationItemId")]

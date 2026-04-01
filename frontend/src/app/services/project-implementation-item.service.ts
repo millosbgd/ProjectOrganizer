@@ -25,16 +25,18 @@ export class ProjectImplementationItemService {
   }
 
   updateCheckList(itemId: number, checklistId: number, zavrsen: boolean): Observable<void> {
+    const today = new Date().toISOString().split('T')[0];
     return this.http.put<void>(`${this.apiUrl}/${itemId}/checklist/${checklistId}`, {
       zavrsen: zavrsen,
-      zavrsenDatum: zavrsen ? new Date().toISOString() : null
+      zavrsenDatum: zavrsen ? today : null
     });
   }
 
   updateCheckListKlijentPotvrdio(itemId: number, checklistId: number, klijentPotvrdio: boolean): Observable<void> {
+    const today = new Date().toISOString().split('T')[0];
     return this.http.put<void>(`${this.apiUrl}/${itemId}/checklist/${checklistId}`, {
       klijentPotvrdio: klijentPotvrdio,
-      klijentPotvrdioDatum: klijentPotvrdio ? new Date().toISOString() : null
+      klijentPotvrdioDatum: klijentPotvrdio ? today : null
     });
   }
 }

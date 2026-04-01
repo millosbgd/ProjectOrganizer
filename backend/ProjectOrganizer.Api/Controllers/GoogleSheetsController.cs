@@ -92,7 +92,7 @@ public class GoogleSheetsController : ControllerBase
             item.KlijentPotvrdio = potvrdeno;
 
             if (potvrdeno && !item.KlijentPotvrdioDatum.HasValue)
-                item.KlijentPotvrdioDatum = DateTime.UtcNow;
+                item.KlijentPotvrdioDatum = DateOnly.FromDateTime(DateTime.UtcNow);
             else if (!potvrdeno)
                 item.KlijentPotvrdioDatum = null;
 
