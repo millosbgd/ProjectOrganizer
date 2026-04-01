@@ -447,3 +447,19 @@
   (save)="saveImplementationItem($event)"
   (close)="closeImplementationItemModal()">
 </app-implementation-item-modal>
+
+<!-- Sheet Toast Notification -->
+<div class="sheet-toast" [ngClass]="sheetToast!.type" *ngIf="sheetToast">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <ng-container *ngIf="sheetToast.type === 'success'">
+      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+      <polyline points="22 4 12 14.01 9 11.01"></polyline>
+    </ng-container>
+    <ng-container *ngIf="sheetToast.type === 'error'">
+      <circle cx="12" cy="12" r="10"></circle>
+      <line x1="12" y1="8" x2="12" y2="12"></line>
+      <line x1="12" y1="16" x2="12.01" y2="16"></line>
+    </ng-container>
+  </svg>
+  <span>{{ sheetToast.message }}</span>
+</div>

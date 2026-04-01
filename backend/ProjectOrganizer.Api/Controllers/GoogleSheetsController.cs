@@ -14,11 +14,13 @@ public class GoogleSheetsController : ControllerBase
 {
     private readonly ApplicationDbContext _context;
     private readonly GoogleSheetsService _googleSheetsService;
+    private readonly ILogger<GoogleSheetsController> _logger;
 
-    public GoogleSheetsController(ApplicationDbContext context, GoogleSheetsService googleSheetsService)
+    public GoogleSheetsController(ApplicationDbContext context, GoogleSheetsService googleSheetsService, ILogger<GoogleSheetsController> logger)
     {
         _context = context;
         _googleSheetsService = googleSheetsService;
+        _logger = logger;
     }
 
     // POST: api/GoogleSheets/projekat/5/generate
@@ -59,10 +61,14 @@ public class GoogleSheetsController : ControllerBase
         catch (GoogleApiException gex)
         {
             var reasons = gex.Error?.Errors?.Select(e => new { e.Domain, e.Message, e.Reason }).ToList();
+            _logger.LogError("GenerateSheet GoogleApiException: Status={Status} Message={Message} Reasons={Reasons}",
+                gex.HttpStatusCode, gex.Message,
+                string.Join(" | ", gex.Error?.Errors?.Select(e => $"{e.Domain}/{e.Reason}: {e.Message}") ?? Array.Empty<string>()));
             return StatusCode(500, new { error = "GoogleApiException", httpStatus = gex.HttpStatusCode.ToString(), message = gex.Message, reasons });
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "GenerateSheet unexpected error: {Type} {Message}", ex.GetType().Name, ex.Message);
             return StatusCode(500, new { error = ex.GetType().Name, message = ex.Message, inner = ex.InnerException?.Message });
         }
     }
@@ -86,14 +92,14 @@ public class GoogleSheetsController : ControllerBase
         var sheetData = await _googleSheetsService.ReadSheetDataAsync(projekat.GoogleSheetId);
 
         int synced = 0;
-        foreach (var (checkListItemId, potvrdeno) in sheetData)
+        foreach (var (checkListItemId, potvrdeno, datumIzSheeta) in sheetData)
         {
             var cl = checkLists.FirstOrDefault(c => c.Id == checkListItemId);
             if (cl == null) continue;
 
             cl.KlijentPotvrdio = potvrdeno;
             cl.KlijentPotvrdioDatum = potvrdeno
-                ? (cl.KlijentPotvrdioDatum ?? DateOnly.FromDateTime(DateTime.UtcNow))
+                ? (datumIzSheeta ?? cl.KlijentPotvrdioDatum ?? DateOnly.FromDateTime(DateTime.UtcNow))
                 : null;
             synced++;
         }

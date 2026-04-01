@@ -72,6 +72,12 @@ export class ProjekatDetailComponent implements OnInit {
 
   generatingSheet = false;
   syncingSheet = false;
+  sheetToast: { message: string; type: 'success' | 'error' } | null = null;
+
+  showSheetToast(message: string, type: 'success' | 'error'): void {
+    this.sheetToast = { message, type };
+    setTimeout(() => { this.sheetToast = null; }, 3500);
+  }
 
   constructor(
     private projekatService: ProjekatService,
@@ -618,7 +624,7 @@ export class ProjekatDetailComponent implements OnInit {
       error: (error) => {
         this.generatingSheet = false;
         const msg = error?.error || 'Greška pri generisanju Sheet-a.';
-        alert(typeof msg === 'string' ? msg : 'Greška pri generisanju Sheet-a.');
+        this.showSheetToast(typeof msg === 'string' ? msg : 'Greška pri generisanju Sheet-a.', 'error');
       }
     });
   }
@@ -629,11 +635,11 @@ export class ProjekatDetailComponent implements OnInit {
       next: (data) => {
         this.syncingSheet = false;
         this.loadImplementationItems(this.projekat.id);
-        alert(`Sinhronizacija završena. Ažurirano stavki: ${data.synced}`);
+        this.showSheetToast(`Sinhronizacija završena. Ažurirano stavki: ${data.synced}`, 'success');
       },
       error: (error) => {
         this.syncingSheet = false;
-        alert('Greška pri sinhronizaciji.');
+        this.showSheetToast('Greška pri sinhronizaciji.', 'error');
       }
     });
   }

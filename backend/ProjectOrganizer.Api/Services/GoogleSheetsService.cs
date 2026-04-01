@@ -155,8 +155,8 @@ public class GoogleSheetsService
         var values = new List<IList<object>>();
         var rowMappings = new List<SheetRowMapping>();
 
-        // Kolone: A=Stavka impl., B=Checklist stavka, C=Završeno, D=Datum završetka, E=Klijent potvrdio, F=Klijent datum, G=ID (skriveno)
-        values.Add(new List<object> { "Stavka implementacije", "Checklist stavka", "Završeno", "Datum završetka", "Klijent potvrdio", "Klijent datum", "ID" });
+        // Kolone: A=Stavka impl., B=Checklist stavka, C=Klijent potvrdio, D=Klijent datum, E=ID (skriveno)
+        values.Add(new List<object> { "Stavka implementacije", "Checklist stavka", "Klijent potvrdio", "Klijent datum", "ID" });
 
         int currentRow = 1; // 0-based, red 0 je header
 
@@ -167,8 +167,7 @@ public class GoogleSheetsService
             if (item.CheckLists == null || !item.CheckLists.Any())
             {
                 // Stavka bez checklist-a - prikaži samo parent red
-                values.Add(new List<object> { itemNaziv, "", item.Zavrseno ? "TRUE" : "FALSE",
-                    item.ZavrsenoDatum?.ToString("dd.MM.yyyy") ?? "",
+                values.Add(new List<object> { itemNaziv, "",
                     item.KlijentPotvrdio ? "TRUE" : "FALSE",
                     item.KlijentPotvrdioDatum?.ToString("dd.MM.yyyy") ?? "", "" });
                 currentRow++;
@@ -176,7 +175,7 @@ public class GoogleSheetsService
             else
             {
                 // Parent red (group header) - bez checkboxa
-                values.Add(new List<object> { itemNaziv, "", "", "", "", "", "" });
+                values.Add(new List<object> { itemNaziv, "", "", "", "" });
                 currentRow++;
 
                 // Checklist redovi
@@ -186,8 +185,6 @@ public class GoogleSheetsService
                     values.Add(new List<object> {
                         "",
                         clOpis,
-                        cl.Zavrsen ? "TRUE" : "FALSE",
-                        cl.ZavrsenDatum?.ToString("dd.MM.yyyy") ?? "",
                         cl.KlijentPotvrdio ? "TRUE" : "FALSE",
                         cl.KlijentPotvrdioDatum?.ToString("dd.MM.yyyy") ?? "",
                         cl.Id.ToString()
@@ -211,17 +208,66 @@ public class GoogleSheetsService
 
     private async Task FormatAndValidateSheetAsync(string spreadsheetId, int dataRowCount, List<SheetRowMapping> rowMappings)
     {
-        var spreadsheet = await _sheetsService!.Spreadsheets.Get(spreadsheetId).ExecuteAsync();
+        var getRequest = _sheetsService!.Spreadsheets.Get(spreadsheetId);
+        getRequest.Fields = "sheets(properties(sheetId),protectedRanges(protectedRangeId),conditionalFormats)";
+        var spreadsheet = await getRequest.ExecuteAsync();
         var sheetId = spreadsheet.Sheets[0].Properties.SheetId ?? 0;
 
         var requests = new List<Request>();
+
+        // --- Obriši sve postojeće protected range-ove (ostaju od prethodnog generisanja) ---
+        var existingProtections = spreadsheet.Sheets[0].ProtectedRanges;
+        if (existingProtections != null)
+        {
+            foreach (var pr in existingProtections)
+            {
+                if (pr.ProtectedRangeId.HasValue)
+                {
+                    requests.Add(new Request
+                    {
+                        DeleteProtectedRange = new DeleteProtectedRangeRequest
+                        {
+                            ProtectedRangeId = pr.ProtectedRangeId.Value
+                        }
+                    });
+                }
+            }
+        }
+
+        // --- Obriši sve postojeće conditional format rules ---
+        var existingRules = spreadsheet.Sheets[0].ConditionalFormats;
+        if (existingRules != null)
+        {
+            // Brišemo od poslednjeg ka prvom da index-i ostanu validni
+            for (int i = existingRules.Count - 1; i >= 0; i--)
+            {
+                requests.Add(new Request
+                {
+                    DeleteConditionalFormatRule = new DeleteConditionalFormatRuleRequest
+                    {
+                        SheetId = sheetId,
+                        Index = i
+                    }
+                });
+            }
+        }
+
+        // --- Obriši sve postojeće data validacije (ostaju od starih verzija) ---
+        requests.Add(new Request
+        {
+            SetDataValidation = new SetDataValidationRequest
+            {
+                Range = new GridRange { SheetId = sheetId, StartRowIndex = 0, EndRowIndex = 1000, StartColumnIndex = 0, EndColumnIndex = 5 }
+                // Rule = null → briše sve validacije u opsegu
+            }
+        });
 
         // --- Header formatiranje (blue bold) ---
         requests.Add(new Request
         {
             RepeatCell = new RepeatCellRequest
             {
-                Range = new GridRange { SheetId = sheetId, StartRowIndex = 0, EndRowIndex = 1, StartColumnIndex = 0, EndColumnIndex = 7 },
+                Range = new GridRange { SheetId = sheetId, StartRowIndex = 0, EndRowIndex = 1, StartColumnIndex = 0, EndColumnIndex = 5 },
                 Cell = new CellData
                 {
                     UserEnteredFormat = new CellFormat
@@ -235,34 +281,89 @@ public class GoogleSheetsService
             }
         });
 
-        // --- Checkbox za kolonu C (Završeno) - sve data redove ---
+        // --- Checkbox za kolonu C (Klijent potvrdio) + validacija datuma na D - samo checklist redovi ---
         if (dataRowCount > 0)
         {
-            requests.Add(new Request
-            {
-                SetDataValidation = new SetDataValidationRequest
-                {
-                    Range = new GridRange { SheetId = sheetId, StartRowIndex = 1, EndRowIndex = 1 + dataRowCount, StartColumnIndex = 2, EndColumnIndex = 3 },
-                    Rule = new DataValidationRule { Condition = new BooleanCondition { Type = "BOOLEAN" }, ShowCustomUi = true }
-                }
-            });
-
-            // --- Checkbox za kolonu E (Klijent potvrdio) - samo checklist redovi ---
             foreach (var mapping in rowMappings)
             {
+                // Checkbox na C
                 requests.Add(new Request
                 {
                     SetDataValidation = new SetDataValidationRequest
                     {
-                        Range = new GridRange { SheetId = sheetId, StartRowIndex = mapping.RowIndex, EndRowIndex = mapping.RowIndex + 1, StartColumnIndex = 4, EndColumnIndex = 5 },
+                        Range = new GridRange { SheetId = sheetId, StartRowIndex = mapping.RowIndex, EndRowIndex = mapping.RowIndex + 1, StartColumnIndex = 2, EndColumnIndex = 3 },
                         Rule = new DataValidationRule { Condition = new BooleanCondition { Type = "BOOLEAN" }, ShowCustomUi = true }
                     }
                 });
+
+                // Validacija datuma na D
+                requests.Add(new Request
+                {
+                    SetDataValidation = new SetDataValidationRequest
+                    {
+                        Range = new GridRange { SheetId = sheetId, StartRowIndex = mapping.RowIndex, EndRowIndex = mapping.RowIndex + 1, StartColumnIndex = 3, EndColumnIndex = 4 },
+                        Rule = new DataValidationRule
+                        {
+                            Condition = new BooleanCondition { Type = "DATE_IS_VALID" },
+                            ShowCustomUi = true,
+                            Strict = true
+                        }
+                    }
+                });
             }
+
+            // --- Format datuma dd.mm.yyyy za celu D kolonu (data redovi) ---
+            requests.Add(new Request
+            {
+                RepeatCell = new RepeatCellRequest
+                {
+                    Range = new GridRange { SheetId = sheetId, StartRowIndex = 1, EndRowIndex = 1 + dataRowCount, StartColumnIndex = 3, EndColumnIndex = 4 },
+                    Cell = new CellData
+                    {
+                        UserEnteredFormat = new CellFormat
+                        {
+                            NumberFormat = new NumberFormat { Type = "DATE", Pattern = "dd.mm.yyyy" }
+                        }
+                    },
+                    Fields = "userEnteredFormat.numberFormat"
+                }
+            });
+        }
+
+        // --- Zaštita: ceo sheet tab, jedino C+D za checklist redove su editabilni ---
+        if (dataRowCount > 0)
+        {
+            var unprotectedRanges = rowMappings
+                .Select(m => new GridRange
+                {
+                    SheetId = sheetId,
+                    StartRowIndex = m.RowIndex,
+                    EndRowIndex = m.RowIndex + 1,
+                    StartColumnIndex = 2, // C (Klijent potvrdio)
+                    EndColumnIndex = 4    // D (Klijent datum)
+                })
+                .ToList();
+
+            // Range = samo SheetId bez row/col indexa = štiti ceo sheet tab
+            // Na nivou celog sheet taba UnprotectedRanges funkcioniše ispravno
+            // i sprečava brisanje redova i kolona
+            requests.Add(new Request
+            {
+                AddProtectedRange = new AddProtectedRangeRequest
+                {
+                    ProtectedRange = new ProtectedRange
+                    {
+                        Range = new GridRange { SheetId = sheetId },
+                        Description = "Edituj samo Klijent potvrdio (C) i datum (D)",
+                        WarningOnly = false,
+                        UnprotectedRanges = unprotectedRanges
+                    }
+                }
+            });
         }
 
         // --- Širine kolona ---
-        var columnWidths = new[] { 250, 280, 100, 130, 130, 120, 1 }; // G (ID) skoro nevidljiv
+        var columnWidths = new[] { 250, 280, 130, 120, 1 }; // E (ID) skoro nevidljiv
         for (int i = 0; i < columnWidths.Length; i++)
         {
             requests.Add(new Request
@@ -295,7 +396,7 @@ public class GoogleSheetsService
             {
                 Rule = new ConditionalFormatRule
                 {
-                    Ranges = new List<GridRange> { new GridRange { SheetId = sheetId, StartRowIndex = 1, EndRowIndex = 1 + dataRowCount, StartColumnIndex = 0, EndColumnIndex = 7 } },
+                    Ranges = new List<GridRange> { new GridRange { SheetId = sheetId, StartRowIndex = 1, EndRowIndex = 1 + dataRowCount, StartColumnIndex = 0, EndColumnIndex = 5 } },
                     BooleanRule = new BooleanRule
                     {
                         Condition = new BooleanCondition
@@ -317,13 +418,13 @@ public class GoogleSheetsService
             {
                 Rule = new ConditionalFormatRule
                 {
-                    Ranges = new List<GridRange> { new GridRange { SheetId = sheetId, StartRowIndex = 1, EndRowIndex = 1 + dataRowCount, StartColumnIndex = 0, EndColumnIndex = 6 } },
+                    Ranges = new List<GridRange> { new GridRange { SheetId = sheetId, StartRowIndex = 1, EndRowIndex = 1 + dataRowCount, StartColumnIndex = 0, EndColumnIndex = 5 } },
                     BooleanRule = new BooleanRule
                     {
                         Condition = new BooleanCondition
                         {
                             Type = "CUSTOM_FORMULA",
-                            Values = new List<ConditionValue> { new ConditionValue { UserEnteredValue = "=$E2=TRUE" } }
+                            Values = new List<ConditionValue> { new ConditionValue { UserEnteredValue = "=$C2=TRUE" } }
                         },
                         Format = new CellFormat { BackgroundColor = new Color { Red = 0.85f, Green = 0.97f, Blue = 0.86f } }
                     }
@@ -337,29 +438,40 @@ public class GoogleSheetsService
             spreadsheetId).ExecuteAsync();
     }
 
-    public async Task<List<(int CheckListItemId, bool KlijentPotvrdio)>> ReadSheetDataAsync(string spreadsheetId)
+    public async Task<List<(int CheckListItemId, bool KlijentPotvrdio, DateOnly? KlijentPotvrdioDatum)>> ReadSheetDataAsync(string spreadsheetId)
     {
         await EnsureInitializedAsync();
 
-        var result = new List<(int, bool)>();
+        var result = new List<(int, bool, DateOnly?)>();
 
-        // Čitamo kolone E (Klijent potvrdio) i G (ID)
+        // Čitamo kolone C (Klijent potvrdio), D (Klijent datum), E (ID)
         var response = await _sheetsService!.Spreadsheets.Values
-            .Get(spreadsheetId, "Stavke!E2:G")
+            .Get(spreadsheetId, "Stavke!C2:E")
             .ExecuteAsync();
 
         if (response.Values == null) return result;
 
         foreach (var row in response.Values)
         {
-            // Kolona G je index 2 u ovom range-u (E=0, F=1, G=2)
+            // Kolona E je index 2 u ovom range-u (C=0, D=1, E=2)
             if (row.Count < 3) continue;
             var idRaw = row[2]?.ToString();
             if (string.IsNullOrEmpty(idRaw) || !int.TryParse(idRaw, out var checkListItemId)) continue;
 
             var potvrdenoRaw = row[0]?.ToString();
             var potvrdeno = potvrdenoRaw == "TRUE";
-            result.Add((checkListItemId, potvrdeno));
+
+            DateOnly? datum = null;
+            var datumRaw = row.Count > 1 ? row[1]?.ToString() : null;
+            if (!string.IsNullOrEmpty(datumRaw) &&
+                DateOnly.TryParseExact(datumRaw, new[] { "dd.MM.yyyy", "M/d/yyyy", "yyyy-MM-dd", "d.M.yyyy" },
+                    System.Globalization.CultureInfo.InvariantCulture,
+                    System.Globalization.DateTimeStyles.None, out var parsedDate))
+            {
+                datum = parsedDate;
+            }
+
+            result.Add((checkListItemId, potvrdeno, datum));
         }
 
         return result;
