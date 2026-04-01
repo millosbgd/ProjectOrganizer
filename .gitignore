@@ -18,6 +18,10 @@ backend/.vs/
 frontend/src/environments/environment.ts
 frontend/src/environments/environment.prod.ts
 
+# Azure logs
+webapp_logs/
+webapp_logs.zip
+
 # OS files
 .DS_Store
 Thumbs.db

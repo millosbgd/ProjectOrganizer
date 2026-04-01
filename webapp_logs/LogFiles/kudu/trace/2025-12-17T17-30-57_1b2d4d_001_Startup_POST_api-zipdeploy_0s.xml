@@ -1,3 +1,0 @@
-<step title="Startup Request" date="2025-12-17T17:30:57.841" instance="1b2d4d" url="/api/zipdeploy?author=ms-azuretools-vscode&amp;deployer=ms-azuretools-vscode&amp;isAsync=true&amp;trackDeploymentId=true" method="POST" type="request" pid="831,1,19" ScmType="None" >
-  <step title="Cleanup Xml Logs" date="2025-12-17T17:30:57.846" /><!-- duration: 10ms -->
-</step><!-- duration: 20ms -->

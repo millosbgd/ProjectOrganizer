@@ -1,4 +1,0 @@
-<step title="Incoming Request" date="2026-04-01T18:23:12.016" instance="18f5fe" url="/dump" method="GET" type="request" pid="831,1,38" Host="projectorganizer-bxcdcbbuhxayacbb.scm.westeurope-01.azurewebsites.net" User-Agent="AZURECLI/2.80.0 (MSI)" Accept-Encoding="identity" Authorization="Bea..." x-ms-client-request-id="d4fd8d4b-2df7-11f1-b859-60452ea571f6" X-ARR-LOG-ID="d4fd8d4b-2df7-11f1-b859-60452ea571f6" CLIENT-IP="87.116.165.189:50007" X-SITE-DEPLOYMENT-ID="ProjectOrganizer" WAS-DEFAULT-HOSTNAME="projectorganizer-bxcdcbbuhxayacbb.scm.westeurope-01.azurewebsites.net" X-Forwarded-Proto="https" X-AppService-Proto="https" X-Forwarded-TlsVersion="1.3" X-WAWS-Unencoded-URL="/dump" X-Client-IP="87.116.165.189" X-Client-Port="50007" >
-  <step title="Cleanup Xml Logs" date="2026-04-01T18:23:12.019" >
-    <step title="Cleanup Infos" date="2026-04-01T18:23:12.041" totalFiles="606" totalCleanup="446" /><!-- duration: 11ms -->
-  </step><!-- duration: 36ms -->
