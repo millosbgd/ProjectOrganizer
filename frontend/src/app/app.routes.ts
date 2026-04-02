@@ -11,8 +11,6 @@ import { ImplementationModelsListComponent } from './components/implementation-m
 import { ImplementationModelEditComponent } from './components/implementation-model-edit/implementation-model-edit.component';
 import { CalendarComponent } from './components/calendar/calendar.component';
 import { AktivnostiListComponent } from './components/aktivnosti-list/aktivnosti-list.component';
-import { MailsComponent } from './components/mails/mails.component';
-
 export const routes: Routes = [
   { path: '', redirectTo: '/dashboard', pathMatch: 'full' },
   { 
@@ -70,9 +68,4 @@ export const routes: Routes = [
     component: AdminUsersComponent,
     canActivate: [AuthGuard]
   },
-  { 
-    path: 'mails', 
-    component: MailsComponent,
-    canActivate: [AuthGuard]
-  }
 ];
