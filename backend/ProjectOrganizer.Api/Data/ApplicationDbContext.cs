@@ -31,6 +31,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<Notification> Notifications { get; set; }
     public DbSet<AiReminder> AiReminders { get; set; }
     public DbSet<DailyTask> DailyTasks { get; set; }
+    public DbSet<Mail> Mailovi { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -256,6 +257,14 @@ public class ApplicationDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(t => t.KorisnikKreirao)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // Mail configuration
+        modelBuilder.Entity<Mail>(entity =>
+        {
+            entity.ToTable("Mailovi");
+            entity.HasIndex(e => e.UserId);
+            entity.HasIndex(e => new { e.UserId, e.MessageId }).IsUnique();
         });
     }
 

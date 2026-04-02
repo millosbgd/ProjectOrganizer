@@ -18,6 +18,9 @@ var connectionString = environment == "Production"
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
 
+// HttpClient for Graph API calls
+builder.Services.AddHttpClient();
+
 // Configure CORS
 var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() 
     ?? new[] { "http://localhost:4200" };
