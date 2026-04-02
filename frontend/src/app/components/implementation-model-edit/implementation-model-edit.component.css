@@ -218,6 +218,7 @@ textarea.form-control {
 
 .modal-footer {
   display: flex;
+  flex-wrap: wrap;
   justify-content: flex-end;
   gap: 10px;
   padding: 20px 25px;
@@ -227,7 +228,7 @@ textarea.form-control {
 
 .form-actions {
   display: flex;
-  justify-content: flex-end;
+  flex-direction: column;
   gap: 10px;
   margin-top: 30px;
   padding-top: 20px;
@@ -503,4 +504,101 @@ textarea.form-control {
   color: #6c757d;
   font-size: 12px;
   font-style: italic;
+}
+
+/* Success / Error Toast */
+.success-toast {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #10b981;
+  color: white;
+  padding: 16px 24px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 15px;
+  font-weight: 500;
+  z-index: 10001;
+  animation: toastSlideDown 0.3s ease-out;
+}
+
+.success-toast.error-toast {
+  background: #ef4444;
+}
+
+.success-toast svg {
+  flex-shrink: 0;
+}
+
+@keyframes toastSlideDown {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* Inline form error */
+.form-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #ffe6e6;
+  color: #d32f2f;
+  padding: 10px 15px;
+  border-radius: 5px;
+  border-left: 4px solid #d32f2f;
+  font-size: 14px;
+  font-weight: 500;
+  animation: slideIn 0.3s ease-out;
+}
+
+.form-error svg {
+  flex-shrink: 0;
+  color: #d32f2f;
+}
+
+.form-actions-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+/* Inline modal error */
+.modal-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #ffe6e6;
+  color: #d32f2f;
+  padding: 8px 12px;
+  border-radius: 5px;
+  border-left: 4px solid #d32f2f;
+  font-size: 13px;
+  font-weight: 500;
+  flex: 1;
+  animation: slideIn 0.3s ease-out;
+}
+
+.modal-error svg {
+  flex-shrink: 0;
+  color: #d32f2f;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

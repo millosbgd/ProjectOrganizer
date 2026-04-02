@@ -41,6 +41,15 @@ export class ImplementationModelEditComponent implements OnInit {
   newCheckListItem: { opis: string; kompleksnost: number | null } = { opis: '', kompleksnost: null };
   savingNewCheckListItem = false;
 
+  // Toast & inline error messages
+  showToast = false;
+  toastMessage = '';
+  toastType: 'success' | 'error' = 'success';
+  formError = '';
+  itemModalError = '';
+  checkListSelectionError = '';
+  newCheckListItemError = '';
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
@@ -58,6 +67,16 @@ export class ImplementationModelEditComponent implements OnInit {
     }
   }
 
+  showToastMessage(message: string, type: 'success' | 'error' = 'success'): void {
+    this.toastMessage = message;
+    this.toastType = type;
+    this.showToast = true;
+    setTimeout(() => {
+      this.showToast = false;
+      this.toastMessage = '';
+    }, 3000);
+  }
+
   loadModel(id: number): void {
     this.implementationModelService.getById(id).subscribe({
       next: (data) => {
@@ -66,13 +85,14 @@ export class ImplementationModelEditComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error loading model:', error);
-        alert('Greška pri učitavanju modela');
-        this.router.navigate(['/implementation-models']);
+        this.showToastMessage('Greška pri učitavanju modela', 'error');
+        setTimeout(() => this.router.navigate(['/implementation-models']), 2000);
       }
     });
   }
 
   addItem(): void {
+    this.itemModalError = '';
     this.editingItem = {
       id: 0,
       implementationModelId: this.model.id,
@@ -86,6 +106,7 @@ export class ImplementationModelEditComponent implements OnInit {
 
   editItem(index: number): void {
     this.editingItemIndex = index;
+    this.itemModalError = '';
     // Create a copy to avoid direct editing
     this.editingItem = { ...this.model.items[index], checkListItems: [] };
     this.showItemModal = true;
@@ -105,7 +126,7 @@ export class ImplementationModelEditComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error loading check lists:', error);
-        alert('Greška pri učitavanju čekliste');
+        this.itemModalError = 'Greška pri učitavanju čekliste';
         this.loadingCheckLists = false;
       }
     });
@@ -115,6 +136,7 @@ export class ImplementationModelEditComponent implements OnInit {
     // Load all available check list items
     this.loadAvailableCheckListItems();
     this.selectedCheckListIds = [];
+    this.checkListSelectionError = '';
     this.showCheckListSelectionModal = true;
   }
 
@@ -133,16 +155,17 @@ export class ImplementationModelEditComponent implements OnInit {
 
   saveCheckListSelection(): void {
     if (this.selectedCheckListIds.length === 0) {
-      alert('Molimo izaberite bar jednu stavku');
+      this.checkListSelectionError = 'Molimo izaberite bar jednu stavku';
       return;
     }
 
     if (!this.editingItem.id || this.editingItem.id === 0) {
-      alert('Molimo prvo sačuvajte stavku modela pre dodavanja čekliste');
+      this.checkListSelectionError = 'Molimo prvo sačuvajte stavku modela pre dodavanja čekliste';
       this.showCheckListSelectionModal = false;
       return;
     }
 
+    this.checkListSelectionError = '';
     this.implementationItemService.addCheckLists(this.editingItem.id, {
       checkListItemIds: this.selectedCheckListIds
     }).subscribe({
@@ -154,7 +177,7 @@ export class ImplementationModelEditComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error adding check lists:', error);
-        alert('Greška pri dodavanju stavki čekliste');
+        this.checkListSelectionError = 'Greška pri dodavanju stavki čekliste';
       }
     });
   }
@@ -166,6 +189,7 @@ export class ImplementationModelEditComponent implements OnInit {
 
   openNewCheckListItemModal(): void {
     this.newCheckListItem = { opis: '', kompleksnost: null };
+    this.newCheckListItemError = '';
     this.showNewCheckListItemModal = true;
   }
 
@@ -176,16 +200,17 @@ export class ImplementationModelEditComponent implements OnInit {
 
   saveNewCheckListItem(): void {
     if (!this.newCheckListItem.opis || this.newCheckListItem.opis.trim() === '') {
-      alert('Opis je obavezan');
+      this.newCheckListItemError = 'Opis je obavezan';
       return;
     }
 
     if (this.newCheckListItem.kompleksnost !== null && 
         (this.newCheckListItem.kompleksnost < 1 || this.newCheckListItem.kompleksnost > 10)) {
-      alert('Kompleksnost mora biti između 1 i 10');
+      this.newCheckListItemError = 'Kompleksnost mora biti između 1 i 10';
       return;
     }
 
+    this.newCheckListItemError = '';
     this.savingNewCheckListItem = true;
 
     const newItem: CheckListItem = {
@@ -200,11 +225,11 @@ export class ImplementationModelEditComponent implements OnInit {
         this.closeNewCheckListItemModal();
         // Refresh the list
         this.loadAvailableCheckListItems();
-        alert('Stavka uspešno kreirana!');
+        this.showToastMessage('Stavka uspešno kreirana!');
       },
       error: (error) => {
         console.error('Error creating check list item:', error);
-        alert('Greška pri kreiranju stavke');
+        this.newCheckListItemError = 'Greška pri kreiranju stavke';
         this.savingNewCheckListItem = false;
       }
     });
@@ -237,16 +262,17 @@ export class ImplementationModelEditComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error removing check list item:', error);
-        alert('Greška pri uklanjanju stavke čekliste');
+        this.itemModalError = 'Greška pri uklanjanju stavke čekliste';
       }
     });
   }
 
   saveItemFromModal(): void {
     if (!this.editingItem.naziv || this.editingItem.naziv.trim() === '') {
-      alert('Naziv je obavezan');
+      this.itemModalError = 'Naziv je obavezan';
       return;
     }
+    this.itemModalError = '';
 
     if (this.editingItemIndex !== null) {
       // Update existing item
@@ -272,15 +298,16 @@ export class ImplementationModelEditComponent implements OnInit {
   }
 
   save(): void {
+    this.formError = '';
     if (!this.model.naziv || this.model.naziv.trim() === '') {
-      alert('Naziv je obavezan');
+      this.formError = 'Naziv je obavezan';
       return;
     }
 
     // Validate items
     for (const item of this.model.items) {
       if (!item.naziv || item.naziv.trim() === '') {
-        alert('Sve stavke moraju imati naziv');
+        this.formError = 'Sve stavke moraju imati naziv';
         return;
       }
     }
@@ -290,7 +317,7 @@ export class ImplementationModelEditComponent implements OnInit {
     if (this.isNew) {
       this.implementationModelService.create(this.model).subscribe({
         next: (createdModel) => {
-          alert('Model uspešno kreiran!');
+          this.showToastMessage('Model uspešno kreiran!');
           // Update model with created data (including ID)
           this.model = createdModel;
           this.isNew = false;
@@ -298,21 +325,21 @@ export class ImplementationModelEditComponent implements OnInit {
         },
         error: (error: any) => {
           console.error('Error saving model:', error);
-          alert('Greška pri čuvanju modela');
+          this.formError = 'Greška pri čuvanju modela';
           this.saving = false;
         }
       });
     } else {
       this.implementationModelService.update(this.model.id, this.model).subscribe({
         next: () => {
-          alert('Model uspešno ažuriran!');
+          this.showToastMessage('Model uspešno ažuriran!');
           this.saving = false;
           // Reload model to get fresh data
           this.loadModel(this.model.id);
         },
         error: (error: any) => {
           console.error('Error saving model:', error);
-          alert('Greška pri čuvanju modela');
+          this.formError = 'Greška pri čuvanju modela';
           this.saving = false;
         }
       });

@@ -1,4 +1,18 @@
 <div class="container">
+  <!-- Toast obaveštenje -->
+  <div class="success-toast" *ngIf="showToast" [class.error-toast]="toastType === 'error'">
+    <svg *ngIf="toastType === 'success'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+      <polyline points="22 4 12 14.01 9 11.01"></polyline>
+    </svg>
+    <svg *ngIf="toastType === 'error'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="12" cy="12" r="10"></circle>
+      <line x1="12" y1="8" x2="12" y2="12"></line>
+      <line x1="12" y1="16" x2="12.01" y2="16"></line>
+    </svg>
+    <span>{{ toastMessage }}</span>
+  </div>
+
   <div class="header">
     <h2>{{ isNew ? 'Novi Model Implementacije' : 'Izmena Modela Implementacije' }}</h2>
   </div>
@@ -88,12 +102,22 @@
     </div>
 
     <div class="form-actions">
-      <button type="button" class="btn-secondary" (click)="cancel()" [disabled]="saving">
-        Nazad
-      </button>
-      <button type="submit" class="btn-primary" [disabled]="saving">
-        {{ saving ? 'Čuvanje...' : 'Sačuvaj' }}
-      </button>
+      <div class="form-error" *ngIf="formError">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        {{ formError }}
+      </div>
+      <div class="form-actions-buttons">
+        <button type="button" class="btn-secondary" (click)="cancel()" [disabled]="saving">
+          Nazad
+        </button>
+        <button type="submit" class="btn-primary" [disabled]="saving">
+          {{ saving ? 'Čuvanje...' : 'Sačuvaj' }}
+        </button>
+      </div>
     </div>
   </form>
 
@@ -185,6 +209,14 @@
       </div>
 
       <div class="modal-footer">
+        <div class="modal-error" *ngIf="itemModalError">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+          {{ itemModalError }}
+        </div>
         <button type="button" class="btn-secondary" (click)="closeItemModal()">
           Otkaži
         </button>
@@ -259,6 +291,14 @@
       </div>
 
       <div class="modal-footer">
+        <div class="modal-error" *ngIf="checkListSelectionError">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+          {{ checkListSelectionError }}
+        </div>
         <button type="button" class="btn-secondary" (click)="cancelCheckListSelection()">
           Otkaži
         </button>
@@ -311,6 +351,14 @@
       </div>
 
       <div class="modal-footer">
+        <div class="modal-error" *ngIf="newCheckListItemError">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+          {{ newCheckListItemError }}
+        </div>
         <button type="button" class="btn-secondary" (click)="closeNewCheckListItemModal()" [disabled]="savingNewCheckListItem">
           Otkaži
         </button>
