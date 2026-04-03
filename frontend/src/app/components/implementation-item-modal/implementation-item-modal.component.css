@@ -63,6 +63,16 @@
 .cl-modal-content {
   max-width: 500px;
   width: 95%;
+  height: auto;
+  overflow: visible;
+}
+
+.cl-modal-content .modal-body {
+  padding: 20px;
+  display: block;
+  overflow: auto;
+  flex: none;
+  min-height: unset;
 }
 
 .full-width {
