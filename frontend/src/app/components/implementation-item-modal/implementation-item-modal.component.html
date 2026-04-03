@@ -21,22 +21,25 @@
         ></textarea>
       </div>
 
-      <div class="form-group" *ngIf="item && item.checkLists && item.checkLists.length > 0">
-        <label>Čeklista:</label>
-        <div class="checklist-container">
+      <div class="form-group" *ngIf="item">
+        <div class="checklist-header-row">
+          <label>Čeklista:</label>
+          <button class="btn-add-custom" (click)="openAddCustomModal()">+ Dodaj stavku</button>
+        </div>
+        <div class="checklist-container" *ngIf="item.checkLists && item.checkLists.length > 0">
           <table class="checklist-table">
             <thead>
               <tr>
-                <th style="width: 50px;">✓</th>
+                <th style="width: 40px;">✓</th>
                 <th>Opis</th>
-                <th style="width: 100px;">Kompleksnost</th>
-                <th style="width: 80px;">Procenat</th>
-                <th style="width: 150px;">Završeno</th>
-                <th style="width: 50px;">Klijent</th>
-                <th style="width: 150px;">Klijent potvrdio</th>
-                <th style="width: 200px;">Detaljni opis</th>
-                <th style="width: 120px;">Planirani rok</th>
-                <th style="width: 60px;"></th>
+                <th style="width: 90px;">Kompleksnost</th>
+                <th style="width: 75px;">Procenat</th>
+                <th style="width: 130px;">Završeno</th>
+                <th style="width: 40px;">Klijent</th>
+                <th style="width: 130px;">Klijent potvrdio</th>
+                <th style="width: 180px;">Detaljni opis</th>
+                <th style="width: 110px;">Planirani rok</th>
+                <th style="width: 55px;"></th>
               </tr>
             </thead>
             <tbody>
@@ -52,9 +55,8 @@
                 <td>{{ checkList.checkListItemKompleksnost || '-' }}</td>
                 <td>{{ checkList.procenat ? (checkList.procenat | number:'1.2-2') + '%' : '-' }}</td>
                 <td>
-                  <span *ngIf="checkList.zavrsenDatum">
-                    {{ checkList.zavrsenDatum | date: 'dd.MM.yyyy' }}
-                  </span>
+                  <span *ngIf="checkList.zavrsenDatum">{{ checkList.zavrsenDatum | date:'dd.MM.yyyy' }}</span>
+                  <span *ngIf="!checkList.zavrsenDatum" class="text-muted">-</span>
                 </td>
                 <td>
                   <input 
@@ -64,81 +66,36 @@
                   />
                 </td>
                 <td>
-                  <span *ngIf="checkList.klijentPotvrdioDatum">
-                    {{ checkList.klijentPotvrdioDatum | date: 'dd.MM.yyyy' }}
-                  </span>
+                  <span *ngIf="checkList.klijentPotvrdioDatum">{{ checkList.klijentPotvrdioDatum | date:'dd.MM.yyyy' }}</span>
+                  <span *ngIf="!checkList.klijentPotvrdioDatum" class="text-muted">-</span>
                 </td>
-                <!-- Detaljni opis -->
                 <td>
-                  <ng-container *ngIf="editingCheckListId === checkList.id; else viewDetaljan">
-                    <textarea [(ngModel)]="checkList.detaljanOpis" rows="2" style="width:100%; font-size:12px;"></textarea>
-                  </ng-container>
-                  <ng-template #viewDetaljan>
-                    <span class="text-preview" style="font-size:12px;">{{ checkList.detaljanOpis || '-' }}</span>
-                  </ng-template>
+                  <span class="text-preview" style="font-size:12px;">{{ checkList.detaljanOpis || '-' }}</span>
                 </td>
-                <!-- Planirani rok -->
-                <td>
-                  <ng-container *ngIf="editingCheckListId === checkList.id; else viewRok">
-                    <input type="date" [(ngModel)]="checkList.planiraniRok" style="width:100%; font-size:12px;" />
-                  </ng-container>
-                  <ng-template #viewRok>
-                    <span style="font-size:12px;">{{ checkList.planiraniRok ? (checkList.planiraniRok | date:'dd.MM.yyyy') : '-' }}</span>
-                  </ng-template>
+                <td style="font-size:12px;">
+                  {{ checkList.planiraniRok ? (checkList.planiraniRok | date:'dd.MM.yyyy') : '-' }}
                 </td>
-                <!-- Akcije -->
                 <td style="white-space:nowrap;">
-                  <ng-container *ngIf="editingCheckListId === checkList.id; else editActions">
-                    <button class="btn-icon-minimal" (click)="saveCheckListFields(checkList)" title="Sačuvaj">✓</button>
-                    <button class="btn-icon-minimal" (click)="cancelEditCheckList()" title="Otkaži">✕</button>
-                  </ng-container>
-                  <ng-template #editActions>
-                    <button class="btn-icon-minimal" (click)="startEditCheckList(checkList)" title="Izmeni detalje">
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                      </svg>
-                    </button>
-                    <button *ngIf="isCustomItem(checkList)" class="btn-icon-minimal btn-danger-minimal" (click)="deleteCustomCheckListItem(checkList)" title="Obriši">
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <polyline points="3 6 5 6 21 6"></polyline>
-                        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
-                        <path d="M10 11v6M14 11v6"></path>
-                      </svg>
-                    </button>
-                  </ng-template>
+                  <button class="btn-icon-minimal" (click)="startEditCheckList(checkList)" title="Izmeni detalje">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                    </svg>
+                  </button>
+                  <button *ngIf="isCustomItem(checkList)" class="btn-icon-minimal btn-danger-minimal" (click)="deleteCustomCheckListItem(checkList)" title="Obriši">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="3 6 5 6 21 6"></polyline>
+                      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+                      <path d="M10 11v6M14 11v6"></path>
+                    </svg>
+                  </button>
                 </td>
               </tr>
             </tbody>
           </table>
         </div>
-      </div>
-
-      <!-- Dodavanje custom stavke čekliste -->
-      <div class="form-group">
-        <button class="btn-add-custom" (click)="toggleAddCustomForm()">
-          {{ showAddCustomForm ? '✕ Otkaži' : '+ Dodaj stavku čekliste' }}
-        </button>
-        <div class="custom-checklist-form" *ngIf="showAddCustomForm">
-          <div class="form-row">
-            <label>Opis: <span class="required">*</span></label>
-            <input type="text" [(ngModel)]="newCustomOpis" placeholder="Opis stavke..." maxlength="200" />
-          </div>
-          <div class="form-row">
-            <label>Detaljni opis:</label>
-            <textarea [(ngModel)]="newCustomDetaljanOpis" rows="2" placeholder="Opcioni detaljni opis..."></textarea>
-          </div>
-          <div class="form-row form-row-inline">
-            <div>
-              <label>Planirani rok:</label>
-              <input type="date" [(ngModel)]="newCustomPlaniraniRok" />
-            </div>
-            <div>
-              <label>Procenat (%):</label>
-              <input type="number" [(ngModel)]="newCustomProcenat" min="0" max="100" step="0.01" placeholder="0.00" style="width:80px;" />
-            </div>
-          </div>
-          <button class="btn-primary btn-sm" (click)="addCustomCheckListItem()">Dodaj</button>
+        <div *ngIf="!item.checkLists || item.checkLists.length === 0" class="no-checklist">
+          Nema stavki čekliste.
         </div>
       </div>
 
@@ -190,6 +147,52 @@
     <div class="modal-footer">
       <button class="btn-secondary" (click)="onClose()">Otkaži</button>
       <button class="btn-primary" (click)="onSave()">Sačuvaj</button>
+    </div>
+  </div>
+</div>
+
+<!-- Sub-modal: dodavanje / izmena stavke čekliste -->
+<div class="modal-backdrop cl-modal-backdrop" *ngIf="showCheckListItemModal" (click)="$event.stopPropagation()">
+  <div class="modal-content cl-modal-content">
+    <div class="modal-header">
+      <h3>{{ checkListItemModalMode === 'add' ? 'Nova stavka čekliste' : 'Izmena stavke čekliste' }}</h3>
+      <button class="close-btn" (click)="cancelCheckListItemModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+
+      <!-- Opis — samo za custom stavke (add uvek, edit samo ako je custom) -->
+      <div class="form-group" *ngIf="checkListItemModalMode === 'add' || (editingCheckListItem && isCustomItem(editingCheckListItem))">
+        <label>Opis: <span class="required">*</span></label>
+        <input type="text" [(ngModel)]="clModalOpis" placeholder="Opis stavke..." maxlength="200" class="full-width" />
+      </div>
+
+      <!-- Opis — readonly za standardne stavke u edit modu -->
+      <div class="form-group" *ngIf="checkListItemModalMode === 'edit' && editingCheckListItem && !isCustomItem(editingCheckListItem)">
+        <label>Stavka:</label>
+        <div class="item-name">{{ editingCheckListItem.checkListItemOpis }}</div>
+      </div>
+
+      <div class="form-group">
+        <label>Detaljni opis:</label>
+        <textarea [(ngModel)]="clModalDetaljanOpis" rows="4" placeholder="Opcioni detaljni opis..." class="full-width"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>Planirani rok:</label>
+        <input type="date" [(ngModel)]="clModalPlaniraniRok" class="date-input" />
+      </div>
+
+      <div class="form-group" *ngIf="checkListItemModalMode === 'add'">
+        <label>Procenat (%):</label>
+        <input type="number" [(ngModel)]="newCustomProcenat" min="0" max="100" step="0.01" placeholder="0.00" class="procenat-input" />
+      </div>
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="cancelCheckListItemModal()">Otkaži</button>
+      <button class="btn-primary" (click)="checkListItemModalMode === 'add' ? addCustomCheckListItem() : saveCheckListFields(editingCheckListItem!)">
+        {{ checkListItemModalMode === 'add' ? 'Dodaj' : 'Sačuvaj' }}
+      </button>
     </div>
   </div>
 </div>

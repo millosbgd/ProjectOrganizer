@@ -21,8 +21,12 @@ export class ImplementationItemModalComponent {
   newCustomDetaljanOpis = '';
   newCustomPlaniraniRok = '';
   newCustomProcenat: number | null = null;
-  showAddCustomForm = false;
-  editingCheckListId: number | null = null;
+  showCheckListItemModal = false;
+  checkListItemModalMode: 'add' | 'edit' = 'add';
+  editingCheckListItem: ProjectImplementationCheckListItem | null = null;
+  clModalOpis = '';
+  clModalDetaljanOpis = '';
+  clModalPlaniraniRok = '';
 
   constructor(private implementationItemService: ProjectImplementationItemService) {}
 
@@ -76,17 +80,27 @@ export class ImplementationItemModalComponent {
     });
   }
   startEditCheckList(cl: ProjectImplementationCheckListItem): void {
-    this.editingCheckListId = cl.id;
+    this.editingCheckListItem = cl;
+    this.clModalOpis = cl.checkListItemOpis || '';
+    this.clModalDetaljanOpis = cl.detaljanOpis || '';
+    this.clModalPlaniraniRok = cl.planiraniRok || '';
+    this.checkListItemModalMode = 'edit';
+    this.showCheckListItemModal = true;
   }
 
   saveCheckListFields(cl: ProjectImplementationCheckListItem): void {
     if (!this.item) return;
+    cl.detaljanOpis = this.clModalDetaljanOpis || undefined;
+    cl.planiraniRok = this.clModalPlaniraniRok || undefined;
+    if (this.isCustomItem(cl)) {
+      cl.checkListItemOpis = this.clModalOpis;
+    }
     this.implementationItemService.updateCheckListFields(this.item.id, cl.id, {
       detaljanOpis: cl.detaljanOpis ?? null,
       planiraniRok: cl.planiraniRok ?? null,
       clearPlaniraniRok: !cl.planiraniRok
     }).subscribe({
-      next: () => { this.editingCheckListId = null; },
+      next: () => { this.showCheckListItemModal = false; this.editingCheckListItem = null; },
       error: (error) => {
         console.error('Error saving checklist fields:', error);
         alert('Greška pri čuvanju polja stavke čekliste');
@@ -94,39 +108,41 @@ export class ImplementationItemModalComponent {
     });
   }
 
-  cancelEditCheckList(): void {
-    this.editingCheckListId = null;
+  cancelCheckListItemModal(): void {
+    this.showCheckListItemModal = false;
+    this.editingCheckListItem = null;
+    this.clModalOpis = '';
+    this.clModalDetaljanOpis = '';
+    this.clModalPlaniraniRok = '';
   }
 
-  toggleAddCustomForm(): void {
-    this.showAddCustomForm = !this.showAddCustomForm;
-    if (!this.showAddCustomForm) {
-      this.resetCustomForm();
-    }
-  }
-
-  resetCustomForm(): void {
-    this.newCustomOpis = '';
-    this.newCustomDetaljanOpis = '';
-    this.newCustomPlaniraniRok = '';
+  openAddCustomModal(): void {
+    this.checkListItemModalMode = 'add';
+    this.clModalOpis = '';
+    this.clModalDetaljanOpis = '';
+    this.clModalPlaniraniRok = '';
     this.newCustomProcenat = null;
+    this.showCheckListItemModal = true;
   }
 
   addCustomCheckListItem(): void {
-    if (!this.item || !this.newCustomOpis.trim()) {
+    if (!this.item || !this.clModalOpis.trim()) {
       alert('Opis je obavezan.');
       return;
     }
     this.implementationItemService.addCustomCheckListItem(this.item.id, {
-      opis: this.newCustomOpis.trim(),
-      detaljanOpis: this.newCustomDetaljanOpis || null,
-      planiraniRok: this.newCustomPlaniraniRok || null,
+      opis: this.clModalOpis.trim(),
+      detaljanOpis: this.clModalDetaljanOpis || null,
+      planiraniRok: this.clModalPlaniraniRok || null,
       procenat: this.newCustomProcenat
     }).subscribe({
       next: (newCl) => {
         this.item!.checkLists = [...(this.item!.checkLists || []), newCl];
-        this.showAddCustomForm = false;
-        this.resetCustomForm();
+        this.showCheckListItemModal = false;
+        this.clModalOpis = '';
+        this.clModalDetaljanOpis = '';
+        this.clModalPlaniraniRok = '';
+        this.newCustomProcenat = null;
       },
       error: (error) => {
         console.error('Error adding custom checklist item:', error);
