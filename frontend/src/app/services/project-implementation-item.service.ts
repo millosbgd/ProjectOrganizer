@@ -51,3 +51,4 @@ export class ProjectImplementationItemService {
   deleteCustomCheckListItem(itemId: number, checklistId: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${itemId}/checklist/${checklistId}`);
   }
+}
