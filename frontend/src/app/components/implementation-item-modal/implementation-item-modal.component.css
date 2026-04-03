@@ -48,6 +48,13 @@
   background: #fff5f5 !important;
 }
 
+.btn-icon-minimal {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+}
+
 /* Sub-modal */
 .cl-modal-backdrop {
   z-index: 1100;
