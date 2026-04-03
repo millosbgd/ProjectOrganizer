@@ -52,7 +52,7 @@
                   />
                 </td>
                 <td>{{ checkList.checkListItemOpis }}</td>
-                <td>{{ checkList.checkListItemKompleksnost || '-' }}</td>
+                <td>{{ (checkList.checkListItemId === -1 ? checkList.kompleksnost : checkList.checkListItemKompleksnost) || '-' }}</td>
                 <td>{{ checkList.procenat ? (checkList.procenat | number:'1.2-2') + '%' : '-' }}</td>
                 <td>
                   <span *ngIf="checkList.zavrsenDatum">{{ checkList.zavrsenDatum | date:'dd.MM.yyyy' }}</span>

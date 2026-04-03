@@ -48,6 +48,7 @@ public class ProjectImplementationItemsController : ControllerBase
                         ? cl.Opis
                         : (cl.CheckListItem != null ? cl.CheckListItem.Opis : null),
                     CheckListItemKompleksnost = cl.CheckListItem != null ? cl.CheckListItem.Kompleksnost : null,
+                    Kompleksnost = cl.Kompleksnost,
                     cl.Procenat,
                     cl.DetaljanOpis,
                     cl.PlaniraniRok,
@@ -91,6 +92,7 @@ public class ProjectImplementationItemsController : ControllerBase
                         ? cl.Opis
                         : (cl.CheckListItem != null ? cl.CheckListItem.Opis : null),
                     CheckListItemKompleksnost = cl.CheckListItem != null ? cl.CheckListItem.Kompleksnost : null,
+                    Kompleksnost = cl.Kompleksnost,
                     cl.Procenat,
                     cl.DetaljanOpis,
                     cl.PlaniraniRok,
