@@ -56,6 +56,9 @@ public class Projekat
     [MaxLength(100)]
     public string? GoogleSheetId { get; set; }
 
+    [MaxLength(100)]
+    public string? InternalGoogleSheetId { get; set; }
+
     // Navigation properties
     [ForeignKey("KlijentId")]
     public Klijent? Klijent { get; set; }

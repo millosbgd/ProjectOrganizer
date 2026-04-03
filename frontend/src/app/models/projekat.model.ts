@@ -26,6 +26,7 @@ export interface Projekat {
   devOpsAreaPath?: string;
   devOpsIterationPath?: string;
   googleSheetId?: string;
+  internalGoogleSheetId?: string;
   klijent?: Klijent;
   aktivnosti?: Aktivnost[];
   completionStats?: ProjectCompletionStats;

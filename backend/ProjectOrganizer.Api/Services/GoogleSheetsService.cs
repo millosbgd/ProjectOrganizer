@@ -476,4 +476,298 @@ public class GoogleSheetsService
 
         return result;
     }
+
+    // ─── INTERNAL SHEET ──────────────────────────────────────────────────────
+
+    public async Task<string> CreateOrUpdateInternalSheetAsync(
+        Projekat projekat,
+        List<ProjectImplementationItem> items,
+        string? existingSpreadsheetId = null)
+    {
+        await EnsureInitializedAsync();
+
+        string spreadsheetId;
+
+        if (!string.IsNullOrEmpty(existingSpreadsheetId))
+        {
+            spreadsheetId = existingSpreadsheetId;
+            // Clear only the "Interni" sheet
+            var clearRequest = _sheetsService!.Spreadsheets.Values.Clear(
+                new ClearValuesRequest(), spreadsheetId, "Interni");
+            await clearRequest.ExecuteAsync();
+        }
+        else
+        {
+            var spreadsheet = new Spreadsheet
+            {
+                Properties = new SpreadsheetProperties
+                {
+                    Title = $"Interni izveštaj - {projekat.Naziv}"
+                },
+                Sheets = new List<Sheet>
+                {
+                    new Sheet
+                    {
+                        Properties = new SheetProperties { Title = "Interni" }
+                    }
+                }
+            };
+            var created = await _sheetsService!.Spreadsheets.Create(spreadsheet).ExecuteAsync();
+            spreadsheetId = created.SpreadsheetId;
+
+            // Set public read-only access
+            var permission = new Google.Apis.Drive.v3.Data.Permission
+            {
+                Type = "anyone",
+                Role = "reader"
+            };
+            await _driveService!.Permissions.Create(permission, spreadsheetId).ExecuteAsync();
+        }
+
+        await WriteInternalDataAsync(spreadsheetId, projekat, items);
+
+        return spreadsheetId;
+    }
+
+    private async Task WriteInternalDataAsync(string spreadsheetId, Projekat projekat, List<ProjectImplementationItem> items)
+    {
+        var values = new List<IList<object>>();
+
+        // Kolone: A=Stavka impl., B=Stavka čekliste, C=Planirani rok, D=Planirano %, E=Realizovano %, F=Datum završetka, G=Klijent potvrdio, H=Klijent datum
+        values.Add(new List<object>
+        {
+            "Stavka implementacije", "Stavka čekliste",
+            "Planirani rok", "Planirano %", "Realizovano %",
+            "Datum završetka", "Klijent potvrdio", "Klijent datum"
+        });
+
+        int dataRowCount = 0;
+        var parentRowIndexes = new List<int>(); // 0-based row indexes of group headers
+
+        foreach (var item in items)
+        {
+            var itemNaziv = item.ImplementationItem?.Naziv ?? $"Stavka {item.Id}";
+
+            if (item.CheckLists == null || !item.CheckLists.Any())
+            {
+                // Stavka bez checklist-a
+                values.Add(new List<object>
+                {
+                    itemNaziv,
+                    "",
+                    "",
+                    "",
+                    item.Zavrseno ? "100%" : "0%",
+                    item.ZavrsenoDatum?.ToString("dd.MM.yyyy") ?? "",
+                    item.KlijentPotvrdio ? "DA" : "NE",
+                    item.KlijentPotvrdioDatum?.ToString("dd.MM.yyyy") ?? ""
+                });
+                parentRowIndexes.Add(values.Count - 1); // treat as parent for coloring
+                dataRowCount++;
+            }
+            else
+            {
+                var sortedChecklists = item.CheckLists.OrderBy(c => c.Id).ToList();
+
+                decimal totalPlanirano = sortedChecklists.Sum(cl => cl.Procenat ?? 0);
+                decimal totalRealizovano = sortedChecklists.Where(cl => cl.Zavrsen).Sum(cl => cl.Procenat ?? 0);
+
+                // Parent (group header) red
+                values.Add(new List<object>
+                {
+                    itemNaziv,
+                    "",
+                    "",
+                    FormatProcenat(totalPlanirano),
+                    FormatProcenat(totalRealizovano),
+                    item.ZavrsenoDatum?.ToString("dd.MM.yyyy") ?? "",
+                    item.KlijentPotvrdio ? "DA" : "NE",
+                    item.KlijentPotvrdioDatum?.ToString("dd.MM.yyyy") ?? ""
+                });
+                parentRowIndexes.Add(values.Count - 1);
+                dataRowCount++;
+
+                // Checklist redovi
+                foreach (var cl in sortedChecklists)
+                {
+                    var clOpis = cl.CheckListItemId == -1
+                        ? (cl.Opis ?? $"Custom {cl.Id}")
+                        : (cl.CheckListItem?.Opis ?? $"Stavka {cl.Id}");
+
+                    values.Add(new List<object>
+                    {
+                        "",
+                        clOpis,
+                        cl.PlaniraniRok?.ToString("dd.MM.yyyy") ?? "",
+                        FormatProcenat(cl.Procenat ?? 0),
+                        cl.Zavrsen ? FormatProcenat(cl.Procenat ?? 0) : "0%",
+                        cl.ZavrsenDatum?.ToString("dd.MM.yyyy") ?? "",
+                        cl.KlijentPotvrdio ? "DA" : "NE",
+                        cl.KlijentPotvrdioDatum?.ToString("dd.MM.yyyy") ?? ""
+                    });
+                    dataRowCount++;
+                }
+            }
+        }
+
+        var body = new ValueRange { Values = values };
+        var updateRequest = _sheetsService!.Spreadsheets.Values.Update(
+            body, spreadsheetId, "Interni!A1");
+        updateRequest.ValueInputOption = SpreadsheetsResource.ValuesResource.UpdateRequest.ValueInputOptionEnum.USERENTERED;
+        await updateRequest.ExecuteAsync();
+
+        await FormatInternalSheetAsync(spreadsheetId, dataRowCount, parentRowIndexes);
+    }
+
+    private static string FormatProcenat(decimal value) => $"{value:0.##}%";
+
+    private async Task FormatInternalSheetAsync(string spreadsheetId, int dataRowCount, List<int> parentRowIndexes)
+    {
+        var getRequest = _sheetsService!.Spreadsheets.Get(spreadsheetId);
+        getRequest.Fields = "sheets(properties(sheetId),protectedRanges(protectedRangeId),conditionalFormats)";
+        var spreadsheet = await getRequest.ExecuteAsync();
+        var sheetEntry = spreadsheet.Sheets.FirstOrDefault(s => s.Properties.Title == "Interni");
+        var sheetId = sheetEntry?.Properties.SheetId ?? 0;
+
+        var requests = new List<Request>();
+
+        // Obriši postojeće protections i conditional formats
+        var existingProtections = sheetEntry?.ProtectedRanges;
+        if (existingProtections != null)
+            foreach (var pr in existingProtections)
+                if (pr.ProtectedRangeId.HasValue)
+                    requests.Add(new Request { DeleteProtectedRange = new DeleteProtectedRangeRequest { ProtectedRangeId = pr.ProtectedRangeId.Value } });
+
+        var existingRules = sheetEntry?.ConditionalFormats;
+        if (existingRules != null)
+            for (int i = existingRules.Count - 1; i >= 0; i--)
+                requests.Add(new Request { DeleteConditionalFormatRule = new DeleteConditionalFormatRuleRequest { SheetId = sheetId, Index = i } });
+
+        // Header (tamno zelena, bold, beli tekst)
+        requests.Add(new Request
+        {
+            RepeatCell = new RepeatCellRequest
+            {
+                Range = new GridRange { SheetId = sheetId, StartRowIndex = 0, EndRowIndex = 1, StartColumnIndex = 0, EndColumnIndex = 8 },
+                Cell = new CellData
+                {
+                    UserEnteredFormat = new CellFormat
+                    {
+                        TextFormat = new TextFormat { Bold = true, ForegroundColor = new Color { Red = 1, Green = 1, Blue = 1 } },
+                        BackgroundColor = new Color { Red = 0.13f, Green = 0.53f, Blue = 0.33f },
+                        HorizontalAlignment = "CENTER"
+                    }
+                },
+                Fields = "userEnteredFormat(textFormat,backgroundColor,horizontalAlignment)"
+            }
+        });
+
+        // Parent redovi (group header) — svetlo plava pozadina, bold
+        foreach (var rowIdx in parentRowIndexes)
+        {
+            requests.Add(new Request
+            {
+                RepeatCell = new RepeatCellRequest
+                {
+                    Range = new GridRange { SheetId = sheetId, StartRowIndex = rowIdx, EndRowIndex = rowIdx + 1, StartColumnIndex = 0, EndColumnIndex = 8 },
+                    Cell = new CellData
+                    {
+                        UserEnteredFormat = new CellFormat
+                        {
+                            TextFormat = new TextFormat { Bold = true },
+                            BackgroundColor = new Color { Red = 0.85f, Green = 0.91f, Blue = 0.97f }
+                        }
+                    },
+                    Fields = "userEnteredFormat(textFormat,backgroundColor)"
+                }
+            });
+        }
+
+        if (dataRowCount > 0)
+        {
+            // Conditional format: završeni checklist redovi → svetlo zelena
+            requests.Add(new Request
+            {
+                AddConditionalFormatRule = new AddConditionalFormatRuleRequest
+                {
+                    Rule = new ConditionalFormatRule
+                    {
+                        Ranges = new List<GridRange> { new GridRange { SheetId = sheetId, StartRowIndex = 1, EndRowIndex = 1 + dataRowCount, StartColumnIndex = 0, EndColumnIndex = 8 } },
+                        BooleanRule = new BooleanRule
+                        {
+                            Condition = new BooleanCondition
+                            {
+                                Type = "CUSTOM_FORMULA",
+                                Values = new List<ConditionValue> { new ConditionValue { UserEnteredValue = "=$G2=\"DA\"" } }
+                            },
+                            Format = new CellFormat { BackgroundColor = new Color { Red = 0.84f, Green = 0.94f, Blue = 1.0f } }
+                        }
+                    },
+                    Index = 0
+                }
+            });
+
+            requests.Add(new Request
+            {
+                AddConditionalFormatRule = new AddConditionalFormatRuleRequest
+                {
+                    Rule = new ConditionalFormatRule
+                    {
+                        Ranges = new List<GridRange> { new GridRange { SheetId = sheetId, StartRowIndex = 1, EndRowIndex = 1 + dataRowCount, StartColumnIndex = 0, EndColumnIndex = 8 } },
+                        BooleanRule = new BooleanRule
+                        {
+                            Condition = new BooleanCondition
+                            {
+                                Type = "CUSTOM_FORMULA",
+                                Values = new List<ConditionValue> { new ConditionValue { UserEnteredValue = "=$F2<>\"\"" } }
+                            },
+                            Format = new CellFormat { BackgroundColor = new Color { Red = 0.85f, Green = 0.97f, Blue = 0.86f } }
+                        }
+                    },
+                    Index = 1
+                }
+            });
+        }
+
+        // Zaštita - ceo sheet je read-only
+        requests.Add(new Request
+        {
+            AddProtectedRange = new AddProtectedRangeRequest
+            {
+                ProtectedRange = new ProtectedRange
+                {
+                    Range = new GridRange { SheetId = sheetId },
+                    Description = "Interni izveštaj - read only",
+                    WarningOnly = false
+                }
+            }
+        });
+
+        // Širine kolona: A=240, B=260, C=110, D=90, E=100, F=120, G=110, H=120
+        var columnWidths = new[] { 240, 260, 110, 90, 100, 120, 110, 120 };
+        for (int i = 0; i < columnWidths.Length; i++)
+            requests.Add(new Request
+            {
+                UpdateDimensionProperties = new UpdateDimensionPropertiesRequest
+                {
+                    Range = new DimensionRange { SheetId = sheetId, Dimension = "COLUMNS", StartIndex = i, EndIndex = i + 1 },
+                    Properties = new DimensionProperties { PixelSize = columnWidths[i] },
+                    Fields = "pixelSize"
+                }
+            });
+
+        // Freeze header
+        requests.Add(new Request
+        {
+            UpdateSheetProperties = new UpdateSheetPropertiesRequest
+            {
+                Properties = new SheetProperties { SheetId = sheetId, GridProperties = new GridProperties { FrozenRowCount = 1 } },
+                Fields = "gridProperties.frozenRowCount"
+            }
+        });
+
+        await _sheetsService.Spreadsheets.BatchUpdate(
+            new BatchUpdateSpreadsheetRequest { Requests = requests },
+            spreadsheetId).ExecuteAsync();
+    }
 }

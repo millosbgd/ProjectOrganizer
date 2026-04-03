@@ -74,8 +74,7 @@ public class GoogleSheetsController : ControllerBase
     }
 
     // POST: api/GoogleSheets/projekat/5/sync
-    [HttpPost("projekat/{projekatId}/sync")]
-    public async Task<IActionResult> SyncFromSheet(int projekatId)
+    [HttpPost("projekat/{projekatId}/sync")]    public async Task<IActionResult> SyncFromSheet(int projekatId)
     {
         var projekat = await _context.Projekti.FindAsync(projekatId);
         if (projekat == null)
@@ -107,5 +106,53 @@ public class GoogleSheetsController : ControllerBase
         await _context.SaveChangesAsync();
 
         return Ok(new { synced });
+    }
+
+    // POST: api/GoogleSheets/projekat/5/generate-internal
+    [HttpPost("projekat/{projekatId}/generate-internal")]
+    public async Task<IActionResult> GenerateInternalSheet(int projekatId)
+    {
+        try
+        {
+            var projekat = await _context.Projekti.FindAsync(projekatId);
+            if (projekat == null)
+                return NotFound("Projekat nije pronađen.");
+
+            var items = await _context.ProjectImplementationItems
+                .Include(pi => pi.ImplementationItem)
+                .Include(pi => pi.CheckLists)
+                    .ThenInclude(cl => cl.CheckListItem)
+                .Where(pi => pi.ProjectId == projekatId)
+                .OrderBy(pi => pi.Id)
+                .ToListAsync();
+
+            if (!items.Any())
+                return BadRequest("Projekat nema stavke implementacije.");
+
+            var existingSheetId = projekat.InternalGoogleSheetId;
+
+            var spreadsheetId = await _googleSheetsService.CreateOrUpdateInternalSheetAsync(
+                projekat, items, existingSheetId);
+
+            if (string.IsNullOrEmpty(existingSheetId))
+            {
+                projekat.InternalGoogleSheetId = spreadsheetId;
+                await _context.SaveChangesAsync();
+            }
+
+            var url = $"https://docs.google.com/spreadsheets/d/{spreadsheetId}";
+            return Ok(new { spreadsheetId, url });
+        }
+        catch (GoogleApiException gex)
+        {
+            var reasons = gex.Error?.Errors?.Select(e => new { e.Domain, e.Message, e.Reason }).ToList();
+            _logger.LogError("GenerateInternalSheet GoogleApiException: {Status} {Message}", gex.HttpStatusCode, gex.Message);
+            return StatusCode(500, new { error = "GoogleApiException", httpStatus = gex.HttpStatusCode.ToString(), message = gex.Message, reasons });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "GenerateInternalSheet error: {Type} {Message}", ex.GetType().Name, ex.Message);
+            return StatusCode(500, new { error = ex.GetType().Name, message = ex.Message });
+        }
     }
 }

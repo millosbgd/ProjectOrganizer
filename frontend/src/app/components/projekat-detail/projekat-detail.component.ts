@@ -72,6 +72,7 @@ export class ProjekatDetailComponent implements OnInit {
 
   generatingSheet = false;
   syncingSheet = false;
+  generatingInternalSheet = false;
   sheetToast: { message: string; type: 'success' | 'error' } | null = null;
 
   showSheetToast(message: string, type: 'success' | 'error'): void {
@@ -640,6 +641,22 @@ export class ProjekatDetailComponent implements OnInit {
       error: (error) => {
         this.syncingSheet = false;
         this.showSheetToast('Greška pri sinhronizaciji.', 'error');
+      }
+    });
+  }
+
+  generateInternalSheet(): void {
+    this.generatingInternalSheet = true;
+    this.googleSheetsService.generateInternalSheet(this.projekat.id).subscribe({
+      next: (data) => {
+        this.generatingInternalSheet = false;
+        this.projekat.internalGoogleSheetId = data.spreadsheetId;
+        window.open(data.url, '_blank');
+      },
+      error: (error) => {
+        this.generatingInternalSheet = false;
+        const msg = error?.error || 'Greška pri generisanju internog Sheet-a.';
+        this.showSheetToast(typeof msg === 'string' ? msg : 'Greška pri generisanju internog Sheet-a.', 'error');
       }
     });
   }

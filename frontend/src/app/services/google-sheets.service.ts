@@ -22,4 +22,10 @@ export class GoogleSheetsService {
       `${this.apiUrl}/projekat/${projekatId}/sync`, {}
     );
   }
+
+  generateInternalSheet(projekatId: number): Observable<{ spreadsheetId: string; url: string }> {
+    return this.http.post<{ spreadsheetId: string; url: string }>(
+      `${this.apiUrl}/projekat/${projekatId}/generate-internal`, {}
+    );
+  }
 }
