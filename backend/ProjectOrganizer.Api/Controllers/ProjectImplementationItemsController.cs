@@ -267,13 +267,26 @@ public class ProjectImplementationItemsController : ControllerBase
 
     private async Task RecalculateProcentAsync(int projectImplementationItemId)
     {
-        var allItems = await _context.ProjectImplementationItemCheckLists
-            .Include(cl => cl.CheckListItem)
-            .Where(cl => cl.ProjectImplementationItemId == projectImplementationItemId)
+        // Find the parent item to determine the scope (project + implementation model)
+        var parentItem = await _context.ProjectImplementationItems
+            .AsNoTracking()
+            .FirstOrDefaultAsync(i => i.Id == projectImplementationItemId);
+
+        if (parentItem == null) return;
+
+        // Get all implementation item IDs in this plan (same project + same model)
+        var planItemIds = await _context.ProjectImplementationItems
+            .Where(i => i.ProjectId == parentItem.ProjectId
+                     && i.ImplementationModelId == parentItem.ImplementationModelId)
+            .Select(i => i.Id)
             .ToListAsync();
 
-        // Effective complexity: for standard items use CheckListItem.Kompleksnost,
-        // for custom items (CheckListItemId == -1) use the inline Kompleksnost field
+        // Get ALL checklist items across the entire plan
+        var allItems = await _context.ProjectImplementationItemCheckLists
+            .Include(cl => cl.CheckListItem)
+            .Where(cl => planItemIds.Contains(cl.ProjectImplementationItemId))
+            .ToListAsync();
+
         decimal totalKompleksnost = allItems.Sum(cl =>
             cl.CheckListItemId == -1
                 ? (cl.Kompleksnost ?? 0)
