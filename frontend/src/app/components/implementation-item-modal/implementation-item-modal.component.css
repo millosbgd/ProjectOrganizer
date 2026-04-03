@@ -218,7 +218,8 @@
 }
 
 .form-group textarea,
-.form-group input[type="date"] {
+.form-group input[type="date"],
+.form-group input[type="text"] {
   width: 100%;
   padding: 8px 10px;
   border: 1px solid #ddd;
@@ -234,7 +235,8 @@
 }
 
 .form-group textarea:focus,
-.form-group input[type="date"]:focus {
+.form-group input[type="date"]:focus,
+.form-group input[type="text"]:focus {
   outline: none;
   border-color: #4CAF50;
 }
