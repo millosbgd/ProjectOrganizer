@@ -78,6 +78,13 @@
   font-size: 14px;
 }
 
+.form-hint {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  color: #6c757d;
+}
+
 .modal-content {
   background: white;
   border-radius: 8px;

@@ -183,7 +183,20 @@ public class ProjectImplementationItemsController : ControllerBase
         if (dto.PlaniraniRok.HasValue || dto.ClearPlaniraniRok == true)
             checkList.PlaniraniRok = dto.ClearPlaniraniRok == true ? null : dto.PlaniraniRok;
 
+        bool recalcNeeded = false;
+        if (checkList.CheckListItemId == -1 && dto.Kompleksnost.HasValue)
+        {
+            checkList.Kompleksnost = dto.Kompleksnost.Value > 0 ? dto.Kompleksnost : null;
+            recalcNeeded = true;
+        }
+
+        if (checkList.CheckListItemId == -1 && dto.Opis != null)
+            checkList.Opis = string.IsNullOrWhiteSpace(dto.Opis) ? checkList.Opis : dto.Opis.Trim();
+
         await _context.SaveChangesAsync();
+
+        if (recalcNeeded)
+            await RecalculateProcentAsync(id);
 
         return NoContent();
     }
@@ -206,18 +219,24 @@ public class ProjectImplementationItemsController : ControllerBase
             Opis = dto.Opis.Trim(),
             DetaljanOpis = string.IsNullOrWhiteSpace(dto.DetaljanOpis) ? null : dto.DetaljanOpis.Trim(),
             PlaniraniRok = dto.PlaniraniRok,
-            Procenat = dto.Procenat
+            Kompleksnost = dto.Kompleksnost,
+            Procenat = null // will be calculated below
         };
 
         _context.ProjectImplementationItemCheckLists.Add(newItem);
         await _context.SaveChangesAsync();
+
+        await RecalculateProcentAsync(id);
+
+        // Reload to return updated Procenat
+        await _context.Entry(newItem).ReloadAsync();
 
         return Ok(new
         {
             newItem.Id,
             newItem.CheckListItemId,
             CheckListItemOpis = newItem.Opis,
-            CheckListItemKompleksnost = (decimal?)null,
+            CheckListItemKompleksnost = newItem.Kompleksnost,
             newItem.Procenat,
             newItem.DetaljanOpis,
             newItem.PlaniraniRok,
@@ -241,7 +260,37 @@ public class ProjectImplementationItemsController : ControllerBase
         _context.ProjectImplementationItemCheckLists.Remove(checkList);
         await _context.SaveChangesAsync();
 
+        await RecalculateProcentAsync(id);
+
         return NoContent();
+    }
+
+    private async Task RecalculateProcentAsync(int projectImplementationItemId)
+    {
+        var allItems = await _context.ProjectImplementationItemCheckLists
+            .Include(cl => cl.CheckListItem)
+            .Where(cl => cl.ProjectImplementationItemId == projectImplementationItemId)
+            .ToListAsync();
+
+        // Effective complexity: for standard items use CheckListItem.Kompleksnost,
+        // for custom items (CheckListItemId == -1) use the inline Kompleksnost field
+        decimal totalKompleksnost = allItems.Sum(cl =>
+            cl.CheckListItemId == -1
+                ? (cl.Kompleksnost ?? 0)
+                : (cl.CheckListItem?.Kompleksnost ?? 0));
+
+        foreach (var cl in allItems)
+        {
+            decimal effectiveK = cl.CheckListItemId == -1
+                ? (cl.Kompleksnost ?? 0)
+                : (cl.CheckListItem?.Kompleksnost ?? 0);
+
+            cl.Procenat = (totalKompleksnost > 0 && effectiveK > 0)
+                ? Math.Round((effectiveK / totalKompleksnost) * 100, 2)
+                : (decimal?)null;
+        }
+
+        await _context.SaveChangesAsync();
     }
 }
 
@@ -254,6 +303,8 @@ public class UpdateCheckListDto
     public string? DetaljanOpis { get; set; }
     public DateOnly? PlaniraniRok { get; set; }
     public bool? ClearPlaniraniRok { get; set; }
+    public decimal? Kompleksnost { get; set; }
+    public string? Opis { get; set; }
 }
 
 public class CreateCheckListItemDto
@@ -261,5 +312,5 @@ public class CreateCheckListItemDto
     public string Opis { get; set; } = string.Empty;
     public string? DetaljanOpis { get; set; }
     public DateOnly? PlaniraniRok { get; set; }
-    public decimal? Procenat { get; set; }
+    public decimal? Kompleksnost { get; set; }
 }

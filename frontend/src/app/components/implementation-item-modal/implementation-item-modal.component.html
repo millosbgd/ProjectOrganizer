@@ -182,9 +182,11 @@
         <input type="date" [(ngModel)]="clModalPlaniraniRok" class="date-input" />
       </div>
 
-      <div class="form-group" *ngIf="checkListItemModalMode === 'add'">
-        <label>Procenat (%):</label>
-        <input type="number" [(ngModel)]="newCustomProcenat" min="0" max="100" step="0.01" placeholder="0.00" class="procenat-input" />
+      <!-- Kompleksnost — samo za custom stavke (add uvek, edit samo ako je custom) -->
+      <div class="form-group" *ngIf="checkListItemModalMode === 'add' || (editingCheckListItem && isCustomItem(editingCheckListItem))">
+        <label>Kompleksnost (1–10):</label>
+        <input type="number" [(ngModel)]="clModalKompleksnost" min="1" max="10" step="0.5" placeholder="npr. 5" class="procenat-input" />
+        <small class="form-hint">Na osnovu kompleksnosti automatski se preračunavaju procenti svih stavki.</small>
       </div>
 
     </div>

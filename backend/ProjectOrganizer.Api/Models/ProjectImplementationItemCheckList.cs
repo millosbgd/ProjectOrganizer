@@ -28,6 +28,14 @@ namespace ProjectOrganizer.Api.Models
         public string? Opis { get; set; }
 
         /// <summary>
+        /// Kompleksnost for custom items (when CheckListItemId == -1).
+        /// For standard items this is read from CheckListItem.Kompleksnost.
+        /// </summary>
+        [Range(1.0, 10.0, ErrorMessage = "Kompleksnost mora biti između 1 i 10")]
+        [Column(TypeName = "decimal(5,2)")]
+        public decimal? Kompleksnost { get; set; }
+
+        /// <summary>
         /// Detailed description / notes for this checklist item on the project
         /// </summary>
         [MaxLength(1000)]

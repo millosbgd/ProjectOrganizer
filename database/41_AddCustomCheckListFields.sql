@@ -69,3 +69,20 @@ BEGIN
     PRINT 'Column PlaniraniRok already exists.';
 END
 GO
+
+-- 5. Add Kompleksnost column (for custom items, overrides codebook value)
+IF NOT EXISTS (
+    SELECT 1 FROM sys.columns
+    WHERE object_id = OBJECT_ID(N'[dbo].[ProjectImplementationItemCheckLists]')
+      AND name = N'Kompleksnost'
+)
+BEGIN
+    ALTER TABLE [dbo].[ProjectImplementationItemCheckLists]
+    ADD [Kompleksnost] DECIMAL(5,2) NULL;
+    PRINT 'Column Kompleksnost added to ProjectImplementationItemCheckLists.';
+END
+ELSE
+BEGIN
+    PRINT 'Column Kompleksnost already exists.';
+END
+GO

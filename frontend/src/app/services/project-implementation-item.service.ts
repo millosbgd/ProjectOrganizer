@@ -40,11 +40,11 @@ export class ProjectImplementationItemService {
     });
   }
 
-  updateCheckListFields(itemId: number, checklistId: number, fields: { detaljanOpis?: string | null; planiraniRok?: string | null; clearPlaniraniRok?: boolean }): Observable<void> {
+  updateCheckListFields(itemId: number, checklistId: number, fields: { detaljanOpis?: string | null; planiraniRok?: string | null; clearPlaniraniRok?: boolean; kompleksnost?: number | null; opis?: string | null }): Observable<void> {
     return this.http.put<void>(`${this.apiUrl}/${itemId}/checklist/${checklistId}`, fields);
   }
 
-  addCustomCheckListItem(itemId: number, dto: { opis: string; detaljanOpis?: string | null; planiraniRok?: string | null; procenat?: number | null }): Observable<any> {
+  addCustomCheckListItem(itemId: number, dto: { opis: string; detaljanOpis?: string | null; planiraniRok?: string | null; kompleksnost?: number | null }): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/${itemId}/checklist`, dto);
   }
 

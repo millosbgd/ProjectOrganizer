@@ -20,13 +20,13 @@ export class ImplementationItemModalComponent {
   newCustomOpis = '';
   newCustomDetaljanOpis = '';
   newCustomPlaniraniRok = '';
-  newCustomProcenat: number | null = null;
   showCheckListItemModal = false;
   checkListItemModalMode: 'add' | 'edit' = 'add';
   editingCheckListItem: ProjectImplementationCheckListItem | null = null;
   clModalOpis = '';
   clModalDetaljanOpis = '';
   clModalPlaniraniRok = '';
+  clModalKompleksnost: number | null = null;
 
   constructor(private implementationItemService: ProjectImplementationItemService) {}
 
@@ -84,6 +84,7 @@ export class ImplementationItemModalComponent {
     this.clModalOpis = cl.checkListItemOpis || '';
     this.clModalDetaljanOpis = cl.detaljanOpis || '';
     this.clModalPlaniraniRok = cl.planiraniRok || '';
+    this.clModalKompleksnost = cl.kompleksnost ?? null;
     this.checkListItemModalMode = 'edit';
     this.showCheckListItemModal = true;
   }
@@ -94,13 +95,25 @@ export class ImplementationItemModalComponent {
     cl.planiraniRok = this.clModalPlaniraniRok || undefined;
     if (this.isCustomItem(cl)) {
       cl.checkListItemOpis = this.clModalOpis;
+      cl.kompleksnost = this.clModalKompleksnost;
     }
     this.implementationItemService.updateCheckListFields(this.item.id, cl.id, {
       detaljanOpis: cl.detaljanOpis ?? null,
       planiraniRok: cl.planiraniRok ?? null,
-      clearPlaniraniRok: !cl.planiraniRok
+      clearPlaniraniRok: !cl.planiraniRok,
+      ...(this.isCustomItem(cl) ? { kompleksnost: this.clModalKompleksnost, opis: this.clModalOpis || null } : {})
     }).subscribe({
-      next: () => { this.showCheckListItemModal = false; this.editingCheckListItem = null; },
+      next: (updatedItems) => {
+        // If backend returns recalculated items, update all procenat values
+        if (Array.isArray(updatedItems) && this.item?.checkLists) {
+          for (const updated of updatedItems) {
+            const local = this.item.checkLists.find(c => c.id === updated.id);
+            if (local) local.procenat = updated.procenat;
+          }
+        }
+        this.showCheckListItemModal = false;
+        this.editingCheckListItem = null;
+      },
       error: (error) => {
         console.error('Error saving checklist fields:', error);
         alert('Greška pri čuvanju polja stavke čekliste');
@@ -114,6 +127,7 @@ export class ImplementationItemModalComponent {
     this.clModalOpis = '';
     this.clModalDetaljanOpis = '';
     this.clModalPlaniraniRok = '';
+    this.clModalKompleksnost = null;
   }
 
   openAddCustomModal(): void {
@@ -121,7 +135,7 @@ export class ImplementationItemModalComponent {
     this.clModalOpis = '';
     this.clModalDetaljanOpis = '';
     this.clModalPlaniraniRok = '';
-    this.newCustomProcenat = null;
+    this.clModalKompleksnost = null;
     this.showCheckListItemModal = true;
   }
 
@@ -134,15 +148,25 @@ export class ImplementationItemModalComponent {
       opis: this.clModalOpis.trim(),
       detaljanOpis: this.clModalDetaljanOpis || null,
       planiraniRok: this.clModalPlaniraniRok || null,
-      procenat: this.newCustomProcenat
+      kompleksnost: this.clModalKompleksnost
     }).subscribe({
       next: (newCl) => {
-        this.item!.checkLists = [...(this.item!.checkLists || []), newCl];
+        // Backend recalculates all procenat, so refresh from server
+        this.item!.checkLists = [...(this.item!.checkLists || []), {
+          ...newCl,
+          checkListItemOpis: newCl.checkListItemOpis,
+          zavrsen: newCl.zavrsen ?? false,
+          klijentPotvrdio: newCl.klijentPotvrdio ?? false
+        }];
+        // Reload the item to get updated procenat for all items
+        this.implementationItemService.getById(this.item!.id).subscribe({
+          next: (updated) => { this.item!.checkLists = updated.checkLists; }
+        });
         this.showCheckListItemModal = false;
         this.clModalOpis = '';
         this.clModalDetaljanOpis = '';
         this.clModalPlaniraniRok = '';
-        this.newCustomProcenat = null;
+        this.clModalKompleksnost = null;
       },
       error: (error) => {
         console.error('Error adding custom checklist item:', error);
@@ -157,6 +181,10 @@ export class ImplementationItemModalComponent {
     this.implementationItemService.deleteCustomCheckListItem(this.item.id, cl.id).subscribe({
       next: () => {
         this.item!.checkLists = this.item!.checkLists!.filter(c => c.id !== cl.id);
+        // Reload to get updated procenat after recalculation
+        this.implementationItemService.getById(this.item!.id).subscribe({
+          next: (updated) => { this.item!.checkLists = updated.checkLists; }
+        });
       },
       error: (error) => {
         console.error('Error deleting custom checklist item:', error);
