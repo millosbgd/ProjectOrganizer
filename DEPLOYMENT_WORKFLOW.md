@@ -26,7 +26,7 @@ Frontend se **automatski** deploy-uje na Azure Static Web Apps kada push-uješ n
 3. **Proveri GitHub Actions:**
    - Idi na: https://github.com/millosbgd/ProjectOrganizer/actions
    - Prati progress build-a
-   - Kada je gotovo, frontend je live na: https://delightful-pebble-0fc0d9403.4.azurestaticapps.net
+   - Kada je gotovo, frontend je live na: https://jolly-ocean-0615ca003.3.azurestaticapps.net
 
 4. **Hard refresh browsera:**
    - `Ctrl + Shift + R` (Windows/Linux)
@@ -249,7 +249,7 @@ az webapp deployment source config-zip --resource-group rg-projectorganizer-dev 
 
 - **Resource Group:** `rg-projectorganizer-dev`
 - **Frontend (Static Web App):** `projectorganizer-frontend`
-  - URL: https://delightful-pebble-0fc0d9403.4.azurestaticapps.net
+  - URL: https://jolly-ocean-0615ca003.3.azurestaticapps.net
 - **Backend (App Service):** `ProjectOrganizer`
   - URL: https://projectorganizer.azurewebsites.net
 - **Database (Azure SQL):** `projectorganizer-sql.database.windows.net`

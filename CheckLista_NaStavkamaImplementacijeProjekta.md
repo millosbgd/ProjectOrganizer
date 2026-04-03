@@ -99,7 +99,7 @@ Takođe, dodati kontrolu da na stavki implementacije ne može da se kliken na Za
 **Commit:** f9d66fb - "Fixed TypeScript errors in checklist template"  
 **Datum:** 15. Februar 2026  
 **Backend:** Deployed to https://projectorganizer.azurewebsites.net  
-**Frontend:** Deployed to https://delightful-pebble-0fc0d9403.4.azurestaticapps.net via GitHub Actions  
+**Frontend:** Deployed to https://jolly-ocean-0615ca003.3.azurestaticapps.net via GitHub Actions  
 **Database:** Migration 23 executed successfully on Azure SQL Database
 
 ### Napomene

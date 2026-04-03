@@ -18,6 +18,9 @@ export interface ProjectImplementationCheckListItem {
   checkListItemOpis?: string;
   checkListItemKompleksnost?: number | null;
   procenat?: number | null;
+  opis?: string;
+  detaljanOpis?: string | null;
+  planiraniRok?: string | null;
   zavrsen: boolean;
   zavrsenDatum?: string;
   klijentPotvrdio: boolean;

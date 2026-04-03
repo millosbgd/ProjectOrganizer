@@ -44,14 +44,18 @@ public class ProjectImplementationItemsController : ControllerBase
                 {
                     cl.Id,
                     cl.CheckListItemId,
-                    CheckListItemOpis = cl.CheckListItem != null ? cl.CheckListItem.Opis : null,
+                    CheckListItemOpis = cl.CheckListItemId == -1
+                        ? cl.Opis
+                        : (cl.CheckListItem != null ? cl.CheckListItem.Opis : null),
                     CheckListItemKompleksnost = cl.CheckListItem != null ? cl.CheckListItem.Kompleksnost : null,
                     cl.Procenat,
+                    cl.DetaljanOpis,
+                    cl.PlaniraniRok,
                     cl.Zavrsen,
                     cl.ZavrsenDatum,
                     cl.KlijentPotvrdio,
                     cl.KlijentPotvrdioDatum
-                }).ToList()
+                }).OrderBy(cl => cl.Id).ToList()
             })
             .ToListAsync();
 
@@ -83,14 +87,18 @@ public class ProjectImplementationItemsController : ControllerBase
                 {
                     cl.Id,
                     cl.CheckListItemId,
-                    CheckListItemOpis = cl.CheckListItem != null ? cl.CheckListItem.Opis : null,
+                    CheckListItemOpis = cl.CheckListItemId == -1
+                        ? cl.Opis
+                        : (cl.CheckListItem != null ? cl.CheckListItem.Opis : null),
                     CheckListItemKompleksnost = cl.CheckListItem != null ? cl.CheckListItem.Kompleksnost : null,
                     cl.Procenat,
+                    cl.DetaljanOpis,
+                    cl.PlaniraniRok,
                     cl.Zavrsen,
                     cl.ZavrsenDatum,
                     cl.KlijentPotvrdio,
                     cl.KlijentPotvrdioDatum
-                }).ToList()
+                }).OrderBy(cl => cl.Id).ToList()
             })
             .FirstOrDefaultAsync();
 
@@ -169,6 +177,68 @@ public class ProjectImplementationItemsController : ControllerBase
             checkList.KlijentPotvrdioDatum = dto.KlijentPotvrdio.Value ? (dto.KlijentPotvrdioDatum ?? DateOnly.FromDateTime(DateTime.UtcNow)) : null;
         }
 
+        if (dto.DetaljanOpis != null)
+            checkList.DetaljanOpis = string.IsNullOrWhiteSpace(dto.DetaljanOpis) ? null : dto.DetaljanOpis.Trim();
+
+        if (dto.PlaniraniRok.HasValue || dto.ClearPlaniraniRok == true)
+            checkList.PlaniraniRok = dto.ClearPlaniraniRok == true ? null : dto.PlaniraniRok;
+
+        await _context.SaveChangesAsync();
+
+        return NoContent();
+    }
+
+    // POST: api/ProjectImplementationItems/5/checklist
+    [HttpPost("{id}/checklist")]
+    public async Task<ActionResult<object>> AddCheckListItem(int id, [FromBody] CreateCheckListItemDto dto)
+    {
+        if (string.IsNullOrWhiteSpace(dto.Opis))
+            return BadRequest(new { message = "Opis je obavezan." });
+
+        var parentItem = await _context.ProjectImplementationItems.FindAsync(id);
+        if (parentItem == null)
+            return NotFound();
+
+        var newItem = new ProjectImplementationItemCheckList
+        {
+            ProjectImplementationItemId = id,
+            CheckListItemId = -1,
+            Opis = dto.Opis.Trim(),
+            DetaljanOpis = string.IsNullOrWhiteSpace(dto.DetaljanOpis) ? null : dto.DetaljanOpis.Trim(),
+            PlaniraniRok = dto.PlaniraniRok,
+            Procenat = dto.Procenat
+        };
+
+        _context.ProjectImplementationItemCheckLists.Add(newItem);
+        await _context.SaveChangesAsync();
+
+        return Ok(new
+        {
+            newItem.Id,
+            newItem.CheckListItemId,
+            CheckListItemOpis = newItem.Opis,
+            CheckListItemKompleksnost = (decimal?)null,
+            newItem.Procenat,
+            newItem.DetaljanOpis,
+            newItem.PlaniraniRok,
+            Zavrsen = false,
+            ZavrsenDatum = (DateOnly?)null,
+            KlijentPotvrdio = false,
+            KlijentPotvrdioDatum = (DateOnly?)null
+        });
+    }
+
+    // DELETE: api/ProjectImplementationItems/5/checklist/3
+    [HttpDelete("{id}/checklist/{checklistId}")]
+    public async Task<IActionResult> DeleteCheckListItem(int id, int checklistId)
+    {
+        var checkList = await _context.ProjectImplementationItemCheckLists
+            .FirstOrDefaultAsync(cl => cl.Id == checklistId && cl.ProjectImplementationItemId == id && cl.CheckListItemId == -1);
+
+        if (checkList == null)
+            return NotFound(new { message = "Stavka nije pronađena ili nije prilagođena stavka." });
+
+        _context.ProjectImplementationItemCheckLists.Remove(checkList);
         await _context.SaveChangesAsync();
 
         return NoContent();
@@ -181,4 +251,15 @@ public class UpdateCheckListDto
     public DateOnly? ZavrsenDatum { get; set; }
     public bool? KlijentPotvrdio { get; set; }
     public DateOnly? KlijentPotvrdioDatum { get; set; }
+    public string? DetaljanOpis { get; set; }
+    public DateOnly? PlaniraniRok { get; set; }
+    public bool? ClearPlaniraniRok { get; set; }
+}
+
+public class CreateCheckListItemDto
+{
+    public string Opis { get; set; } = string.Empty;
+    public string? DetaljanOpis { get; set; }
+    public DateOnly? PlaniraniRok { get; set; }
+    public decimal? Procenat { get; set; }
 }

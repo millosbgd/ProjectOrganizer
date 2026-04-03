@@ -11,7 +11,7 @@ git add .
 git commit -m "Your message"
 git push origin deploy
 # Wait for GitHub Actions to complete
-# URL: https://delightful-pebble-0fc0d9403.4.azurestaticapps.net
+# URL: https://jolly-ocean-0615ca003.3.azurestaticapps.net
 ```
 
 ---
@@ -61,7 +61,7 @@ git push origin deploy
 # 4. Frontend deploys automatically via GitHub Actions
 
 # 5. Test
-# https://delightful-pebble-0fc0d9403.4.azurestaticapps.net
+# https://jolly-ocean-0615ca003.3.azurestaticapps.net
 # https://projectorganizer.azurewebsites.net/api
 ```
 
@@ -111,7 +111,7 @@ ng serve
 
 ## Production URLs
 
-- **Frontend:** https://delightful-pebble-0fc0d9403.4.azurestaticapps.net
+- **Frontend:** https://jolly-ocean-0615ca003.3.azurestaticapps.net
 - **Backend:** https://projectorganizer.azurewebsites.net
 - **API:** https://projectorganizer.azurewebsites.net/api
 - **Database:** projectorganizer-sql.database.windows.net

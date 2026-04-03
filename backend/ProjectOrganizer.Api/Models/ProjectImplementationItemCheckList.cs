@@ -15,8 +15,28 @@ namespace ProjectOrganizer.Api.Models
         [Required]
         public int ProjectImplementationItemId { get; set; }
 
+        /// <summary>
+        /// -1 for custom (ad-hoc) items not tied to implementation model codebook
+        /// </summary>
         [Required]
         public int CheckListItemId { get; set; }
+
+        /// <summary>
+        /// Opis for custom items (when CheckListItemId == -1)
+        /// </summary>
+        [MaxLength(200)]
+        public string? Opis { get; set; }
+
+        /// <summary>
+        /// Detailed description / notes for this checklist item on the project
+        /// </summary>
+        [MaxLength(1000)]
+        public string? DetaljanOpis { get; set; }
+
+        /// <summary>
+        /// Planned completion deadline for this checklist item
+        /// </summary>
+        public DateOnly? PlaniraniRok { get; set; }
 
         /// <summary>
         /// Indicates if this checklist item is completed

@@ -17,8 +17,18 @@ export class ImplementationItemModalComponent {
   @Output() save = new EventEmitter<ProjectImplementationItem>();
   @Output() close = new EventEmitter<void>();
 
+  newCustomOpis = '';
+  newCustomDetaljanOpis = '';
+  newCustomPlaniraniRok = '';
+  newCustomProcenat: number | null = null;
+  showAddCustomForm = false;
+  editingCheckListId: number | null = null;
+
   constructor(private implementationItemService: ProjectImplementationItemService) {}
 
+  isCustomItem(cl: ProjectImplementationCheckListItem): boolean {
+    return cl.checkListItemId === -1;
+  }
   get zavrsenoDateRequired(): boolean {
     return this.item?.zavrseno === true;
   }
@@ -65,7 +75,79 @@ export class ImplementationItemModalComponent {
       }
     });
   }
+  startEditCheckList(cl: ProjectImplementationCheckListItem): void {
+    this.editingCheckListId = cl.id;
+  }
 
+  saveCheckListFields(cl: ProjectImplementationCheckListItem): void {
+    if (!this.item) return;
+    this.implementationItemService.updateCheckListFields(this.item.id, cl.id, {
+      detaljanOpis: cl.detaljanOpis ?? null,
+      planiraniRok: cl.planiraniRok ?? null,
+      clearPlaniraniRok: !cl.planiraniRok
+    }).subscribe({
+      next: () => { this.editingCheckListId = null; },
+      error: (error) => {
+        console.error('Error saving checklist fields:', error);
+        alert('Greška pri čuvanju polja stavke čekliste');
+      }
+    });
+  }
+
+  cancelEditCheckList(): void {
+    this.editingCheckListId = null;
+  }
+
+  toggleAddCustomForm(): void {
+    this.showAddCustomForm = !this.showAddCustomForm;
+    if (!this.showAddCustomForm) {
+      this.resetCustomForm();
+    }
+  }
+
+  resetCustomForm(): void {
+    this.newCustomOpis = '';
+    this.newCustomDetaljanOpis = '';
+    this.newCustomPlaniraniRok = '';
+    this.newCustomProcenat = null;
+  }
+
+  addCustomCheckListItem(): void {
+    if (!this.item || !this.newCustomOpis.trim()) {
+      alert('Opis je obavezan.');
+      return;
+    }
+    this.implementationItemService.addCustomCheckListItem(this.item.id, {
+      opis: this.newCustomOpis.trim(),
+      detaljanOpis: this.newCustomDetaljanOpis || null,
+      planiraniRok: this.newCustomPlaniraniRok || null,
+      procenat: this.newCustomProcenat
+    }).subscribe({
+      next: (newCl) => {
+        this.item!.checkLists = [...(this.item!.checkLists || []), newCl];
+        this.showAddCustomForm = false;
+        this.resetCustomForm();
+      },
+      error: (error) => {
+        console.error('Error adding custom checklist item:', error);
+        alert('Greška pri dodavanju stavke čekliste');
+      }
+    });
+  }
+
+  deleteCustomCheckListItem(cl: ProjectImplementationCheckListItem): void {
+    if (!this.item) return;
+    if (!confirm(`Obriši stavku "${cl.checkListItemOpis}"?`)) return;
+    this.implementationItemService.deleteCustomCheckListItem(this.item.id, cl.id).subscribe({
+      next: () => {
+        this.item!.checkLists = this.item!.checkLists!.filter(c => c.id !== cl.id);
+      },
+      error: (error) => {
+        console.error('Error deleting custom checklist item:', error);
+        alert('Greška pri brisanju stavke čekliste');
+      }
+    });
+  }
   onZavrsenoChange(): void {
     if (this.item) {
       if (!this.item.zavrseno) {

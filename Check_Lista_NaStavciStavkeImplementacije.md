@@ -142,7 +142,7 @@ Nemoj da se zbuniš - za sada ne radimo ništa sa modelima implementacije na pro
 
 #### Frontend
 - ✅ **Automatski deploy** kroz GitHub Actions
-- ✅ URL: https://delightful-pebble-0fc0d9403.4.azurestaticapps.net
+- ✅ URL: https://jolly-ocean-0615ca003.3.azurestaticapps.net
 - ✅ Status: GitHub Actions workflow pokrenut
 
 #### Backend

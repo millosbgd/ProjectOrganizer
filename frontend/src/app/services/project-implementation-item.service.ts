@@ -39,4 +39,15 @@ export class ProjectImplementationItemService {
       klijentPotvrdioDatum: klijentPotvrdio ? today : null
     });
   }
-}
+
+  updateCheckListFields(itemId: number, checklistId: number, fields: { detaljanOpis?: string | null; planiraniRok?: string | null; clearPlaniraniRok?: boolean }): Observable<void> {
+    return this.http.put<void>(`${this.apiUrl}/${itemId}/checklist/${checklistId}`, fields);
+  }
+
+  addCustomCheckListItem(itemId: number, dto: { opis: string; detaljanOpis?: string | null; planiraniRok?: string | null; procenat?: number | null }): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/${itemId}/checklist`, dto);
+  }
+
+  deleteCustomCheckListItem(itemId: number, checklistId: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${itemId}/checklist/${checklistId}`);
+  }
