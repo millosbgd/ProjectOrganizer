@@ -258,4 +258,16 @@ export class ImplementationItemModalComponent {
       this.item.klijentPotvrdioDatum = value || undefined;
     }
   }
+
+  get totalProcenat(): number {
+    return (this.item?.checkLists ?? []).reduce((s, cl) => s + (cl.procenat ?? 0), 0);
+  }
+
+  get zavrsenoProcenat(): number {
+    return (this.item?.checkLists ?? []).filter(cl => cl.zavrsen).reduce((s, cl) => s + (cl.procenat ?? 0), 0);
+  }
+
+  get klijentPotvrdioProcenat(): number {
+    return (this.item?.checkLists ?? []).filter(cl => cl.klijentPotvrdio).reduce((s, cl) => s + (cl.procenat ?? 0), 0);
+  }
 }
