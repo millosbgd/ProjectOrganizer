@@ -13,11 +13,13 @@ public class NotificationsController : ControllerBase
 {
     private readonly ApplicationDbContext _context;
     private readonly UserService _userService;
+    private readonly ILogger<NotificationsController> _logger;
 
-    public NotificationsController(ApplicationDbContext context, UserService userService)
+    public NotificationsController(ApplicationDbContext context, UserService userService, ILogger<NotificationsController> logger)
     {
         _context = context;
         _userService = userService;
+        _logger = logger;
     }
 
     // GET: api/Notifications
@@ -42,12 +44,20 @@ public class NotificationsController : ControllerBase
     [HttpGet("unread-count")]
     public async Task<IActionResult> GetUnreadCount()
     {
-        var currentUser = await _userService.EnsureUserExistsAsync(User);
+        try
+        {
+            var currentUser = await _userService.EnsureUserExistsAsync(User);
 
-        var count = await _context.Notifications
-            .CountAsync(n => n.UserId == currentUser.Id && !n.IsRead && !n.Dismissed);
+            var count = await _context.Notifications
+                .CountAsync(n => n.UserId == currentUser.Id && !n.IsRead && !n.Dismissed);
 
-        return Ok(count);
+            return Ok(count);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in GetUnreadCount");
+            return StatusCode(500);
+        }
     }
 
     // PUT: api/Notifications/5/read

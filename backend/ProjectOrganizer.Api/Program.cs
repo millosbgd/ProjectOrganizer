@@ -99,6 +99,20 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseExceptionHandler(errorApp =>
+{
+    errorApp.Run(async context =>
+    {
+        var exceptionFeature = context.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerFeature>();
+        if (exceptionFeature != null)
+        {
+            var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
+            logger.LogError(exceptionFeature.Error, "Unhandled exception at {Path}", context.Request.Path);
+        }
+        context.Response.StatusCode = 500;
+    });
+});
+
 app.UseHttpsRedirection();
 
 app.UseCors("AllowAngular");
