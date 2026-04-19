@@ -1,6 +1,7 @@
 export interface StatusHistoryEntry {
   status: string;
   assignedTo?: string;
+  roleName?: string;
   totalDurationMinutes?: number;
   isActive: boolean;
   lastStartedAt?: string;

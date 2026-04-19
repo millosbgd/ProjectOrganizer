@@ -51,6 +51,13 @@ public class DevOpsTasksCandidatesController : ControllerBase
                 .ThenByDescending(c => c.CreatedAt)
                 .ToListAsync();
 
+            var roleDict = await _context.DevOpsUsers
+                .Where(u => u.RoleId != null)
+                .Join(_context.Codebooks, u => u.RoleId, cb => cb.Id, (u, cb) => new { u.DisplayName, cb.Value })
+                .GroupBy(x => x.DisplayName)
+                .Select(g => new { DisplayName = g.Key, RoleName = g.First().Value })
+                .ToDictionaryAsync(x => x.DisplayName, x => x.RoleName);
+
             var candidates = candidateEntities.Select(c => new
             {
                 c.Id,
@@ -79,6 +86,7 @@ public class DevOpsTasksCandidatesController : ControllerBase
                     {
                         g.Key.Status,
                         g.Key.AssignedTo,
+                        RoleName = g.Key.AssignedTo != null && roleDict.TryGetValue(g.Key.AssignedTo, out var r) ? r : null,
                         TotalDurationMinutes = g.Where(h => h.DurationMinutes.HasValue).Sum(h => h.DurationMinutes),
                         IsActive = g.Any(h => !h.DurationMinutes.HasValue),
                         LastStartedAt = g.Max(h => h.ChangedDate)
@@ -396,6 +404,14 @@ public class DevOpsTasksCandidatesController : ControllerBase
 
             await _context.SaveChangesAsync();
 
+            // Load role dictionary
+            var roleDict = await _context.DevOpsUsers
+                .Where(u => u.RoleId != null)
+                .Join(_context.Codebooks, u => u.RoleId, cb => cb.Id, (u, cb) => new { u.DisplayName, cb.Value })
+                .GroupBy(x => x.DisplayName)
+                .Select(g => new { DisplayName = g.Key, RoleName = g.First().Value })
+                .ToDictionaryAsync(x => x.DisplayName, x => x.RoleName);
+
             // Return grouped by (AssignedTo, Status)
             return rawEntries
                 .GroupBy(e => new { e.AssignedTo, e.Status })
@@ -404,6 +420,7 @@ public class DevOpsTasksCandidatesController : ControllerBase
                 {
                     Status = g.Key.Status,
                     AssignedTo = g.Key.AssignedTo,
+                    RoleName = g.Key.AssignedTo != null && roleDict.TryGetValue(g.Key.AssignedTo, out var r) ? r : null,
                     TotalDurationMinutes = g.Where(e => e.DurationMinutes.HasValue).Sum(e => (int?)e.DurationMinutes),
                     IsActive = g.Any(e => !e.DurationMinutes.HasValue),
                     LastStartedAt = g.Max(e => e.ChangedDate)
@@ -711,6 +728,7 @@ public class StatusHistoryEntryDto
 {
     public string Status { get; set; } = string.Empty;
     public string? AssignedTo { get; set; }
+    public string? RoleName { get; set; }
     public int? TotalDurationMinutes { get; set; }
     public bool IsActive { get; set; }
     public DateTime? LastStartedAt { get; set; }
