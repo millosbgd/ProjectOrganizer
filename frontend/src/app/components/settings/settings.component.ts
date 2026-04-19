@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { UserSettingsService } from '../../services/user-settings.service';
 import { UserSettings, UpdateUserSettings } from '../../models/user-settings.model';
+import { DevOpsTasksCandidateService } from '../../services/devops-tasks-candidate.service';
 
 @Component({
   selector: 'app-settings',
@@ -25,7 +26,12 @@ export class SettingsComponent implements OnInit {
   saveError = false;
   errorMessage = '';
 
-  constructor(private settingsService: UserSettingsService) {}
+  syncLoading = false;
+  syncSuccess = false;
+  syncError = false;
+  syncMessage = '';
+
+  constructor(private settingsService: UserSettingsService, private devOpsService: DevOpsTasksCandidateService) {}
 
   ngOnInit() {
     this.loadSettings();
@@ -152,6 +158,28 @@ export class SettingsComponent implements OnInit {
           this.saveError = false;
           this.errorMessage = '';
         }, 3000);
+      }
+    });
+  }
+
+  syncDevOpsUsers() {
+    this.syncLoading = true;
+    this.syncSuccess = false;
+    this.syncError = false;
+    this.syncMessage = '';
+
+    this.devOpsService.syncUsers().subscribe({
+      next: (result) => {
+        this.syncLoading = false;
+        this.syncSuccess = true;
+        this.syncMessage = result.message;
+        setTimeout(() => { this.syncSuccess = false; this.syncMessage = ''; }, 5000);
+      },
+      error: (err) => {
+        this.syncLoading = false;
+        this.syncError = true;
+        this.syncMessage = err?.error?.message ?? 'Greška pri sinhronizaciji korisnika.';
+        setTimeout(() => { this.syncError = false; this.syncMessage = ''; }, 5000);
       }
     });
   }

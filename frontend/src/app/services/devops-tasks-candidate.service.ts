@@ -49,4 +49,8 @@ export class DevOpsTasksCandidateService {
   deleteCandidate(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
+
+  syncUsers(): Observable<{ added: number; updated: number; total: number; message: string }> {
+    return this.http.post<any>(`${this.apiUrl}/sync-users`, {});
+  }
 }
