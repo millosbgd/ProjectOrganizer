@@ -2,6 +2,7 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DevOpsTasksCandidate } from '../../models/devops-tasks-candidate.model';
+import { DevOpsTasksCandidateService } from '../../services/devops-tasks-candidate.service';
 
 @Component({
   selector: 'app-devops-task-edit-modal',
@@ -16,15 +17,41 @@ export class DevOpsTaskEditModalComponent {
   @Output() save = new EventEmitter<DevOpsTasksCandidate>();
   @Output() close = new EventEmitter<void>();
 
+  refreshLoading = false;
+  refreshError: string | null = null;
+
   statusOptions = [
     { value: 'Draft', label: 'Draft' },
     { value: 'Sent', label: 'Sent' },
     { value: 'Rejected', label: 'Rejected' }
   ];
 
+  constructor(private devOpsTasksCandidateService: DevOpsTasksCandidateService) {}
+
+  refreshFromDevOps(): void {
+    if (!this.task?.devOpsUrl) return;
+
+    this.refreshLoading = true;
+    this.refreshError = null;
+
+    this.devOpsTasksCandidateService.fetchFromDevOpsUrl(this.task.devOpsUrl).subscribe({
+      next: (fetched) => {
+        this.task!.title = fetched.title ?? this.task!.title;
+        this.task!.description = fetched.description ?? this.task!.description;
+        this.task!.acceptanceCriteria = fetched.acceptanceCriteria ?? this.task!.acceptanceCriteria;
+        this.task!.priority = fetched.priority ?? this.task!.priority;
+        this.task!.estimation = fetched.estimation ?? this.task!.estimation;
+        this.refreshLoading = false;
+      },
+      error: (err) => {
+        this.refreshError = err?.error?.message ?? 'Greška pri osvežavanju iz DevOps-a.';
+        this.refreshLoading = false;
+      }
+    });
+  }
+
   onSave(): void {
     if (this.task) {
-      // Validate required fields
       if (!this.task.title || this.task.title.trim() === '') {
         alert('Naziv taska je obavezan.');
         return;
@@ -34,6 +61,7 @@ export class DevOpsTaskEditModalComponent {
   }
 
   onClose(): void {
+    this.refreshError = null;
     this.close.emit();
   }
 

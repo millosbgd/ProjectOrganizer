@@ -232,7 +232,7 @@ public class DevOpsTasksCandidatesController : ControllerBase
                 .FirstOrDefaultAsync(s => s.UserId == auth0Id);
 
             if (userSettings == null || string.IsNullOrWhiteSpace(userSettings.DevOpsPersonalAccessToken))
-                return BadRequest(new { message = "Nijiste podesili Azure DevOps PAT token u podešavanjima." });
+                return BadRequest(new { message = "Nemate podešen PAT token u podešavanjima." });
 
             // Parse Azure DevOps URL
             // Supported formats:

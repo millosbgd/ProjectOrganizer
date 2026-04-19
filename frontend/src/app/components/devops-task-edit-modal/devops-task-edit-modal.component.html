@@ -2,10 +2,97 @@
   <div class="modal-content">
     <div class="modal-header">
       <h3>Ažuriranje DevOps taska</h3>
-      <button class="close-btn" (click)="onClose()">&times;</button>
+      <div class="header-actions">
+        <button
+          *ngIf="task?.devOpsUrl"
+          class="btn-refresh"
+          (click)="refreshFromDevOps()"
+          [disabled]="refreshLoading"
+          title="Osveži podatke iz Azure DevOps"
+        >
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" [class.spinning]="refreshLoading">
+            <polyline points="23 4 23 10 17 10"></polyline>
+            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+          </svg>
+          {{ refreshLoading ? 'Osvežavam...' : 'Osveži iz DevOps' }}
+        </button>
+        <button class="close-btn" (click)="onClose()">&times;</button>
+      </div>
     </div>
 
+    <div *ngIf="refreshError" class="refresh-error">{{ refreshError }}</div>
+
     <div class="modal-body">
+      <div class="form-group">
+        <label>Naziv: <span class="required">*</span></label>
+        <input 
+          type="text" 
+          [(ngModel)]="task!.title" 
+          name="title" 
+          placeholder="Unesite naziv taska..."
+          required
+        />
+      </div>
+
+      <div class="form-group">
+        <label>Opis:</label>
+        <textarea 
+          [(ngModel)]="task!.description" 
+          name="description" 
+          rows="4"
+          placeholder="Unesite opis taska..."
+        ></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>Acceptance Criteria:</label>
+        <textarea 
+          [(ngModel)]="task!.acceptanceCriteria" 
+          name="acceptanceCriteria" 
+          rows="4"
+          placeholder="Unesite acceptance criteria..."
+        ></textarea>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Prioritet:</label>
+          <input 
+            type="text" 
+            [(ngModel)]="task!.priority" 
+            name="priority" 
+            placeholder="npr. High, Medium, Low"
+          />
+        </div>
+
+        <div class="form-group">
+          <label>Procena:</label>
+          <input 
+            type="text" 
+            [(ngModel)]="task!.estimation" 
+            name="estimation" 
+            placeholder="npr. 5h, 2d"
+          />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Status:</label>
+        <select [(ngModel)]="task!.status" name="status">
+          <option *ngFor="let opt of statusOptions" [value]="opt.value">
+            {{ opt.label }}
+          </option>
+        </select>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="onClose()">Otkaži</button>
+      <button class="btn-primary" (click)="onSave()">Sačuvaj</button>
+    </div>
+  </div>
+</div>
+
       <div class="form-group">
         <label>Naziv: <span class="required">*</span></label>
         <input 
