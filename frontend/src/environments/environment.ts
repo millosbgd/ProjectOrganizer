@@ -7,7 +7,8 @@ export const environment = {
     clientId: 'rOVVRDGgscn6oAqvO0vu09kA61JUKmPp',  // Zameni sa tvojim Auth0 Client ID
     authorizationParams: {
       redirect_uri: window.location.origin,
-      audience: 'https://projectorganizer.api'  // Zameni sa tvojim Auth0 API identifikatorom
+      audience: 'https://projectorganizer.api',  // Zameni sa tvojim Auth0 API identifikatorom
+      scope: 'openid profile email offline_access'
     }
   }
 };

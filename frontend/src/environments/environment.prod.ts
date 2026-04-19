@@ -7,7 +7,8 @@ export const environment = {
     clientId: 'rOVVRDGgscn6oAqvO0vu09kA61JUKmPp',
     authorizationParams: {
       redirect_uri: window.location.origin,
-      audience: 'https://projectorganizer.api'
+      audience: 'https://projectorganizer.api',
+      scope: 'openid profile email offline_access'
     }
   }
 };
