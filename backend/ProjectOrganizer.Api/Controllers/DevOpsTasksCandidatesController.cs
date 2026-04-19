@@ -298,7 +298,7 @@ public class DevOpsTasksCandidatesController : ControllerBase
         if (!Uri.TryCreate(url, UriKind.Absolute, out var uri))
             return false;
 
-        var segments = uri.AbsolutePath.TrimStart('/').Split('/');
+        var segments = uri.AbsolutePath.TrimStart('/').TrimEnd('/').Split('/');
 
         // https://dev.azure.com/{org}/{project}/_workitems/edit/{id}
         if (uri.Host.Equals("dev.azure.com", StringComparison.OrdinalIgnoreCase))
