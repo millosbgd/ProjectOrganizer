@@ -455,101 +455,98 @@ public class DevOpsTasksCandidatesController : ControllerBase
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", token);
             client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
-            // Get all unique org+project combos from connected DevOps tasks
+            // Get all unique organizations from connected DevOps tasks
             var connectedUrls = await _context.DevOpsTasksCandidates
                 .Where(t => t.DevOpsUrl != null && t.DevOpsUrl != "")
                 .Select(t => t.DevOpsUrl!)
                 .Distinct()
                 .ToListAsync();
 
-            var devOpsProjects = connectedUrls
+            var organizations = connectedUrls
                 .Select(url =>
                 {
-                    TryParseDevOpsUrl(url, out var org, out var proj, out _);
-                    return new { DevOpsOrganization = org, DevOpsProject = proj };
+                    TryParseDevOpsUrl(url, out var org, out _, out _);
+                    return org;
                 })
-                .Where(x => !string.IsNullOrEmpty(x.DevOpsOrganization) && !string.IsNullOrEmpty(x.DevOpsProject))
-                .DistinctBy(x => $"{x.DevOpsOrganization}|{x.DevOpsProject}")
+                .Where(org => !string.IsNullOrEmpty(org))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
                 .ToList();
 
-            if (!devOpsProjects.Any())
-                return BadRequest(new { message = "Nema konektovanih DevOps taskova na osnovu kojih bi se odredila organizacija i projekat." });
+            if (!organizations.Any())
+                return BadRequest(new { message = "Nema konektovanih DevOps taskova na osnovu kojih bi se odredila organizacija." });
 
-            // key = "uniqueName|organization"
+            // key = "principalName|organization"
             var collectedUsers = new Dictionary<string, DevOpsUser>(StringComparer.OrdinalIgnoreCase);
 
-            foreach (var proj in devOpsProjects)
+            foreach (var org in organizations)
             {
                 try
                 {
-                    // WIQL - get all work item IDs in project
-                    var wiqlUrl = $"https://dev.azure.com/{proj.DevOpsOrganization}/{proj.DevOpsProject}/_apis/wit/wiql?api-version=7.1";
-                    var wiqlBody = JsonSerializer.Serialize(new { query = $"SELECT [System.Id] FROM WorkItems WHERE [System.TeamProject] = '{proj.DevOpsProject}'" });
-                    var wiqlResponse = await client.PostAsync(wiqlUrl,
-                        new StringContent(wiqlBody, Encoding.UTF8, "application/json"));
-
-                    if (!wiqlResponse.IsSuccessStatusCode)
+                    // Use Graph API to enumerate all users in the organization (handles pagination via continuationToken)
+                    string? continuationToken = null;
+                    do
                     {
-                        _logger.LogWarning("WIQL failed for {Org}/{Project}: {Status}", proj.DevOpsOrganization, proj.DevOpsProject, wiqlResponse.StatusCode);
-                        continue;
-                    }
+                        var graphUrl = $"https://vssps.dev.azure.com/{org}/_apis/graph/users?api-version=7.1-preview.1";
+                        if (!string.IsNullOrEmpty(continuationToken))
+                            graphUrl += $"&continuationToken={Uri.EscapeDataString(continuationToken)}";
 
-                    var wiqlJson = await wiqlResponse.Content.ReadAsStringAsync();
-                    using var wiqlDoc = JsonDocument.Parse(wiqlJson);
-                    var ids = wiqlDoc.RootElement
-                        .GetProperty("workItems")
-                        .EnumerateArray()
-                        .Select(wi => wi.GetProperty("id").GetInt32())
-                        .ToList();
-
-                    if (!ids.Any()) continue;
-
-                    // Batch fetch user fields (max 200 per request)
-                    for (int i = 0; i < ids.Count; i += 200)
-                    {
-                        var batch = ids.Skip(i).Take(200);
-                        var idsParam = string.Join(",", batch);
-                        var batchUrl = $"https://dev.azure.com/{proj.DevOpsOrganization}/{proj.DevOpsProject}/_apis/wit/workitems?ids={idsParam}&fields=System.AssignedTo,System.CreatedBy,System.ChangedBy&api-version=7.1";
-                        var batchResponse = await client.GetAsync(batchUrl);
-                        if (!batchResponse.IsSuccessStatusCode) continue;
-
-                        var batchJson = await batchResponse.Content.ReadAsStringAsync();
-                        using var batchDoc = JsonDocument.Parse(batchJson);
-
-                        foreach (var item in batchDoc.RootElement.GetProperty("value").EnumerateArray())
+                        var graphResponse = await client.GetAsync(graphUrl);
+                        if (!graphResponse.IsSuccessStatusCode)
                         {
-                            if (!item.TryGetProperty("fields", out var fields)) continue;
+                            _logger.LogWarning("Graph users API failed for {Org}: {Status}", org, graphResponse.StatusCode);
+                            break;
+                        }
 
-                            foreach (var fieldName in new[] { "System.AssignedTo", "System.CreatedBy", "System.ChangedBy" })
+                        // Continuation token comes as a response header
+                        continuationToken = null;
+                        if (graphResponse.Headers.TryGetValues("X-MS-ContinuationToken", out var tokenValues))
+                            continuationToken = tokenValues.FirstOrDefault();
+
+                        var graphJson = await graphResponse.Content.ReadAsStringAsync();
+                        using var graphDoc = JsonDocument.Parse(graphJson);
+
+                        if (!graphDoc.RootElement.TryGetProperty("value", out var usersArray)) break;
+
+                        foreach (var u in usersArray.EnumerateArray())
+                        {
+                            var subjectKind = u.TryGetProperty("subjectKind", out var sk) ? sk.GetString() : null;
+                            // Only sync actual user accounts (not groups or service principals)
+                            if (subjectKind != "user") continue;
+
+                            var principalName = u.TryGetProperty("principalName", out var pn) ? pn.GetString() : null;
+                            var displayName   = u.TryGetProperty("displayName",   out var dn) ? dn.GetString() : null;
+
+                            if (string.IsNullOrWhiteSpace(principalName) || string.IsNullOrWhiteSpace(displayName))
+                                continue;
+
+                            // Skip service/build accounts
+                            if (principalName.StartsWith("vstfs://", StringComparison.OrdinalIgnoreCase)) continue;
+
+                            string? imageUrl = null;
+                            if (u.TryGetProperty("_links", out var links) &&
+                                links.TryGetProperty("avatar", out var avatar) &&
+                                avatar.TryGetProperty("href", out var href))
+                                imageUrl = href.GetString();
+
+                            var key = $"{principalName}|{org}";
+                            if (!collectedUsers.ContainsKey(key))
                             {
-                                if (!fields.TryGetProperty(fieldName, out var identity) ||
-                                    identity.ValueKind != JsonValueKind.Object) continue;
-
-                                var uniqueName = GetIdentityFieldString(identity, "uniqueName");
-                                var displayName = GetIdentityFieldString(identity, "displayName");
-
-                                if (string.IsNullOrWhiteSpace(uniqueName) || string.IsNullOrWhiteSpace(displayName))
-                                    continue;
-
-                                var key = $"{uniqueName}|{proj.DevOpsOrganization}";
-                                if (!collectedUsers.ContainsKey(key))
+                                collectedUsers[key] = new DevOpsUser
                                 {
-                                    collectedUsers[key] = new DevOpsUser
-                                    {
-                                        UniqueName = uniqueName,
-                                        DisplayName = displayName,
-                                        Organization = proj.DevOpsOrganization!,
-                                        ImageUrl = GetIdentityFieldString(identity, "imageUrl"),
-                                        SyncedAt = DateTime.UtcNow
-                                    };
-                                }
+                                    UniqueName   = principalName,
+                                    DisplayName  = displayName,
+                                    Organization = org!,
+                                    ImageUrl     = imageUrl,
+                                    SyncedAt     = DateTime.UtcNow
+                                };
                             }
                         }
                     }
+                    while (!string.IsNullOrEmpty(continuationToken));
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogWarning(ex, "Failed to sync users from {Org}/{Project}", proj.DevOpsOrganization, proj.DevOpsProject);
+                    _logger.LogWarning(ex, "Failed to sync users from org {Org}", org);
                 }
             }
 
