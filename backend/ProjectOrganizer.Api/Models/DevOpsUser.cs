@@ -23,4 +23,8 @@ public class DevOpsUser
     public string? ImageUrl { get; set; }
 
     public DateTime SyncedAt { get; set; } = DateTime.UtcNow;
+
+    public int? RoleId { get; set; }
+
+    public Codebook? Role { get; set; }
 }
