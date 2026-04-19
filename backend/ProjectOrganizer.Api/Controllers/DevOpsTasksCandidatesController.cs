@@ -19,17 +19,20 @@ public class DevOpsTasksCandidatesController : ControllerBase
     private readonly UserService _userService;
     private readonly ILogger<DevOpsTasksCandidatesController> _logger;
     private readonly IHttpClientFactory _httpClientFactory;
+    private readonly EncryptionService _encryptionService;
 
     public DevOpsTasksCandidatesController(
         ApplicationDbContext context,
         UserService userService,
         ILogger<DevOpsTasksCandidatesController> logger,
-        IHttpClientFactory httpClientFactory)
+        IHttpClientFactory httpClientFactory,
+        EncryptionService encryptionService)
     {
         _context = context;
         _userService = userService;
         _logger = logger;
         _httpClientFactory = httpClientFactory;
+        _encryptionService = encryptionService;
     }
 
     // GET: api/devopstaskscandidates/aktivnost/{aktivnostId}
@@ -238,8 +241,9 @@ public class DevOpsTasksCandidatesController : ControllerBase
 
             var apiUrl = $"https://dev.azure.com/{organization}/{project}/_apis/wit/workitems/{workItemId}?$expand=all&api-version=7.1";
 
+            var decryptedPat = _encryptionService.Decrypt(userSettings.DevOpsPersonalAccessToken);
             var client = _httpClientFactory.CreateClient();
-            var token = Convert.ToBase64String(Encoding.ASCII.GetBytes($":{userSettings.DevOpsPersonalAccessToken}"));
+            var token = Convert.ToBase64String(Encoding.ASCII.GetBytes($":{decryptedPat}"));
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", token);
             client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
