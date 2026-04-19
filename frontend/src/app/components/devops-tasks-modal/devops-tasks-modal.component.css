@@ -71,6 +71,38 @@
   background: #eaf4fb;
 }
 
+.devops-connected-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px 3px 7px;
+  background: linear-gradient(135deg, #0078d4, #005a9e);
+  color: white;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+  box-shadow: 0 1px 4px rgba(0, 120, 212, 0.4);
+  cursor: default;
+}
+
+.devops-url-meta {
+  flex-basis: 100%;
+}
+
+.meta-devops-url {
+  font-size: 12px;
+  color: #0078d4;
+  text-decoration: none;
+  word-break: break-all;
+  font-weight: 400;
+}
+.meta-devops-url:hover {
+  text-decoration: underline;
+  color: #005a9e;
+}
+
 .close-btn {
   background: rgba(255, 255, 255, 0.2);
   border: none;

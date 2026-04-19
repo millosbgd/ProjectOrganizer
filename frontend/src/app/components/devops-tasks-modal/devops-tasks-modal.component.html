@@ -33,6 +33,13 @@
             </div>
             <div class="task-header-right">
               <div class="task-badges">
+                <span class="devops-connected-badge" *ngIf="task.devOpsUrl" [attr.title]="task.devOpsUrl">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M15 7h3a5 5 0 0 1 0 10h-3M9 17H6a5 5 0 0 1 0-10h3"/>
+                    <line x1="8" y1="12" x2="16" y2="12"/>
+                  </svg>
+                  Connected
+                </span>
                 <span class="badge" [ngClass]="getPriorityBadgeClass(task.priority)">
                   {{ task.priority || 'Medium' }}
                 </span>
@@ -90,6 +97,12 @@
               <div class="meta-item" *ngIf="task.devOpsWorkItemId">
                 <span class="meta-label">ADO #:</span>
                 <span class="meta-value">{{ task.devOpsWorkItemId }}</span>
+              </div>
+              <div class="meta-item devops-url-meta" *ngIf="task.devOpsUrl">
+                <span class="meta-label">DevOps URL:</span>
+                <a class="meta-devops-url" [href]="task.devOpsUrl" target="_blank" rel="noopener noreferrer" [title]="task.devOpsUrl">
+                  {{ task.devOpsUrl | slice:0:55 }}{{ task.devOpsUrl.length > 55 ? '...' : '' }}
+                </a>
               </div>
               <div class="meta-item">
                 <span class="meta-label">Kreirao:</span>

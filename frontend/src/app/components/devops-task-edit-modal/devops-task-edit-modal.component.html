@@ -1,7 +1,16 @@
 <div class="modal-backdrop" *ngIf="isOpen" (click)="onBackdropClick($event)">
   <div class="modal-content">
     <div class="modal-header">
-      <h3>Ažuriranje DevOps taska</h3>
+      <div class="edit-header-title">
+        <h3>Ažuriranje DevOps taska</h3>
+        <span class="devops-connected-badge" *ngIf="task?.devOpsUrl">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M15 7h3a5 5 0 0 1 0 10h-3M9 17H6a5 5 0 0 1 0-10h3"/>
+            <line x1="8" y1="12" x2="16" y2="12"/>
+          </svg>
+          Connected
+        </span>
+      </div>
       <div class="header-actions">
         <button
           *ngIf="task?.devOpsUrl"
@@ -23,6 +32,28 @@
     <div *ngIf="refreshError" class="refresh-error">{{ refreshError }}</div>
 
     <div class="modal-body">
+      <div class="form-group devops-url-form-group" *ngIf="task?.devOpsUrl">
+        <label class="devops-url-label">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#0078d4" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M15 7h3a5 5 0 0 1 0 10h-3M9 17H6a5 5 0 0 1 0-10h3"/>
+            <line x1="8" y1="12" x2="16" y2="12"/>
+          </svg>
+          Azure DevOps URL:
+        </label>
+        <div class="devops-url-input-wrapper">
+          <input type="text" [value]="task!.devOpsUrl" readonly class="devops-url-readonly" />
+          <button class="btn-copy-url" (click)="copyDevOpsUrl()" [title]="copied ? 'Kopirano!' : 'Kopiraj link'">
+            <svg *ngIf="!copied" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="9" y="9" width="13" height="13" rx="2"/>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+            </svg>
+            <svg *ngIf="copied" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
       <div class="form-group">
         <label>Naziv: <span class="required">*</span></label>
         <input 

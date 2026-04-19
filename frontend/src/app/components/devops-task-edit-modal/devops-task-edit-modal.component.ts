@@ -19,6 +19,7 @@ export class DevOpsTaskEditModalComponent {
 
   refreshLoading = false;
   refreshError: string | null = null;
+  copied = false;
 
   statusOptions = [
     { value: 'Draft', label: 'Draft' },
@@ -50,6 +51,14 @@ export class DevOpsTaskEditModalComponent {
         this.refreshError = err?.error?.message ?? 'Greška pri osvežavanju iz DevOps-a.';
         this.refreshLoading = false;
       }
+    });
+  }
+
+  copyDevOpsUrl(): void {
+    if (!this.task?.devOpsUrl) return;
+    navigator.clipboard.writeText(this.task.devOpsUrl).then(() => {
+      this.copied = true;
+      setTimeout(() => { this.copied = false; }, 2000);
     });
   }
 
