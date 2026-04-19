@@ -224,10 +224,12 @@ public class DevOpsTasksCandidatesController : ControllerBase
     {
         try
         {
-            var currentUser = await _userService.EnsureUserExistsAsync(User);
+            var auth0Id = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(auth0Id))
+                return Unauthorized();
 
             var userSettings = await _context.UserSettings
-                .FirstOrDefaultAsync(s => s.UserId == currentUser.Id.ToString());
+                .FirstOrDefaultAsync(s => s.UserId == auth0Id);
 
             if (userSettings == null || string.IsNullOrWhiteSpace(userSettings.DevOpsPersonalAccessToken))
                 return BadRequest(new { message = "Nijiste podesili Azure DevOps PAT token u podešavanjima." });
