@@ -61,6 +61,8 @@ public class DevOpsTasksCandidatesController : ControllerBase
                     c.OrderIndex,
                     c.Status,
                     c.CreatedAt,
+                    c.DevOpsWorkItemId,
+                    c.DevOpsUrl,
                     User = new
                     {
                         c.User!.Id,
