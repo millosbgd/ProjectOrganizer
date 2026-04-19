@@ -74,12 +74,12 @@
           <div class="task-body">
             <div class="task-section" *ngIf="task.description">
               <label>Opis:</label>
-              <p>{{ task.description }}</p>
+              <div class="html-content" [innerHTML]="task.description"></div>
             </div>
 
             <div class="task-section" *ngIf="task.acceptanceCriteria">
               <label>Acceptance Criteria:</label>
-              <pre>{{ task.acceptanceCriteria }}</pre>
+              <div class="html-content" [innerHTML]="task.acceptanceCriteria"></div>
             </div>
 
               <div class="task-meta">

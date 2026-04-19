@@ -363,9 +363,8 @@ public class DevOpsTasksCandidatesController : ControllerBase
     private static string? StripHtml(string? html)
     {
         if (string.IsNullOrWhiteSpace(html)) return html;
-        // Remove HTML tags using regex, then decode HTML entities (&quot; -> ", &amp; -> &, etc.)
-        var stripped = System.Text.RegularExpressions.Regex.Replace(html, "<[^>]*(>|$)", string.Empty).Trim();
-        return System.Net.WebUtility.HtmlDecode(stripped);
+        // Decode HTML entities only — keep HTML tags for frontend rendering
+        return System.Net.WebUtility.HtmlDecode(html);
     }
 }
 

@@ -280,6 +280,19 @@
   border-left: 3px solid #667eea;
 }
 
+.html-content {
+  color: #666;
+  line-height: 1.6;
+  font-size: 14px;
+}
+
+.html-content p { margin: 0 0 6px 0; }
+.html-content ul, .html-content ol { margin: 4px 0 6px 16px; padding: 0; }
+.html-content li { margin-bottom: 2px; }
+.html-content strong, .html-content b { font-weight: 600; color: #444; }
+.html-content h1, .html-content h2, .html-content h3 { font-size: 14px; font-weight: 600; margin: 6px 0 4px 0; }
+.html-content br + br { display: none; }
+
 .task-meta {
   display: flex;
   flex-wrap: wrap;
