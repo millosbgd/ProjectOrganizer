@@ -417,6 +417,160 @@ public class DevOpsTasksCandidatesController : ControllerBase
         }
     }
 
+    // POST: api/devopstaskscandidates/sync-users
+    [HttpPost("sync-users")]
+    public async Task<ActionResult> SyncDevOpsUsers()
+    {
+        try
+        {
+            var auth0Id = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(auth0Id)) return Unauthorized();
+
+            var userSettings = await _context.UserSettings
+                .FirstOrDefaultAsync(s => s.UserId == auth0Id);
+
+            if (userSettings == null || string.IsNullOrWhiteSpace(userSettings.DevOpsPersonalAccessToken))
+                return BadRequest(new { message = "Nemate podešen PAT token u podešavanjima." });
+
+            var decryptedPat = _encryptionService.Decrypt(userSettings.DevOpsPersonalAccessToken);
+            var token = Convert.ToBase64String(Encoding.ASCII.GetBytes($":{decryptedPat}"));
+            var client = _httpClientFactory.CreateClient();
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", token);
+            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+            // Get all unique org+project combos from configured projects
+            var devOpsProjects = await _context.Projekti
+                .Where(p => !string.IsNullOrEmpty(p.DevOpsOrganization) && !string.IsNullOrEmpty(p.DevOpsProject))
+                .Select(p => new { p.DevOpsOrganization, p.DevOpsProject })
+                .Distinct()
+                .ToListAsync();
+
+            if (!devOpsProjects.Any())
+                return BadRequest(new { message = "Nema projekata sa podešenom Azure DevOps organizacijom i projektom." });
+
+            // key = "uniqueName|organization"
+            var collectedUsers = new Dictionary<string, DevOpsUser>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var proj in devOpsProjects)
+            {
+                try
+                {
+                    // WIQL - get all work item IDs in project
+                    var wiqlUrl = $"https://dev.azure.com/{proj.DevOpsOrganization}/{proj.DevOpsProject}/_apis/wit/wiql?api-version=7.1";
+                    var wiqlBody = JsonSerializer.Serialize(new { query = $"SELECT [System.Id] FROM WorkItems WHERE [System.TeamProject] = '{proj.DevOpsProject}'" });
+                    var wiqlResponse = await client.PostAsync(wiqlUrl,
+                        new StringContent(wiqlBody, Encoding.UTF8, "application/json"));
+
+                    if (!wiqlResponse.IsSuccessStatusCode)
+                    {
+                        _logger.LogWarning("WIQL failed for {Org}/{Project}: {Status}", proj.DevOpsOrganization, proj.DevOpsProject, wiqlResponse.StatusCode);
+                        continue;
+                    }
+
+                    var wiqlJson = await wiqlResponse.Content.ReadAsStringAsync();
+                    using var wiqlDoc = JsonDocument.Parse(wiqlJson);
+                    var ids = wiqlDoc.RootElement
+                        .GetProperty("workItems")
+                        .EnumerateArray()
+                        .Select(wi => wi.GetProperty("id").GetInt32())
+                        .ToList();
+
+                    if (!ids.Any()) continue;
+
+                    // Batch fetch user fields (max 200 per request)
+                    for (int i = 0; i < ids.Count; i += 200)
+                    {
+                        var batch = ids.Skip(i).Take(200);
+                        var idsParam = string.Join(",", batch);
+                        var batchUrl = $"https://dev.azure.com/{proj.DevOpsOrganization}/{proj.DevOpsProject}/_apis/wit/workitems?ids={idsParam}&fields=System.AssignedTo,System.CreatedBy,System.ChangedBy&api-version=7.1";
+                        var batchResponse = await client.GetAsync(batchUrl);
+                        if (!batchResponse.IsSuccessStatusCode) continue;
+
+                        var batchJson = await batchResponse.Content.ReadAsStringAsync();
+                        using var batchDoc = JsonDocument.Parse(batchJson);
+
+                        foreach (var item in batchDoc.RootElement.GetProperty("value").EnumerateArray())
+                        {
+                            if (!item.TryGetProperty("fields", out var fields)) continue;
+
+                            foreach (var fieldName in new[] { "System.AssignedTo", "System.CreatedBy", "System.ChangedBy" })
+                            {
+                                if (!fields.TryGetProperty(fieldName, out var identity) ||
+                                    identity.ValueKind != JsonValueKind.Object) continue;
+
+                                var uniqueName = GetIdentityFieldString(identity, "uniqueName");
+                                var displayName = GetIdentityFieldString(identity, "displayName");
+
+                                if (string.IsNullOrWhiteSpace(uniqueName) || string.IsNullOrWhiteSpace(displayName))
+                                    continue;
+
+                                var key = $"{uniqueName}|{proj.DevOpsOrganization}";
+                                if (!collectedUsers.ContainsKey(key))
+                                {
+                                    collectedUsers[key] = new DevOpsUser
+                                    {
+                                        UniqueName = uniqueName,
+                                        DisplayName = displayName,
+                                        Organization = proj.DevOpsOrganization!,
+                                        ImageUrl = GetIdentityFieldString(identity, "imageUrl"),
+                                        SyncedAt = DateTime.UtcNow
+                                    };
+                                }
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to sync users from {Org}/{Project}", proj.DevOpsOrganization, proj.DevOpsProject);
+                }
+            }
+
+            // Upsert into DevOpsUsers table
+            int added = 0, updated = 0;
+            foreach (var user in collectedUsers.Values)
+            {
+                var existing = await _context.DevOpsUsers
+                    .FirstOrDefaultAsync(u => u.UniqueName == user.UniqueName && u.Organization == user.Organization);
+
+                if (existing == null)
+                {
+                    _context.DevOpsUsers.Add(user);
+                    added++;
+                }
+                else
+                {
+                    existing.DisplayName = user.DisplayName;
+                    existing.ImageUrl = user.ImageUrl;
+                    existing.SyncedAt = DateTime.UtcNow;
+                    updated++;
+                }
+            }
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                added,
+                updated,
+                total = added + updated,
+                message = $"Sinhronizovano {added + updated} korisnika ({added} novih, {updated} ažuriranih)."
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error syncing DevOps users");
+            return StatusCode(500, "Greška pri sinhronizaciji korisnika.");
+        }
+    }
+
+    private static string? GetIdentityFieldString(JsonElement identity, string property)
+    {
+        return identity.TryGetProperty(property, out var val) && val.ValueKind == JsonValueKind.String
+            ? val.GetString()
+            : null;
+    }
+
     private static bool TryParseDevOpsUrl(string url, out string organization, out string project, out int workItemId)
     {
         organization = string.Empty;

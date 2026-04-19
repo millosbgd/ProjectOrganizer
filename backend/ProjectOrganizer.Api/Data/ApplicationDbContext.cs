@@ -33,6 +33,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<AiReminder> AiReminders { get; set; }
     public DbSet<DailyTask> DailyTasks { get; set; }
     public DbSet<Mail> Mailovi { get; set; }
+    public DbSet<DevOpsUser> DevOpsUsers { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
