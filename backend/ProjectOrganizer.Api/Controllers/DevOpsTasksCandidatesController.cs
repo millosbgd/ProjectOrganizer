@@ -440,7 +440,8 @@ public class DevOpsTasksCandidatesController : ControllerBase
 
             // Get all unique org+project combos from configured projects
             var devOpsProjects = await _context.Projekti
-                .Where(p => !string.IsNullOrEmpty(p.DevOpsOrganization) && !string.IsNullOrEmpty(p.DevOpsProject))
+                .Where(p => p.DevOpsOrganization != null && p.DevOpsOrganization != "" &&
+                            p.DevOpsProject != null && p.DevOpsProject != "")
                 .Select(p => new { p.DevOpsOrganization, p.DevOpsProject })
                 .Distinct()
                 .ToListAsync();
