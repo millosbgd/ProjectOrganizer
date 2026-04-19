@@ -74,13 +74,14 @@ public class DevOpsTasksCandidatesController : ControllerBase
                 },
                 StatusHistory = (c.StatusHistory ?? Enumerable.Empty<DevOpsTaskStatusHistory>())
                     .GroupBy(h => new { h.AssignedTo, h.Status })
-                    .OrderBy(g => g.Min(h => h.ChangedDate))
+                    .OrderByDescending(g => g.Max(h => h.ChangedDate))
                     .Select(g => new
                     {
                         g.Key.Status,
                         g.Key.AssignedTo,
                         TotalDurationMinutes = g.Where(h => h.DurationMinutes.HasValue).Sum(h => h.DurationMinutes),
-                        IsActive = g.Any(h => !h.DurationMinutes.HasValue)
+                        IsActive = g.Any(h => !h.DurationMinutes.HasValue),
+                        LastStartedAt = g.Max(h => h.ChangedDate)
                     })
                     .ToList()
             });
@@ -398,13 +399,14 @@ public class DevOpsTasksCandidatesController : ControllerBase
             // Return grouped by (AssignedTo, Status)
             return rawEntries
                 .GroupBy(e => new { e.AssignedTo, e.Status })
-                .OrderBy(g => g.Min(e => e.ChangedDate))
+                .OrderByDescending(g => g.Max(e => e.ChangedDate))
                 .Select(g => new StatusHistoryEntryDto
                 {
                     Status = g.Key.Status,
                     AssignedTo = g.Key.AssignedTo,
                     TotalDurationMinutes = g.Where(e => e.DurationMinutes.HasValue).Sum(e => (int?)e.DurationMinutes),
-                    IsActive = g.Any(e => !e.DurationMinutes.HasValue)
+                    IsActive = g.Any(e => !e.DurationMinutes.HasValue),
+                    LastStartedAt = g.Max(e => e.ChangedDate)
                 })
                 .ToList();
         }
@@ -547,4 +549,5 @@ public class StatusHistoryEntryDto
     public string? AssignedTo { get; set; }
     public int? TotalDurationMinutes { get; set; }
     public bool IsActive { get; set; }
+    public DateTime? LastStartedAt { get; set; }
 }

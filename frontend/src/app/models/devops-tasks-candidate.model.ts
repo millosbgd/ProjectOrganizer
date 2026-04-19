@@ -3,6 +3,7 @@ export interface StatusHistoryEntry {
   assignedTo?: string;
   totalDurationMinutes?: number;
   isActive: boolean;
+  lastStartedAt?: string;
 }
 
 export interface DevOpsTasksCandidate {

@@ -83,6 +83,13 @@ export class DevOpsTaskEditModalComponent {
     }
   }
 
+  formatDate(dateStr: string): string {
+    if (!dateStr) return '—';
+    const d = new Date(dateStr);
+    return d.toLocaleDateString('sr-Latn-RS', { day: '2-digit', month: '2-digit', year: 'numeric' })
+      + ' ' + d.toLocaleTimeString('sr-Latn-RS', { hour: '2-digit', minute: '2-digit' });
+  }
+
   formatDuration(minutes?: number, isActive?: boolean): string {
     const base = minutes != null && minutes > 0 ? (() => {
       if (minutes < 60) return `${minutes} min`;
