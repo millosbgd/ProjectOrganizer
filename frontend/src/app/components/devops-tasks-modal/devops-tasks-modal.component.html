@@ -2,7 +2,16 @@
   <div class="modal-content-large" (click)="$event.stopPropagation()">
     <div class="modal-header">
       <h3>📋 Sačuvani DevOps Taskovi</h3>
-      <button class="close-btn" (click)="closeModal()">&times;</button>
+      <div class="header-actions">
+        <button class="btn-new-task" (click)="openCreateModal()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          Novi task
+        </button>
+        <button class="close-btn" (click)="closeModal()">&times;</button>
+      </div>
     </div>
     
     <div class="modal-body">
@@ -32,6 +41,20 @@
                 </span>
               </div>
               <div class="task-actions">
+                <a
+                  *ngIf="task.devOpsUrl"
+                  [href]="task.devOpsUrl"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="btn-icon btn-devops-link"
+                  title="Otvori u Azure DevOps"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                    <polyline points="15 3 21 3 21 9"></polyline>
+                    <line x1="10" y1="14" x2="21" y2="3"></line>
+                  </svg>
+                </a>
                 <button class="btn-icon btn-edit" (click)="editTask(task)" title="Izmeni task">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
@@ -59,10 +82,14 @@
               <pre>{{ task.acceptanceCriteria }}</pre>
             </div>
 
-            <div class="task-meta">
+              <div class="task-meta">
               <div class="meta-item" *ngIf="task.estimation">
                 <span class="meta-label">Procena:</span>
                 <span class="meta-value">{{ task.estimation }}</span>
+              </div>
+              <div class="meta-item" *ngIf="task.devOpsWorkItemId">
+                <span class="meta-label">ADO #:</span>
+                <span class="meta-value">{{ task.devOpsWorkItemId }}</span>
               </div>
               <div class="meta-item">
                 <span class="meta-label">Kreirao:</span>
@@ -93,3 +120,10 @@
   (save)="saveTask($event)"
   (close)="closeEditModal()"
 ></app-devops-task-edit-modal>
+
+<app-devops-task-create-modal
+  *ngIf="isCreateModalOpen"
+  [aktivnostId]="aktivnostId"
+  (save)="saveNewTask($event)"
+  (close)="closeCreateModal()"
+></app-devops-task-create-modal>

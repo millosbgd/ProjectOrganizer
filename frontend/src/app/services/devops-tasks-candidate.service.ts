@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { DevOpsTasksCandidate } from '../models/devops-tasks-candidate.model';
+import { DevOpsTasksCandidate, FetchedDevOpsTask } from '../models/devops-tasks-candidate.model';
 
 @Injectable({
   providedIn: 'root'
@@ -18,6 +18,24 @@ export class DevOpsTasksCandidateService {
 
   getCandidate(id: number): Observable<DevOpsTasksCandidate> {
     return this.http.get<DevOpsTasksCandidate>(`${this.apiUrl}/${id}`);
+  }
+
+  createCandidate(data: {
+    aktivnostId: number;
+    title: string;
+    description?: string;
+    acceptanceCriteria?: string;
+    priority?: string;
+    estimation?: string;
+    orderIndex?: number;
+    devOpsWorkItemId?: number;
+    devOpsUrl?: string;
+  }): Observable<{ id: number; aktivnostId: number; title: string; status: string; createdAt: Date }> {
+    return this.http.post<any>(this.apiUrl, { orderIndex: 0, ...data });
+  }
+
+  fetchFromDevOpsUrl(url: string): Observable<FetchedDevOpsTask> {
+    return this.http.post<FetchedDevOpsTask>(`${this.apiUrl}/fetch-from-url`, { url });
   }
 
   updateCandidate(id: number, candidate: Partial<DevOpsTasksCandidate>): Observable<void> {

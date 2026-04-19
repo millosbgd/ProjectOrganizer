@@ -38,6 +38,39 @@
   color: white;
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn-new-task {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: rgba(255,255,255,0.2);
+  color: white;
+  border: 1px solid rgba(255,255,255,0.4);
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.btn-new-task:hover {
+  background: rgba(255,255,255,0.35);
+}
+
+.btn-icon.btn-devops-link {
+  color: #2980b9;
+  text-decoration: none;
+}
+.btn-icon.btn-devops-link:hover {
+  color: #1a5276;
+  background: #eaf4fb;
+}
+
 .close-btn {
   background: rgba(255, 255, 255, 0.2);
   border: none;

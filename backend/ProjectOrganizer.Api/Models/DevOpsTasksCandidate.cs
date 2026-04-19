@@ -32,7 +32,12 @@ public class DevOpsTasksCandidate
     [Required]
     [MaxLength(50)]
     public string Status { get; set; } = "Draft"; // Draft, Sent, Rejected
-    
+
+    public int? DevOpsWorkItemId { get; set; }
+
+    [MaxLength(500)]
+    public string? DevOpsUrl { get; set; }
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     
     // Navigation properties

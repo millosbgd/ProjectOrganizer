@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { DevOpsTasksCandidateService } from '../../services/devops-tasks-candidate.service';
 import { DevOpsTasksCandidate } from '../../models/devops-tasks-candidate.model';
 import { DevOpsTaskEditModalComponent } from '../devops-task-edit-modal/devops-task-edit-modal.component';
+import { DevOpsTaskCreateModalComponent, NewDevOpsTaskForm } from '../devops-task-create-modal/devops-task-create-modal.component';
 
 @Component({
   selector: 'app-devops-tasks-modal',
   standalone: true,
-  imports: [CommonModule, DevOpsTaskEditModalComponent],
+  imports: [CommonModule, DevOpsTaskEditModalComponent, DevOpsTaskCreateModalComponent],
   templateUrl: './devops-tasks-modal.component.html',
   styleUrls: ['./devops-tasks-modal.component.css']
 })
@@ -18,10 +19,13 @@ export class DevOpsTasksModalComponent implements OnInit {
   tasks: DevOpsTasksCandidate[] = [];
   loading = true;
   selectedTasks: Set<number> = new Set();
-  
+
   // Edit modal
   isEditModalOpen = false;
   taskToEdit: DevOpsTasksCandidate | null = null;
+
+  // Create modal
+  isCreateModalOpen = false;
 
   constructor(private devOpsTasksCandidateService: DevOpsTasksCandidateService) {}
 
@@ -59,6 +63,32 @@ export class DevOpsTasksModalComponent implements OnInit {
     return this.selectedTasks.has(taskId);
   }
 
+  // --- Create ---
+  openCreateModal(): void {
+    this.isCreateModalOpen = true;
+  }
+
+  closeCreateModal(): void {
+    this.isCreateModalOpen = false;
+  }
+
+  saveNewTask(form: NewDevOpsTaskForm): void {
+    this.devOpsTasksCandidateService.createCandidate({
+      aktivnostId: this.aktivnostId,
+      ...form
+    }).subscribe({
+      next: () => {
+        this.isCreateModalOpen = false;
+        this.loadTasks();
+      },
+      error: (error) => {
+        console.error('Error creating task:', error);
+        alert('Greška prilikom kreiranja taska.');
+      }
+    });
+  }
+
+  // --- Edit ---
   editTask(task: DevOpsTasksCandidate): void {
     this.taskToEdit = { ...task };
     this.isEditModalOpen = true;
@@ -108,29 +138,21 @@ export class DevOpsTasksModalComponent implements OnInit {
 
   getStatusBadgeClass(status: string): string {
     switch (status) {
-      case 'Draft':
-        return 'badge-draft';
-      case 'Sent':
-        return 'badge-sent';
-      case 'Rejected':
-        return 'badge-rejected';
-      default:
-        return 'badge-draft';
+      case 'Draft': return 'badge-draft';
+      case 'Sent': return 'badge-sent';
+      case 'Rejected': return 'badge-rejected';
+      default: return 'badge-draft';
     }
   }
 
   getPriorityBadgeClass(priority: string | undefined): string {
     if (!priority) return 'badge-medium';
-    
     switch (priority.toLowerCase()) {
-      case 'high':
-        return 'badge-high';
-      case 'medium':
-        return 'badge-medium';
-      case 'low':
-        return 'badge-low';
-      default:
-        return 'badge-medium';
+      case 'critical':
+      case 'high': return 'badge-high';
+      case 'medium': return 'badge-medium';
+      case 'low': return 'badge-low';
+      default: return 'badge-medium';
     }
   }
 }

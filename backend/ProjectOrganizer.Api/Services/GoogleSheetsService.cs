@@ -624,10 +624,11 @@ public class GoogleSheetsService
     private async Task FormatInternalSheetAsync(string spreadsheetId, int dataRowCount, List<int> parentRowIndexes)
     {
         var getRequest = _sheetsService!.Spreadsheets.Get(spreadsheetId);
-        getRequest.Fields = "sheets(properties(sheetId),protectedRanges(protectedRangeId),conditionalFormats)";
+        getRequest.Fields = "sheets(properties(sheetId,title),protectedRanges(protectedRangeId),conditionalFormats)";
         var spreadsheet = await getRequest.ExecuteAsync();
-        var sheetEntry = spreadsheet.Sheets.FirstOrDefault(s => s.Properties.Title == "Interni");
-        var sheetId = sheetEntry?.Properties.SheetId ?? 0;
+        var sheetEntry = spreadsheet.Sheets.FirstOrDefault(s => s.Properties.Title == "Interni")
+                         ?? spreadsheet.Sheets[0];
+        var sheetId = sheetEntry.Properties.SheetId ?? 0;
 
         var requests = new List<Request>();
 
