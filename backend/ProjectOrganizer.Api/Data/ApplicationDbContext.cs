@@ -20,6 +20,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<User> Users { get; set; }
     public DbSet<ProjectPermission> ProjectPermissions { get; set; }
     public DbSet<DevOpsTasksCandidate> DevOpsTasksCandidates { get; set; }
+    public DbSet<DevOpsTaskStatusHistory> DevOpsTaskStatusHistory { get; set; }
     public DbSet<CodebookEntity> CodebookEntities { get; set; }
     public DbSet<Codebook> Codebooks { get; set; }
     public DbSet<ImplementationModel> ImplementationModels { get; set; }

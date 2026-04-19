@@ -1,3 +1,10 @@
+export interface StatusHistoryEntry {
+  status: string;
+  assignedTo?: string;
+  changedDate: string;
+  durationMinutes?: number;
+}
+
 export interface DevOpsTasksCandidate {
   id: number;
   aktivnostId: number;
@@ -12,6 +19,7 @@ export interface DevOpsTasksCandidate {
   createdAt: Date;
   devOpsWorkItemId?: number;
   devOpsUrl?: string;
+  statusHistory?: StatusHistoryEntry[];
   user?: {
     id: number;
     email: string;
@@ -28,4 +36,5 @@ export interface FetchedDevOpsTask {
   priority?: string;
   estimation?: string;
   workItemType?: string;
+  statusHistory?: StatusHistoryEntry[];
 }

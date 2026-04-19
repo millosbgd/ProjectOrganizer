@@ -76,6 +76,28 @@
       </div>
     </div>
 
+    <div *ngIf="task?.statusHistory && task!.statusHistory!.length > 0" class="status-history-section">
+      <h4 class="status-history-title">Istorija statusa</h4>
+      <table class="status-history-table">
+        <thead>
+          <tr>
+            <th>Status</th>
+            <th>Dodeljeno</th>
+            <th>Datum promene</th>
+            <th>Trajanje</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let entry of task!.statusHistory; let last = last" [class.current-status]="last && !entry.durationMinutes">
+            <td><span class="status-badge">{{ entry.status }}</span></td>
+            <td>{{ entry.assignedTo || '—' }}</td>
+            <td>{{ entry.changedDate | date:'dd.MM.yyyy HH:mm' }}</td>
+            <td class="duration">{{ formatDuration(entry.durationMinutes) }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
     <div class="modal-footer">
       <button class="btn-secondary" (click)="onClose()">Otkaži</button>
       <button class="btn-primary" (click)="onSave()">Sačuvaj</button>

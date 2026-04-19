@@ -34,8 +34,8 @@ export class DevOpsTasksCandidateService {
     return this.http.post<any>(this.apiUrl, { orderIndex: 0, ...data });
   }
 
-  fetchFromDevOpsUrl(url: string): Observable<FetchedDevOpsTask> {
-    return this.http.post<FetchedDevOpsTask>(`${this.apiUrl}/fetch-from-url`, { url });
+  fetchFromDevOpsUrl(url: string, candidateId?: number): Observable<FetchedDevOpsTask> {
+    return this.http.post<FetchedDevOpsTask>(`${this.apiUrl}/fetch-from-url`, { url, candidateId });
   }
 
   updateCandidate(id: number, candidate: Partial<DevOpsTasksCandidate>): Observable<void> {

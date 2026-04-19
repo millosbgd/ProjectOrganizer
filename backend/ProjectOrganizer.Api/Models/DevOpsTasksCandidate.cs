@@ -38,6 +38,8 @@ public class DevOpsTasksCandidate
     [MaxLength(500)]
     public string? DevOpsUrl { get; set; }
 
+    public ICollection<DevOpsTaskStatusHistory>? StatusHistory { get; set; }
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     
     // Navigation properties

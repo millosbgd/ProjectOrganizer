@@ -1,7 +1,7 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { DevOpsTasksCandidate } from '../../models/devops-tasks-candidate.model';
+import { DevOpsTasksCandidate, StatusHistoryEntry } from '../../models/devops-tasks-candidate.model';
 import { DevOpsTasksCandidateService } from '../../services/devops-tasks-candidate.service';
 
 @Component({
@@ -34,13 +34,16 @@ export class DevOpsTaskEditModalComponent {
     this.refreshLoading = true;
     this.refreshError = null;
 
-    this.devOpsTasksCandidateService.fetchFromDevOpsUrl(this.task.devOpsUrl).subscribe({
+    this.devOpsTasksCandidateService.fetchFromDevOpsUrl(this.task.devOpsUrl, this.task.id).subscribe({
       next: (fetched) => {
         this.task!.title = fetched.title ?? this.task!.title;
         this.task!.description = fetched.description ?? this.task!.description;
         this.task!.acceptanceCriteria = fetched.acceptanceCriteria ?? this.task!.acceptanceCriteria;
         this.task!.priority = fetched.priority ?? this.task!.priority;
         this.task!.estimation = fetched.estimation ?? this.task!.estimation;
+        if (fetched.statusHistory && fetched.statusHistory.length > 0) {
+          this.task!.statusHistory = fetched.statusHistory;
+        }
         this.refreshLoading = false;
       },
       error: (err) => {
@@ -69,5 +72,14 @@ export class DevOpsTaskEditModalComponent {
     if (event.target === event.currentTarget) {
       this.onClose();
     }
+  }
+
+  formatDuration(minutes?: number): string {
+    if (minutes == null) return 'trenutno';
+    if (minutes < 60) return `${minutes} min`;
+    const h = Math.floor(minutes / 60);
+    const d = Math.floor(h / 24);
+    if (d > 0) return `${d}d ${h % 24}h`;
+    return `${h}h ${minutes % 60 > 0 ? (minutes % 60) + 'min' : ''}`.trim();
   }
 }

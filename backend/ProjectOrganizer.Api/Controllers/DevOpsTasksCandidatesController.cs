@@ -45,6 +45,7 @@ public class DevOpsTasksCandidatesController : ControllerBase
 
             var candidates = await _context.DevOpsTasksCandidates
                 .Include(c => c.User)
+                .Include(c => c.StatusHistory)
                 .Where(c => c.AktivnostId == aktivnostId)
                 .OrderBy(c => c.OrderIndex)
                 .ThenByDescending(c => c.CreatedAt)
@@ -68,7 +69,16 @@ public class DevOpsTasksCandidatesController : ControllerBase
                         c.User!.Id,
                         c.User.Email,
                         c.User.Name
-                    }
+                    },
+                    StatusHistory = c.StatusHistory!
+                        .OrderBy(h => h.ChangedDate)
+                        .Select(h => new
+                        {
+                            h.Status,
+                            h.AssignedTo,
+                            h.ChangedDate,
+                            h.DurationMinutes
+                        })
                 })
                 .ToListAsync();
 
@@ -284,12 +294,115 @@ public class DevOpsTasksCandidatesController : ControllerBase
                 WorkItemType = GetFieldString(fields, "System.WorkItemType")
             };
 
+            // Fetch status history if we have a candidateId
+            if (dto.CandidateId.HasValue)
+            {
+                result.StatusHistory = await FetchAndSaveStatusHistoryAsync(
+                    organization, project, workItemId, dto.CandidateId.Value, client);
+            }
+
             return Ok(result);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error fetching work item from DevOps URL {Url}", dto.Url);
             return StatusCode(500, "Greška pri učitavanju taska iz Azure DevOps.");
+        }
+    }
+
+    private async Task<List<StatusHistoryEntryDto>> FetchAndSaveStatusHistoryAsync(
+        string organization, string project, int workItemId, int candidateId, HttpClient client)
+    {
+        try
+        {
+            var updatesUrl = $"https://dev.azure.com/{organization}/{project}/_apis/wit/workitems/{workItemId}/updates?api-version=7.1";
+            var updatesResponse = await client.GetAsync(updatesUrl);
+            if (!updatesResponse.IsSuccessStatusCode) return new List<StatusHistoryEntryDto>();
+
+            var updatesJson = await updatesResponse.Content.ReadAsStringAsync();
+            using var updatesDoc = JsonDocument.Parse(updatesJson);
+
+            // Build timeline: list of (changedDate, state, assignedTo) from each revision
+            var timeline = new List<(DateTime ChangedDate, string? State, string? AssignedTo)>();
+            string? currentState = null;
+            string? currentAssignedTo = null;
+
+            foreach (var update in updatesDoc.RootElement.GetProperty("value").EnumerateArray())
+            {
+                if (!update.TryGetProperty("fields", out var updFields)) continue;
+                if (!update.TryGetProperty("revisedDate", out var revisedDateEl)) continue;
+                if (!DateTime.TryParse(revisedDateEl.GetString(), out var revisedDate)) continue;
+
+                bool changed = false;
+
+                if (updFields.TryGetProperty("System.State", out var stateEl))
+                {
+                    var newState = stateEl.TryGetProperty("newValue", out var nv) && nv.ValueKind != JsonValueKind.Null
+                        ? nv.GetString() : null;
+                    if (newState != null && newState != currentState)
+                    {
+                        currentState = newState;
+                        changed = true;
+                    }
+                }
+
+                if (updFields.TryGetProperty("System.AssignedTo", out var assignedEl))
+                {
+                    string? newAssigned = null;
+                    if (assignedEl.TryGetProperty("newValue", out var nv2) && nv2.ValueKind != JsonValueKind.Null)
+                    {
+                        newAssigned = nv2.ValueKind == JsonValueKind.Object && nv2.TryGetProperty("displayName", out var dn)
+                            ? dn.GetString() : nv2.GetString();
+                    }
+                    if (newAssigned != currentAssignedTo)
+                    {
+                        currentAssignedTo = newAssigned;
+                        changed = true;
+                    }
+                }
+
+                if (changed && currentState != null)
+                    timeline.Add((revisedDate, currentState, currentAssignedTo));
+            }
+
+            // Calculate duration for each entry
+            var entries = new List<StatusHistoryEntryDto>();
+            for (int i = 0; i < timeline.Count; i++)
+            {
+                var (changedDate, state, assignedTo) = timeline[i];
+                int? durationMinutes = null;
+                if (i + 1 < timeline.Count)
+                    durationMinutes = (int)(timeline[i + 1].ChangedDate - changedDate).TotalMinutes;
+
+                entries.Add(new StatusHistoryEntryDto
+                {
+                    Status = state!,
+                    AssignedTo = assignedTo,
+                    ChangedDate = changedDate,
+                    DurationMinutes = durationMinutes
+                });
+            }
+
+            // Save to DB: delete existing and insert fresh
+            var existing = _context.DevOpsTaskStatusHistory.Where(h => h.DevOpsTaskCandidateId == candidateId);
+            _context.DevOpsTaskStatusHistory.RemoveRange(existing);
+
+            _context.DevOpsTaskStatusHistory.AddRange(entries.Select(e => new DevOpsTaskStatusHistory
+            {
+                DevOpsTaskCandidateId = candidateId,
+                Status = e.Status,
+                AssignedTo = e.AssignedTo,
+                ChangedDate = e.ChangedDate,
+                DurationMinutes = e.DurationMinutes
+            }));
+
+            await _context.SaveChangesAsync();
+            return entries;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to fetch status history for work item {WorkItemId}", workItemId);
+            return new List<StatusHistoryEntryDto>();
         }
     }
 
@@ -400,6 +513,10 @@ public class CreateDevOpsTaskCandidateDto
 public class FetchFromDevOpsUrlDto
 {
     public string Url { get; set; } = string.Empty;
+    /// <summary>
+    /// Optional — if provided, status history will be fetched and saved.
+    /// </summary>
+    public int? CandidateId { get; set; }
 }
 
 public class FetchedDevOpsTaskDto
@@ -412,4 +529,13 @@ public class FetchedDevOpsTaskDto
     public string? Priority { get; set; }
     public string? Estimation { get; set; }
     public string? WorkItemType { get; set; }
+    public List<StatusHistoryEntryDto> StatusHistory { get; set; } = new();
+}
+
+public class StatusHistoryEntryDto
+{
+    public string Status { get; set; } = string.Empty;
+    public string? AssignedTo { get; set; }
+    public DateTime ChangedDate { get; set; }
+    public int? DurationMinutes { get; set; }
 }
