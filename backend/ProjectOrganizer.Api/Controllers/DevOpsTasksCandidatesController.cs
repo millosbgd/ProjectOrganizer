@@ -358,7 +358,7 @@ public class DevOpsTasksCandidatesController : ControllerBase
         // Remove HTML tags using regex
         return System.Text.RegularExpressions.Regex.Replace(html, "<[^>]*(>|$)", string.Empty).Trim();
     }
-
+}
 
 public class UpdateStatusDto
 {
