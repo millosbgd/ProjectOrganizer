@@ -438,16 +438,25 @@ public class DevOpsTasksCandidatesController : ControllerBase
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", token);
             client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
-            // Get all unique org+project combos from configured projects
-            var devOpsProjects = await _context.Projekti
-                .Where(p => p.DevOpsOrganization != null && p.DevOpsOrganization != "" &&
-                            p.DevOpsProject != null && p.DevOpsProject != "")
-                .Select(p => new { p.DevOpsOrganization, p.DevOpsProject })
+            // Get all unique org+project combos from connected DevOps tasks
+            var connectedUrls = await _context.DevOpsTasksCandidates
+                .Where(t => t.DevOpsUrl != null && t.DevOpsUrl != "")
+                .Select(t => t.DevOpsUrl!)
                 .Distinct()
                 .ToListAsync();
 
+            var devOpsProjects = connectedUrls
+                .Select(url =>
+                {
+                    TryParseDevOpsUrl(url, out var org, out var proj, out _);
+                    return new { DevOpsOrganization = org, DevOpsProject = proj };
+                })
+                .Where(x => !string.IsNullOrEmpty(x.DevOpsOrganization) && !string.IsNullOrEmpty(x.DevOpsProject))
+                .DistinctBy(x => $"{x.DevOpsOrganization}|{x.DevOpsProject}")
+                .ToList();
+
             if (!devOpsProjects.Any())
-                return BadRequest(new { message = "Nema projekata sa podešenom Azure DevOps organizacijom i projektom." });
+                return BadRequest(new { message = "Nema konektovanih DevOps taskova na osnovu kojih bi se odredila organizacija i projekat." });
 
             // key = "uniqueName|organization"
             var collectedUsers = new Dictionary<string, DevOpsUser>(StringComparer.OrdinalIgnoreCase);
