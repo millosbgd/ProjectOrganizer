@@ -74,12 +74,15 @@ export class DevOpsTaskEditModalComponent {
     }
   }
 
-  formatDuration(minutes?: number): string {
-    if (minutes == null) return 'trenutno';
-    if (minutes < 60) return `${minutes} min`;
-    const h = Math.floor(minutes / 60);
-    const d = Math.floor(h / 24);
-    if (d > 0) return `${d}d ${h % 24}h`;
-    return `${h}h ${minutes % 60 > 0 ? (minutes % 60) + 'min' : ''}`.trim();
+  formatDuration(minutes?: number, isActive?: boolean): string {
+    const base = minutes != null && minutes > 0 ? (() => {
+      if (minutes < 60) return `${minutes} min`;
+      const h = Math.floor(minutes / 60);
+      const d = Math.floor(h / 24);
+      if (d > 0) return `${d}d ${h % 24}h`;
+      return `${h}h ${minutes % 60 > 0 ? (minutes % 60) + 'min' : ''}`.trim();
+    })() : null;
+    if (isActive) return base ? `${base} + trenutno aktivno` : 'trenutno aktivno';
+    return base ?? '—';
   }
 }

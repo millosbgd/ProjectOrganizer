@@ -83,16 +83,14 @@
           <tr>
             <th>Status</th>
             <th>Dodeljeno</th>
-            <th>Datum promene</th>
-            <th>Trajanje</th>
+            <th>Ukupno trajanje</th>
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let entry of task!.statusHistory; let last = last" [class.current-status]="last && !entry.durationMinutes">
+          <tr *ngFor="let entry of task!.statusHistory" [class.current-status]="entry.isActive">
             <td><span class="status-badge">{{ entry.status }}</span></td>
             <td>{{ entry.assignedTo || '—' }}</td>
-            <td>{{ entry.changedDate | date:'dd.MM.yyyy HH:mm' }}</td>
-            <td class="duration">{{ formatDuration(entry.durationMinutes) }}</td>
+            <td class="duration">{{ formatDuration(entry.totalDurationMinutes, entry.isActive) }}</td>
           </tr>
         </tbody>
       </table>

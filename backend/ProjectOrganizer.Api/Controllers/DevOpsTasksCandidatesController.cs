@@ -43,44 +43,47 @@ public class DevOpsTasksCandidatesController : ControllerBase
         {
             var currentUser = await _userService.EnsureUserExistsAsync(User);
 
-            var candidates = await _context.DevOpsTasksCandidates
+            var candidateEntities = await _context.DevOpsTasksCandidates
                 .Include(c => c.User)
                 .Include(c => c.StatusHistory)
                 .Where(c => c.AktivnostId == aktivnostId)
                 .OrderBy(c => c.OrderIndex)
                 .ThenByDescending(c => c.CreatedAt)
-                .Select(c => new
-                {
-                    c.Id,
-                    c.AktivnostId,
-                    c.UserId,
-                    c.Title,
-                    c.Description,
-                    c.AcceptanceCriteria,
-                    c.Priority,
-                    c.Estimation,
-                    c.OrderIndex,
-                    c.Status,
-                    c.CreatedAt,
-                    c.DevOpsWorkItemId,
-                    c.DevOpsUrl,
-                    User = new
-                    {
-                        c.User!.Id,
-                        c.User.Email,
-                        c.User.Name
-                    },
-                    StatusHistory = c.StatusHistory!
-                        .OrderBy(h => h.ChangedDate)
-                        .Select(h => new
-                        {
-                            h.Status,
-                            h.AssignedTo,
-                            h.ChangedDate,
-                            h.DurationMinutes
-                        })
-                })
                 .ToListAsync();
+
+            var candidates = candidateEntities.Select(c => new
+            {
+                c.Id,
+                c.AktivnostId,
+                c.UserId,
+                c.Title,
+                c.Description,
+                c.AcceptanceCriteria,
+                c.Priority,
+                c.Estimation,
+                c.OrderIndex,
+                c.Status,
+                c.CreatedAt,
+                c.DevOpsWorkItemId,
+                c.DevOpsUrl,
+                User = c.User == null ? null : new
+                {
+                    c.User.Id,
+                    c.User.Email,
+                    c.User.Name
+                },
+                StatusHistory = (c.StatusHistory ?? Enumerable.Empty<DevOpsTaskStatusHistory>())
+                    .GroupBy(h => new { h.AssignedTo, h.Status })
+                    .OrderBy(g => g.Min(h => h.ChangedDate))
+                    .Select(g => new
+                    {
+                        g.Key.Status,
+                        g.Key.AssignedTo,
+                        TotalDurationMinutes = g.Where(h => h.DurationMinutes.HasValue).Sum(h => h.DurationMinutes),
+                        IsActive = g.Any(h => !h.DurationMinutes.HasValue)
+                    })
+                    .ToList()
+            });
 
             return Ok(candidates);
         }
@@ -365,8 +368,8 @@ public class DevOpsTasksCandidatesController : ControllerBase
                     timeline.Add((revisedDate, currentState, currentAssignedTo));
             }
 
-            // Calculate duration for each entry
-            var entries = new List<StatusHistoryEntryDto>();
+            // Calculate duration for each raw entry
+            var rawEntries = new List<(string Status, string? AssignedTo, DateTime ChangedDate, int? DurationMinutes)>();
             for (int i = 0; i < timeline.Count; i++)
             {
                 var (changedDate, state, assignedTo) = timeline[i];
@@ -374,20 +377,14 @@ public class DevOpsTasksCandidatesController : ControllerBase
                 if (i + 1 < timeline.Count)
                     durationMinutes = (int)(timeline[i + 1].ChangedDate - changedDate).TotalMinutes;
 
-                entries.Add(new StatusHistoryEntryDto
-                {
-                    Status = state!,
-                    AssignedTo = assignedTo,
-                    ChangedDate = changedDate,
-                    DurationMinutes = durationMinutes
-                });
+                rawEntries.Add((state!, assignedTo, changedDate, durationMinutes));
             }
 
-            // Save to DB: delete existing and insert fresh
+            // Save raw entries to DB
             var existing = _context.DevOpsTaskStatusHistory.Where(h => h.DevOpsTaskCandidateId == candidateId);
             _context.DevOpsTaskStatusHistory.RemoveRange(existing);
 
-            _context.DevOpsTaskStatusHistory.AddRange(entries.Select(e => new DevOpsTaskStatusHistory
+            _context.DevOpsTaskStatusHistory.AddRange(rawEntries.Select(e => new DevOpsTaskStatusHistory
             {
                 DevOpsTaskCandidateId = candidateId,
                 Status = e.Status,
@@ -397,7 +394,19 @@ public class DevOpsTasksCandidatesController : ControllerBase
             }));
 
             await _context.SaveChangesAsync();
-            return entries;
+
+            // Return grouped by (AssignedTo, Status)
+            return rawEntries
+                .GroupBy(e => new { e.AssignedTo, e.Status })
+                .OrderBy(g => g.Min(e => e.ChangedDate))
+                .Select(g => new StatusHistoryEntryDto
+                {
+                    Status = g.Key.Status,
+                    AssignedTo = g.Key.AssignedTo,
+                    TotalDurationMinutes = g.Where(e => e.DurationMinutes.HasValue).Sum(e => (int?)e.DurationMinutes),
+                    IsActive = g.Any(e => !e.DurationMinutes.HasValue)
+                })
+                .ToList();
         }
         catch (Exception ex)
         {
@@ -536,6 +545,6 @@ public class StatusHistoryEntryDto
 {
     public string Status { get; set; } = string.Empty;
     public string? AssignedTo { get; set; }
-    public DateTime ChangedDate { get; set; }
-    public int? DurationMinutes { get; set; }
+    public int? TotalDurationMinutes { get; set; }
+    public bool IsActive { get; set; }
 }

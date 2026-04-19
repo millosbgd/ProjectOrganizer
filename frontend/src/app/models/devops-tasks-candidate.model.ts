@@ -1,8 +1,8 @@
 export interface StatusHistoryEntry {
   status: string;
   assignedTo?: string;
-  changedDate: string;
-  durationMinutes?: number;
+  totalDurationMinutes?: number;
+  isActive: boolean;
 }
 
 export interface DevOpsTasksCandidate {
