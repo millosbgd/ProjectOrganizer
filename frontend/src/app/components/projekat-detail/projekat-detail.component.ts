@@ -20,12 +20,13 @@ import { ProjectImplementationItem } from '../../models/project-implementation-i
 import { DevOpsTasksCandidate } from '../../models/devops-tasks-candidate.model';
 import { AktivnostModalComponent } from '../aktivnost-modal/aktivnost-modal.component';
 import { ImplementationItemModalComponent } from '../implementation-item-modal/implementation-item-modal.component';
+import { DevOpsTaskEditModalComponent } from '../devops-task-edit-modal/devops-task-edit-modal.component';
 import { GoogleSheetsService } from '../../services/google-sheets.service';
 
 @Component({
   selector: 'app-projekat-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, AktivnostModalComponent, ImplementationItemModalComponent],
+  imports: [CommonModule, FormsModule, RouterModule, AktivnostModalComponent, ImplementationItemModalComponent, DevOpsTaskEditModalComponent],
   templateUrl: './projekat-detail.component.html',
   styleUrls: ['./projekat-detail.component.css']
 })
@@ -68,9 +69,11 @@ export class ProjekatDetailComponent implements OnInit {
   showAktivnostModal = false;
   showImplementationItemModal = false;
   currentImplementationItem: ProjectImplementationItem | null = null;
+  currentDevOpsTask: DevOpsTasksCandidate | null = null;
   openDropdownId: number | null = null;
   showDokumentiSidebar = false;
   showNotesSidebar = false;
+  showDevOpsTaskEditModal = false;
   currentNote: string = '';
   editingNoteId: number | null = null;
 
@@ -221,6 +224,51 @@ export class ProjekatDetailComponent implements OnInit {
       case 'low': return 'devops-priority-low';
       case 'medium':
       default: return 'devops-priority-medium';
+    }
+  }
+
+  editDevOpsTask(task: DevOpsTasksCandidate): void {
+    this.currentDevOpsTask = { ...task };
+    this.showDevOpsTaskEditModal = true;
+  }
+
+  closeDevOpsTaskEditModal(): void {
+    this.showDevOpsTaskEditModal = false;
+    this.currentDevOpsTask = null;
+  }
+
+  saveDevOpsTask(task: DevOpsTasksCandidate): void {
+    this.devOpsTasksCandidateService.updateCandidate(task.id, {
+      title: task.title,
+      description: task.description,
+      acceptanceCriteria: task.acceptanceCriteria,
+      priority: task.priority,
+      estimation: task.estimation,
+      orderIndex: task.orderIndex,
+      status: task.status
+    }).subscribe({
+      next: () => {
+        this.closeDevOpsTaskEditModal();
+        this.loadDevOpsTasks(this.projekat.id);
+      },
+      error: (error) => {
+        console.error('Error updating DevOps task:', error);
+        alert('Greška prilikom ažuriranja taska.');
+      }
+    });
+  }
+
+  deleteDevOpsTask(taskId: number): void {
+    if (confirm('Da li ste sigurni da želite da obrišete ovaj task?')) {
+      this.devOpsTasksCandidateService.deleteCandidate(taskId).subscribe({
+        next: () => {
+          this.loadDevOpsTasks(this.projekat.id);
+        },
+        error: (error) => {
+          console.error('Error deleting DevOps task:', error);
+          alert('Greška prilikom brisanja taska.');
+        }
+      });
     }
   }
 
