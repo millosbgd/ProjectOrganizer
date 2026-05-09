@@ -18,3 +18,30 @@
 .sheet-toast.error{background:#ef4444}
 .sheet-toast svg{flex-shrink:0}
 @keyframes sheetSlideDown{from{opacity:0;transform:translateX(-50%) translateY(-20px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+.project-devops-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:16px;margin-top:20px}
+.project-devops-card{border:1px solid #e0e0e0;border-radius:8px;background:#fff;padding:16px;display:flex;flex-direction:column;gap:14px;transition:border-color .2s,box-shadow .2s,transform .2s}
+.project-devops-card:hover{border-color:#5dade2;box-shadow:0 4px 12px rgba(52,152,219,.12);transform:translateY(-2px)}
+.project-devops-card-header{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.project-devops-title-wrap{min-width:0;flex:1}
+.project-devops-title-wrap h4{margin:0;color:#2c3e50;font-size:16px;line-height:1.35}
+.project-devops-origin{margin-top:6px;color:#666;font-size:12px;line-height:1.4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.project-devops-badges{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end;flex-shrink:0}
+.project-devops-badge{padding:4px 10px;border-radius:12px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.3px;white-space:nowrap}
+.devops-status-draft{background:#e3f2fd;color:#1565c0}
+.devops-status-sent{background:#e8f5e9;color:#2e7d32}
+.devops-status-rejected{background:#ffebee;color:#c62828}
+.devops-priority-high{background:#ffebee;color:#c62828}
+.devops-priority-medium{background:#fff3e0;color:#ef6c00}
+.devops-priority-low{background:#e8f5e9;color:#2e7d32}
+.project-devops-body{display:flex;flex-direction:column;gap:12px}
+.project-devops-section label{display:block;margin-bottom:5px;color:#555;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.3px}
+.project-devops-html{color:#555;font-size:13px;line-height:1.5;max-height:140px;overflow:auto;padding-right:4px}
+.project-devops-html p{margin:0 0 6px 0}
+.project-devops-html ul,.project-devops-html ol{margin:4px 0 6px 18px;padding:0}
+.project-devops-meta{display:flex;align-items:flex-end;flex-wrap:wrap;gap:12px;padding-top:12px;border-top:1px solid #eee;margin-top:auto}
+.project-devops-meta-item{display:flex;flex-direction:column;gap:3px}
+.project-devops-meta-item span{font-size:11px;color:#999;text-transform:uppercase;letter-spacing:.3px}
+.project-devops-meta-item strong{font-size:13px;color:#333;font-weight:600}
+.project-devops-link{margin-left:auto;color:#2980b9;text-decoration:none;font-size:13px;font-weight:600}
+.project-devops-link:hover{text-decoration:underline}
+@media (max-width:768px){.project-devops-grid{grid-template-columns:1fr}.project-devops-card-header{flex-direction:column}.project-devops-badges{justify-content:flex-start}.project-devops-link{margin-left:0}}

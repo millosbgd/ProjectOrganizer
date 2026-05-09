@@ -9,6 +9,7 @@ import { DokumentService } from '../../services/dokument.service';
 import { NoteService } from '../../services/note.service';
 import { ImplementationModelService } from '../../services/implementation-model.service';
 import { ProjectImplementationItemService } from '../../services/project-implementation-item.service';
+import { DevOpsTasksCandidateService } from '../../services/devops-tasks-candidate.service';
 import { Projekat } from '../../models/projekat.model';
 import { Klijent } from '../../models/klijent.model';
 import { Aktivnost } from '../../models/aktivnost.model';
@@ -16,6 +17,7 @@ import { Dokument } from '../../models/dokument.model';
 import { Note } from '../../models/note.model';
 import { ImplementationModel } from '../../models/implementation-model.model';
 import { ProjectImplementationItem } from '../../models/project-implementation-item.model';
+import { DevOpsTasksCandidate } from '../../models/devops-tasks-candidate.model';
 import { AktivnostModalComponent } from '../aktivnost-modal/aktivnost-modal.component';
 import { ImplementationItemModalComponent } from '../implementation-item-modal/implementation-item-modal.component';
 import { GoogleSheetsService } from '../../services/google-sheets.service';
@@ -43,13 +45,15 @@ export class ProjekatDetailComponent implements OnInit {
   implementationModels: ImplementationModel[] = [];
   aktivnosti: Aktivnost[] = [];
   implementationItems: ProjectImplementationItem[] = [];
+  devOpsTasks: DevOpsTasksCandidate[] = [];
   dokumenti: Dokument[] = [];
   notes: Note[] = [];
   isEditMode = false;
   isNewMode = false;
   loading = true;
+  loadingDevOpsTasks = false;
   uploadingFile = false;
-  activeTab: 'aktivnosti' | 'implementacija' = 'aktivnosti';
+  activeTab: 'aktivnosti' | 'implementacija' | 'devops' = 'aktivnosti';
   
   currentAktivnost: Aktivnost = {
     id: 0,
@@ -88,6 +92,7 @@ export class ProjekatDetailComponent implements OnInit {
     private aktivnostService: AktivnostService,
     private implementationModelService: ImplementationModelService,
     private implementationItemService: ProjectImplementationItemService,
+    private devOpsTasksCandidateService: DevOpsTasksCandidateService,
     private googleSheetsService: GoogleSheetsService,
     private route: ActivatedRoute,
     private router: Router
@@ -108,13 +113,18 @@ export class ProjekatDetailComponent implements OnInit {
       this.loadProjekat(+id);
       this.loadAktivnosti(+id);
       this.loadImplementationItems(+id);
+      this.loadDevOpsTasks(+id);
       this.loadDokumenti(+id);
       this.loadNotes(+id);
     }
   }
 
-  setActiveTab(tab: 'aktivnosti' | 'implementacija'): void {
+  setActiveTab(tab: 'aktivnosti' | 'implementacija' | 'devops'): void {
     this.activeTab = tab;
+
+    if (tab === 'devops' && !this.loadingDevOpsTasks && this.devOpsTasks.length === 0 && this.projekat.id) {
+      this.loadDevOpsTasks(this.projekat.id);
+    }
   }
 
   loadKlijenti(): void {
@@ -177,6 +187,41 @@ export class ProjekatDetailComponent implements OnInit {
         console.error('Error loading implementation items:', error);
       }
     });
+  }
+
+  loadDevOpsTasks(projekatId: number): void {
+    this.loadingDevOpsTasks = true;
+    this.devOpsTasksCandidateService.getCandidatesForProject(projekatId).subscribe({
+      next: (data) => {
+        this.devOpsTasks = data;
+        this.loadingDevOpsTasks = false;
+      },
+      error: (error) => {
+        console.error('Error loading DevOps tasks:', error);
+        this.loadingDevOpsTasks = false;
+      }
+    });
+  }
+
+  getDevOpsTaskStatusClass(status: string): string {
+    switch (status) {
+      case 'Sent': return 'devops-status-sent';
+      case 'Rejected': return 'devops-status-rejected';
+      case 'Draft':
+      default: return 'devops-status-draft';
+    }
+  }
+
+  getDevOpsPriorityClass(priority?: string): string {
+    if (!priority) return 'devops-priority-medium';
+
+    switch (priority.toLowerCase()) {
+      case 'critical':
+      case 'high': return 'devops-priority-high';
+      case 'low': return 'devops-priority-low';
+      case 'medium':
+      default: return 'devops-priority-medium';
+    }
   }
 
   openImplementationItemModal(item: ProjectImplementationItem): void {
@@ -265,7 +310,11 @@ export class ProjekatDetailComponent implements OnInit {
         aiPracen: this.projekat.aiPracen ?? false,
         status: this.projekat.status,
         klijentId: this.projekat.klijentId,
-        implementationModelId: this.projekat.implementationModelId
+        implementationModelId: this.projekat.implementationModelId,
+        devOpsOrganization: this.projekat.devOpsOrganization,
+        devOpsProject: this.projekat.devOpsProject,
+        devOpsAreaPath: this.projekat.devOpsAreaPath,
+        devOpsIterationPath: this.projekat.devOpsIterationPath
       };
 
       this.projekatService.create(projekatToSave as any).subscribe({

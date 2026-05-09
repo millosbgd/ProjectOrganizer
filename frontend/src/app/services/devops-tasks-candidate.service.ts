@@ -16,6 +16,10 @@ export class DevOpsTasksCandidateService {
     return this.http.get<DevOpsTasksCandidate[]>(`${this.apiUrl}/aktivnost/${aktivnostId}`);
   }
 
+  getCandidatesForProject(projectId: number): Observable<DevOpsTasksCandidate[]> {
+    return this.http.get<DevOpsTasksCandidate[]>(`${this.apiUrl}/project/${projectId}`);
+  }
+
   getCandidate(id: number): Observable<DevOpsTasksCandidate> {
     return this.http.get<DevOpsTasksCandidate>(`${this.apiUrl}/${id}`);
   }

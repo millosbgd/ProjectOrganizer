@@ -14,11 +14,11 @@ GO
 -- Korak 2: Ubaci vrednosti šifarnika za DevOps uloge
 IF NOT EXISTS (SELECT * FROM Codebooks WHERE EntityTypeId = 2 AND Code = 'TL')
 BEGIN
-    INSERT INTO Codebooks (EntityTypeId, Type, Code, Value, OrderIndex, IsActive)
+    INSERT INTO Codebooks (EntityTypeId, Code, Value, OrderIndex, IsActive)
     VALUES
-        (2, 'DevOpsRole', 'TL',         'Team Leader', 1, 1),
-        (2, 'DevOpsRole', 'KONSULTANT', 'Konsultant',  2, 1),
-        (2, 'DevOpsRole', 'PROGRAMER',  'Programer',   3, 1);
+        (2, 'TL',         'Team Leader', 1, 1),
+        (2, 'KONSULTANT', 'Konsultant',  2, 1),
+        (2, 'PROGRAMER',  'Programer',   3, 1);
 END
 GO
 

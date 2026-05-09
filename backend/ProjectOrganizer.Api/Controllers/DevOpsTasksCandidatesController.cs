@@ -103,6 +103,92 @@ public class DevOpsTasksCandidatesController : ControllerBase
         }
     }
 
+    // GET: api/devopstaskscandidates/project/{projectId}
+    [HttpGet("project/{projectId}")]
+    public async Task<ActionResult<IEnumerable<object>>> GetCandidatesForProject(int projectId)
+    {
+        try
+        {
+            var currentUser = await _userService.EnsureUserExistsAsync(User);
+
+            if (currentUser.Role != "Admin")
+            {
+                var hasPermission = await _context.ProjectPermissions
+                    .AnyAsync(p => p.ProjekatId == projectId && p.UserId == currentUser.Id);
+
+                if (!hasPermission)
+                    return Forbid();
+            }
+
+            var candidateEntities = await _context.DevOpsTasksCandidates
+                .Include(c => c.User)
+                .Include(c => c.StatusHistory)
+                .Include(c => c.Aktivnost)
+                .Where(c => c.Aktivnost != null && c.Aktivnost.ProjekatId == projectId)
+                .OrderByDescending(c => c.CreatedAt)
+                .ThenBy(c => c.OrderIndex)
+                .ToListAsync();
+
+            var roleDict = await _context.DevOpsUsers
+                .Where(u => u.RoleId != null)
+                .Join(_context.Codebooks, u => u.RoleId, cb => cb.Id, (u, cb) => new { u.DisplayName, cb.Value })
+                .GroupBy(x => x.DisplayName)
+                .Select(g => new { DisplayName = g.Key, RoleName = g.First().Value })
+                .ToDictionaryAsync(x => x.DisplayName, x => x.RoleName);
+
+            var candidates = candidateEntities.Select(c => new
+            {
+                c.Id,
+                c.AktivnostId,
+                c.UserId,
+                c.Title,
+                c.Description,
+                c.AcceptanceCriteria,
+                c.Priority,
+                c.Estimation,
+                c.OrderIndex,
+                c.Status,
+                c.CreatedAt,
+                c.DevOpsWorkItemId,
+                c.DevOpsUrl,
+                Aktivnost = c.Aktivnost == null ? null : new
+                {
+                    c.Aktivnost.Id,
+                    c.Aktivnost.Opis,
+                    c.Aktivnost.Datum,
+                    c.Aktivnost.Status,
+                    c.Aktivnost.Vrsta
+                },
+                User = c.User == null ? null : new
+                {
+                    c.User.Id,
+                    c.User.Email,
+                    c.User.Name
+                },
+                StatusHistory = (c.StatusHistory ?? Enumerable.Empty<DevOpsTaskStatusHistory>())
+                    .GroupBy(h => new { h.AssignedTo, h.Status })
+                    .OrderByDescending(g => g.Max(h => h.ChangedDate))
+                    .Select(g => new
+                    {
+                        g.Key.Status,
+                        g.Key.AssignedTo,
+                        RoleName = g.Key.AssignedTo != null && roleDict.TryGetValue(g.Key.AssignedTo, out var r) ? r : null,
+                        TotalDurationMinutes = g.Where(h => h.DurationMinutes.HasValue).Sum(h => h.DurationMinutes),
+                        IsActive = g.Any(h => !h.DurationMinutes.HasValue),
+                        LastStartedAt = g.Max(h => h.ChangedDate)
+                    })
+                    .ToList()
+            });
+
+            return Ok(candidates);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting DevOps task candidates for project {ProjectId}", projectId);
+            return StatusCode(500, "Error retrieving project task candidates");
+        }
+    }
+
     // GET: api/devopstaskscandidates/{id}
     [HttpGet("{id}")]
     public async Task<ActionResult<DevOpsTasksCandidate>> GetCandidate(int id)

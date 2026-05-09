@@ -169,6 +169,12 @@
           *ngIf="projekat.implementationModelId">
           Stavke implementacije
         </button>
+        <button 
+          class="tab-button" 
+          [class.active]="activeTab === 'devops'"
+          (click)="setActiveTab('devops')">
+          DevOps taskovi
+        </button>
       </div>
 
       <!-- Aktivnosti Tab Content -->
@@ -316,6 +322,79 @@
 
         <div *ngIf="implementationItems.length === 0" class="no-data">
           Nema stavki implementacije. Izaberite model implementacije u podacima projekta.
+        </div>
+      </div>
+
+      <!-- DevOps Tasks Tab Content -->
+      <div class="tab-content" *ngIf="activeTab === 'devops'">
+        <div class="card-header-with-action">
+          <h3>DevOps taskovi</h3>
+          <button class="btn-secondary" (click)="loadDevOpsTasks(projekat.id)" [disabled]="loadingDevOpsTasks">
+            {{ loadingDevOpsTasks ? 'Učitavanje...' : 'Osveži' }}
+          </button>
+        </div>
+
+        <div *ngIf="loadingDevOpsTasks" class="loading">
+          Učitavanje DevOps taskova...
+        </div>
+
+        <div *ngIf="!loadingDevOpsTasks && devOpsTasks.length === 0" class="no-data">
+          Nema DevOps taskova vezanih za ovaj projekat.
+        </div>
+
+        <div *ngIf="!loadingDevOpsTasks && devOpsTasks.length > 0" class="project-devops-grid">
+          <div class="project-devops-card" *ngFor="let task of devOpsTasks">
+            <div class="project-devops-card-header">
+              <div class="project-devops-title-wrap">
+                <h4>{{ task.title }}</h4>
+                <div class="project-devops-origin" *ngIf="task.aktivnost">
+                  Aktivnost: {{ task.aktivnost.opis }}
+                </div>
+              </div>
+              <div class="project-devops-badges">
+                <span class="project-devops-badge" [ngClass]="getDevOpsTaskStatusClass(task.status)">
+                  {{ task.status }}
+                </span>
+                <span class="project-devops-badge" [ngClass]="getDevOpsPriorityClass(task.priority)" *ngIf="task.priority">
+                  {{ task.priority }}
+                </span>
+              </div>
+            </div>
+
+            <div class="project-devops-body">
+              <div class="project-devops-section" *ngIf="task.description">
+                <label>Opis</label>
+                <div class="project-devops-html" [innerHTML]="task.description"></div>
+              </div>
+
+              <div class="project-devops-section" *ngIf="task.acceptanceCriteria">
+                <label>Acceptance Criteria</label>
+                <div class="project-devops-html" [innerHTML]="task.acceptanceCriteria"></div>
+              </div>
+            </div>
+
+            <div class="project-devops-meta">
+              <div class="project-devops-meta-item" *ngIf="task.devOpsWorkItemId">
+                <span>ADO #</span>
+                <strong>{{ task.devOpsWorkItemId }}</strong>
+              </div>
+              <div class="project-devops-meta-item" *ngIf="task.estimation">
+                <span>Procena</span>
+                <strong>{{ task.estimation }}</strong>
+              </div>
+              <div class="project-devops-meta-item" *ngIf="task.aktivnost">
+                <span>Datum aktivnosti</span>
+                <strong>{{ task.aktivnost.datum | date:'dd.MM.yyyy' }}</strong>
+              </div>
+              <div class="project-devops-meta-item">
+                <span>Kreirao</span>
+                <strong>{{ task.user?.name || task.user?.email || '-' }}</strong>
+              </div>
+              <a *ngIf="task.devOpsUrl" class="project-devops-link" [href]="task.devOpsUrl" target="_blank" rel="noopener noreferrer">
+                Otvori u DevOps-u
+              </a>
+            </div>
+          </div>
         </div>
       </div>
     </div>

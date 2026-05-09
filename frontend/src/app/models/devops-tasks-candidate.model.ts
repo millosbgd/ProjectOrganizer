@@ -22,6 +22,13 @@ export interface DevOpsTasksCandidate {
   devOpsWorkItemId?: number;
   devOpsUrl?: string;
   statusHistory?: StatusHistoryEntry[];
+  aktivnost?: {
+    id: number;
+    opis: string;
+    datum: Date | string;
+    status: string;
+    vrsta: string;
+  };
   user?: {
     id: number;
     email: string;
