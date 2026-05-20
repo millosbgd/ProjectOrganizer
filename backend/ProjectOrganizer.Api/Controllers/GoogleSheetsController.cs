@@ -134,7 +134,7 @@ public class GoogleSheetsController : ControllerBase
             var spreadsheetId = await _googleSheetsService.CreateOrUpdateInternalSheetAsync(
                 projekat, items, existingSheetId);
 
-            if (string.IsNullOrEmpty(existingSheetId))
+            if (spreadsheetId != existingSheetId)
             {
                 projekat.InternalGoogleSheetId = spreadsheetId;
                 await _context.SaveChangesAsync();

@@ -1,5 +1,6 @@
 using Azure.Identity;
 using Azure.Security.KeyVault.Secrets;
+using Google;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Auth.OAuth2.Flows;
 using Google.Apis.Auth.OAuth2.Responses;
@@ -490,43 +491,88 @@ public class GoogleSheetsService
 
         if (!string.IsNullOrEmpty(existingSpreadsheetId))
         {
-            spreadsheetId = existingSpreadsheetId;
-            // Clear only the "Interni" sheet
-            var clearRequest = _sheetsService!.Spreadsheets.Values.Clear(
-                new ClearValuesRequest(), spreadsheetId, "Interni");
-            await clearRequest.ExecuteAsync();
+            try
+            {
+                spreadsheetId = existingSpreadsheetId;
+                await EnsureInternalSheetExistsAndClearAsync(spreadsheetId);
+            }
+            catch (GoogleApiException gex) when (gex.HttpStatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                _logger.LogWarning(gex,
+                    "Stored internal spreadsheet {SpreadsheetId} was not found. Creating a new internal sheet for project {ProjectId}.",
+                    existingSpreadsheetId, projekat.Id);
+
+                spreadsheetId = await CreateInternalSpreadsheetAsync(projekat);
+            }
         }
         else
         {
-            var spreadsheet = new Spreadsheet
-            {
-                Properties = new SpreadsheetProperties
-                {
-                    Title = $"Interni izveštaj - {projekat.Naziv}"
-                },
-                Sheets = new List<Sheet>
-                {
-                    new Sheet
-                    {
-                        Properties = new SheetProperties { Title = "Interni" }
-                    }
-                }
-            };
-            var created = await _sheetsService!.Spreadsheets.Create(spreadsheet).ExecuteAsync();
-            spreadsheetId = created.SpreadsheetId;
-
-            // Set public read-only access
-            var permission = new Google.Apis.Drive.v3.Data.Permission
-            {
-                Type = "anyone",
-                Role = "reader"
-            };
-            await _driveService!.Permissions.Create(permission, spreadsheetId).ExecuteAsync();
+            spreadsheetId = await CreateInternalSpreadsheetAsync(projekat);
         }
 
         await WriteInternalDataAsync(spreadsheetId, projekat, items);
 
         return spreadsheetId;
+    }
+
+    private async Task<string> CreateInternalSpreadsheetAsync(Projekat projekat)
+    {
+        var spreadsheet = new Spreadsheet
+        {
+            Properties = new SpreadsheetProperties
+            {
+                Title = $"Interni izveštaj - {projekat.Naziv}"
+            },
+            Sheets = new List<Sheet>
+            {
+                new Sheet
+                {
+                    Properties = new SheetProperties { Title = "Interni" }
+                }
+            }
+        };
+
+        var created = await _sheetsService!.Spreadsheets.Create(spreadsheet).ExecuteAsync();
+
+        var permission = new Google.Apis.Drive.v3.Data.Permission
+        {
+            Type = "anyone",
+            Role = "reader"
+        };
+        await _driveService!.Permissions.Create(permission, created.SpreadsheetId).ExecuteAsync();
+
+        return created.SpreadsheetId;
+    }
+
+    private async Task EnsureInternalSheetExistsAndClearAsync(string spreadsheetId)
+    {
+        var getRequest = _sheetsService!.Spreadsheets.Get(spreadsheetId);
+        getRequest.Fields = "sheets(properties(title))";
+        var spreadsheet = await getRequest.ExecuteAsync();
+
+        var hasInternalSheet = spreadsheet.Sheets.Any(s => s.Properties.Title == "Interni");
+        if (!hasInternalSheet)
+        {
+            await _sheetsService.Spreadsheets.BatchUpdate(
+                new BatchUpdateSpreadsheetRequest
+                {
+                    Requests = new List<Request>
+                    {
+                        new Request
+                        {
+                            AddSheet = new AddSheetRequest
+                            {
+                                Properties = new SheetProperties { Title = "Interni" }
+                            }
+                        }
+                    }
+                },
+                spreadsheetId).ExecuteAsync();
+        }
+
+        var clearRequest = _sheetsService.Spreadsheets.Values.Clear(
+            new ClearValuesRequest(), spreadsheetId, "Interni");
+        await clearRequest.ExecuteAsync();
     }
 
     private async Task WriteInternalDataAsync(string spreadsheetId, Projekat projekat, List<ProjectImplementationItem> items)
