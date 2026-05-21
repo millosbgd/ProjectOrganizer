@@ -76,6 +76,7 @@ export class ProjekatDetailComponent implements OnInit {
   showDevOpsTaskEditModal = false;
   currentNote: string = '';
   editingNoteId: number | null = null;
+  refreshingDevOpsAktivnostIds = new Set<number>();
 
   generatingSheet = false;
   syncingSheet = false;
@@ -508,6 +509,34 @@ export class ProjekatDetailComponent implements OnInit {
     if (this.projekat && this.projekat.id) {
       this.loadAktivnosti(this.projekat.id);
     }
+  }
+
+  refreshDevOpsTasksForAktivnost(aktivnost: Aktivnost): void {
+    if (!aktivnost.id || this.refreshingDevOpsAktivnostIds.has(aktivnost.id)) {
+      return;
+    }
+
+    this.refreshingDevOpsAktivnostIds.add(aktivnost.id);
+    this.devOpsTasksCandidateService.refreshAktivnostTasksFromDevOps(aktivnost.id).subscribe({
+      next: (result) => {
+        aktivnost.devOpsTasksTotalCount = result.totalTasks;
+        aktivnost.devOpsTasksReadyCount = result.readyTasks;
+        this.refreshingDevOpsAktivnostIds.delete(aktivnost.id);
+
+        if (result.failedTasks > 0) {
+          alert(`Osveženo: ${result.refreshedTasks}. Preskočeno: ${result.skippedTasks}. Neuspešno: ${result.failedTasks}.`);
+        }
+      },
+      error: (error) => {
+        console.error('Error refreshing DevOps tasks:', error);
+        this.refreshingDevOpsAktivnostIds.delete(aktivnost.id);
+        alert(error.error?.message || 'Greška prilikom osvežavanja taskova iz DevOps-a.');
+      }
+    });
+  }
+
+  isRefreshingDevOpsAktivnost(aktivnostId: number): boolean {
+    return this.refreshingDevOpsAktivnostIds.has(aktivnostId);
   }
 
   toggleDropdown(aktivnostId: number): void {

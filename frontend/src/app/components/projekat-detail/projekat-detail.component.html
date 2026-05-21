@@ -202,6 +202,28 @@
               </div>
             </div>
             <div class="aktivnost-footer">
+              <div class="aktivnost-devops-summary">
+                <span class="devops-count" title="Ready / Ukupno taskova">
+                  {{ aktivnost.devOpsTasksReadyCount || 0 }} / {{ aktivnost.devOpsTasksTotalCount || 0 }}
+                </span>
+                <button
+                  class="btn-icon-minimal"
+                  (click)="refreshDevOpsTasksForAktivnost(aktivnost)"
+                  [disabled]="isRefreshingDevOpsAktivnost(aktivnost.id) || !aktivnost.devOpsTasksTotalCount"
+                  title="Ažuriraj sve taskove sa DevOpsa">
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    [class.spinning]="isRefreshingDevOpsAktivnost(aktivnost.id)">
+                    <polyline points="23 4 23 10 17 10"></polyline>
+                    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                  </svg>
+                </button>
+              </div>
               <div class="aktivnost-actions">
                 <button class="btn-icon-minimal" (click)="openEditAktivnostModal(aktivnost)" title="Izmeni">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
