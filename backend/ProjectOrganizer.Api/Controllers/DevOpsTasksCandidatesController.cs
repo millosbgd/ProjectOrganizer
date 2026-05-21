@@ -408,6 +408,104 @@ public class DevOpsTasksCandidatesController : ControllerBase
         }
     }
 
+    // POST: api/devopstaskscandidates/aktivnost/{aktivnostId}/refresh-from-devops
+    [HttpPost("aktivnost/{aktivnostId}/refresh-from-devops")]
+    public async Task<ActionResult<RefreshAktivnostDevOpsTasksResultDto>> RefreshAktivnostTasksFromDevOps(int aktivnostId)
+    {
+        try
+        {
+            var auth0Id = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(auth0Id))
+                return Unauthorized();
+
+            var userSettings = await _context.UserSettings
+                .FirstOrDefaultAsync(s => s.UserId == auth0Id);
+
+            if (userSettings == null || string.IsNullOrWhiteSpace(userSettings.DevOpsPersonalAccessToken))
+                return BadRequest(new { message = "Nemate podešen PAT token u podešavanjima." });
+
+            var candidates = await _context.DevOpsTasksCandidates
+                .Where(t => t.AktivnostId == aktivnostId)
+                .ToListAsync();
+
+            var result = new RefreshAktivnostDevOpsTasksResultDto
+            {
+                TotalTasks = candidates.Count,
+                SkippedTasks = candidates.Count(t => string.IsNullOrWhiteSpace(t.DevOpsUrl))
+            };
+
+            var decryptedPat = _encryptionService.Decrypt(userSettings.DevOpsPersonalAccessToken);
+            var client = _httpClientFactory.CreateClient();
+            var token = Convert.ToBase64String(Encoding.ASCII.GetBytes($":{decryptedPat}"));
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", token);
+            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+            foreach (var candidate in candidates.Where(t => !string.IsNullOrWhiteSpace(t.DevOpsUrl)))
+            {
+                try
+                {
+                    if (!TryParseDevOpsUrl(candidate.DevOpsUrl!, out var organization, out var project, out var workItemId))
+                    {
+                        result.FailedTasks++;
+                        continue;
+                    }
+
+                    var apiUrl = $"https://dev.azure.com/{organization}/{project}/_apis/wit/workitems/{workItemId}?$expand=all&api-version=7.1";
+                    var response = await client.GetAsync(apiUrl);
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        result.FailedTasks++;
+                        continue;
+                    }
+
+                    var json = await response.Content.ReadAsStringAsync();
+                    using var doc = JsonDocument.Parse(json);
+                    var fields = doc.RootElement.GetProperty("fields");
+
+                    candidate.DevOpsWorkItemId = workItemId;
+                    candidate.Title = GetFieldString(fields, "System.Title") ?? candidate.Title;
+                    candidate.Description = StripHtml(GetFieldString(fields, "System.Description")) ?? candidate.Description;
+                    candidate.AcceptanceCriteria = StripHtml(GetFieldString(fields, "Microsoft.VSTS.Common.AcceptanceCriteria")) ?? candidate.AcceptanceCriteria;
+                    candidate.Priority = MapPriority(fields) ?? candidate.Priority;
+                    candidate.Estimation = MapEstimation(fields) ?? candidate.Estimation;
+
+                    var statusHistory = await FetchAndSaveStatusHistoryAsync(
+                        organization, project, workItemId, candidate.Id, client);
+
+                    if (statusHistory.Any(h => h.IsActive && h.Status == "Ready"))
+                        result.ReadyTasks++;
+
+                    result.RefreshedTasks++;
+                }
+                catch (Exception ex)
+                {
+                    result.FailedTasks++;
+                    _logger.LogWarning(ex, "Failed to refresh DevOps candidate {CandidateId}", candidate.Id);
+                }
+            }
+
+            await _context.SaveChangesAsync();
+
+            result.TotalTasks = await _context.DevOpsTasksCandidates
+                .CountAsync(t => t.AktivnostId == aktivnostId);
+
+            result.ReadyTasks = await _context.DevOpsTaskStatusHistory
+                .Where(h => h.DurationMinutes == null
+                    && h.Status == "Ready"
+                    && h.DevOpsTasksCandidate!.AktivnostId == aktivnostId)
+                .Select(h => h.DevOpsTaskCandidateId)
+                .Distinct()
+                .CountAsync();
+
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error refreshing DevOps tasks for aktivnost {AktivnostId}", aktivnostId);
+            return StatusCode(500, "Greška pri osvežavanju taskova iz Azure DevOps.");
+        }
+    }
+
     private async Task<List<StatusHistoryEntryDto>> FetchAndSaveStatusHistoryAsync(
         string organization, string project, int workItemId, int candidateId, HttpClient client)
     {
@@ -815,4 +913,13 @@ public class StatusHistoryEntryDto
     public int? TotalDurationMinutes { get; set; }
     public bool IsActive { get; set; }
     public DateTime? LastStartedAt { get; set; }
+}
+
+public class RefreshAktivnostDevOpsTasksResultDto
+{
+    public int TotalTasks { get; set; }
+    public int ReadyTasks { get; set; }
+    public int RefreshedTasks { get; set; }
+    public int SkippedTasks { get; set; }
+    public int FailedTasks { get; set; }
 }

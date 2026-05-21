@@ -21,4 +21,6 @@ export interface Aktivnost {
     name: string;
     email: string;
   };
+  devOpsTasksTotalCount?: number;
+  devOpsTasksReadyCount?: number;
 }

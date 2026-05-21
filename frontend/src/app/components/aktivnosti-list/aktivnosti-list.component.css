@@ -219,6 +219,44 @@
   color: #991b1b;
 }
 
+.devops-column {
+  min-width: 140px;
+}
+
+.devops-summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  white-space: nowrap;
+}
+
+.devops-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 54px;
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+  background: #eef6ff;
+  color: #1d4ed8;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.btn-icon-minimal:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.spinning {
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
 .actions-column {
   width: 100px;
   text-align: right;

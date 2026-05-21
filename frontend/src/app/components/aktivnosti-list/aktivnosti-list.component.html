@@ -68,6 +68,7 @@
           <th>Projekat</th>
           <th>Datum</th>
           <th>Status</th>
+          <th>DevOps</th>
           <th class="actions-column">Akcije</th>
         </tr>
       </thead>
@@ -97,6 +98,30 @@
             <span class="status-badge" [ngClass]="'status-' + aktivnost.status.toLowerCase()">
               {{ aktivnost.status }}
             </span>
+          </td>
+          <td class="devops-column">
+            <div class="devops-summary">
+              <span class="devops-count" title="Ready / Ukupno taskova">
+                {{ aktivnost.devOpsTasksReadyCount || 0 }} / {{ aktivnost.devOpsTasksTotalCount || 0 }}
+              </span>
+              <button
+                class="btn-icon-minimal"
+                (click)="refreshDevOpsTasks(aktivnost)"
+                [disabled]="isRefreshingDevOps(aktivnost.id) || !aktivnost.devOpsTasksTotalCount"
+                title="Ažuriraj sve taskove sa DevOpsa">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  [class.spinning]="isRefreshingDevOps(aktivnost.id)">
+                  <polyline points="23 4 23 10 17 10"></polyline>
+                  <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                </svg>
+              </button>
+            </div>
           </td>
           <td class="actions-column">
             <button class="btn-icon-minimal" (click)="editAktivnost(aktivnost)" title="Izmeni">

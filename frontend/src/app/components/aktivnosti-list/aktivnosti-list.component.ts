@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { AktivnostService } from '../../services/aktivnost.service';
+import { DevOpsTasksCandidateService } from '../../services/devops-tasks-candidate.service';
 import { UserService } from '../../services/user.service';
 import { Aktivnost } from '../../models/aktivnost.model';
 import { User } from '../../models/user.model';
@@ -34,9 +35,11 @@ export class AktivnostiListComponent implements OnInit {
   // Modal properties
   isModalOpen = false;
   selectedAktivnost: Aktivnost = this.getEmptyAktivnost();
+  refreshingDevOpsAktivnostIds = new Set<number>();
 
   constructor(
     private aktivnostService: AktivnostService,
+    private devOpsTasksCandidateService: DevOpsTasksCandidateService,
     private userService: UserService
   ) { }
 
@@ -136,6 +139,34 @@ export class AktivnostiListComponent implements OnInit {
   onModalDelete(id: number): void {
     this.isModalOpen = false;
     this.loadAktivnosti();
+  }
+
+  refreshDevOpsTasks(aktivnost: Aktivnost): void {
+    if (!aktivnost.id || this.refreshingDevOpsAktivnostIds.has(aktivnost.id)) {
+      return;
+    }
+
+    this.refreshingDevOpsAktivnostIds.add(aktivnost.id);
+    this.devOpsTasksCandidateService.refreshAktivnostTasksFromDevOps(aktivnost.id).subscribe({
+      next: (result) => {
+        aktivnost.devOpsTasksTotalCount = result.totalTasks;
+        aktivnost.devOpsTasksReadyCount = result.readyTasks;
+        this.refreshingDevOpsAktivnostIds.delete(aktivnost.id);
+
+        if (result.failedTasks > 0) {
+          alert(`Osveženo: ${result.refreshedTasks}. Preskočeno: ${result.skippedTasks}. Neuspešno: ${result.failedTasks}.`);
+        }
+      },
+      error: (error) => {
+        console.error('Error refreshing DevOps tasks:', error);
+        this.refreshingDevOpsAktivnostIds.delete(aktivnost.id);
+        alert(error.error?.message || 'Greška prilikom osvežavanja taskova iz DevOps-a.');
+      }
+    });
+  }
+
+  isRefreshingDevOps(aktivnostId: number): boolean {
+    return this.refreshingDevOpsAktivnostIds.has(aktivnostId);
   }
 
   formatDate(date: Date): string {

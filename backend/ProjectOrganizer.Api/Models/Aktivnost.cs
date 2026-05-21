@@ -43,6 +43,12 @@ public class Aktivnost
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
+    [NotMapped]
+    public int DevOpsTasksTotalCount { get; set; }
+
+    [NotMapped]
+    public int DevOpsTasksReadyCount { get; set; }
+
     // Navigation properties
     [ForeignKey("ProjekatId")]
     public Projekat? Projekat { get; set; }

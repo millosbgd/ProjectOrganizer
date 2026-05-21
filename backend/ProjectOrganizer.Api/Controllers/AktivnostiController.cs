@@ -61,6 +61,30 @@ public class AktivnostiController : ControllerBase
             .OrderByDescending(a => a.Datum)
             .ToListAsync();
 
+        var aktivnostIds = aktivnosti.Select(a => a.Id).ToList();
+        if (aktivnostIds.Count > 0)
+        {
+            var taskCounts = await _context.DevOpsTasksCandidates
+                .Where(t => aktivnostIds.Contains(t.AktivnostId))
+                .GroupBy(t => t.AktivnostId)
+                .Select(g => new { AktivnostId = g.Key, Total = g.Count() })
+                .ToDictionaryAsync(x => x.AktivnostId, x => x.Total);
+
+            var readyCounts = await _context.DevOpsTaskStatusHistory
+                .Where(h => h.DurationMinutes == null
+                    && h.Status == "Ready"
+                    && aktivnostIds.Contains(h.DevOpsTasksCandidate!.AktivnostId))
+                .GroupBy(h => h.DevOpsTasksCandidate!.AktivnostId)
+                .Select(g => new { AktivnostId = g.Key, Ready = g.Select(h => h.DevOpsTaskCandidateId).Distinct().Count() })
+                .ToDictionaryAsync(x => x.AktivnostId, x => x.Ready);
+
+            foreach (var aktivnost in aktivnosti)
+            {
+                aktivnost.DevOpsTasksTotalCount = taskCounts.GetValueOrDefault(aktivnost.Id);
+                aktivnost.DevOpsTasksReadyCount = readyCounts.GetValueOrDefault(aktivnost.Id);
+            }
+        }
+
         return Ok(aktivnosti);
     }
 
