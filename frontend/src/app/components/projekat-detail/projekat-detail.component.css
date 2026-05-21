@@ -26,12 +26,30 @@
 .devops-count {
   display: inline-flex;
   align-items: center;
+  gap: 3px;
   justify-content: center;
   min-width: 54px;
   padding: 4px 8px;
   border-radius: 9999px;
   background: #eef6ff;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.devops-ready-count {
+  color: #f97316;
+}
+
+.devops-separator {
+  color: #94a3b8;
+}
+
+.devops-total-count {
   color: #1d4ed8;
+}
+
+.devops-label {
+  color: #4b5563;
   font-size: 12px;
   font-weight: 700;
 }

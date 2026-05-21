@@ -101,8 +101,11 @@
           </td>
           <td class="devops-column">
             <div class="devops-summary">
+              <span class="devops-label">DevOps</span>
               <span class="devops-count" title="Ready / Ukupno taskova">
-                {{ aktivnost.devOpsTasksReadyCount || 0 }} / {{ aktivnost.devOpsTasksTotalCount || 0 }}
+                <span class="devops-ready-count">{{ aktivnost.devOpsTasksReadyCount || 0 }}</span>
+                <span class="devops-separator">/</span>
+                <span class="devops-total-count">{{ aktivnost.devOpsTasksTotalCount || 0 }}</span>
               </span>
               <button
                 class="btn-icon-minimal"
