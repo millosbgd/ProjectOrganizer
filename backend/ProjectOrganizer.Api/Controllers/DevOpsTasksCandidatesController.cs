@@ -20,19 +20,22 @@ public class DevOpsTasksCandidatesController : ControllerBase
     private readonly ILogger<DevOpsTasksCandidatesController> _logger;
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly EncryptionService _encryptionService;
+    private readonly DevOpsSyncService _devOpsSyncService;
 
     public DevOpsTasksCandidatesController(
         ApplicationDbContext context,
         UserService userService,
         ILogger<DevOpsTasksCandidatesController> logger,
         IHttpClientFactory httpClientFactory,
-        EncryptionService encryptionService)
+        EncryptionService encryptionService,
+        DevOpsSyncService devOpsSyncService)
     {
         _context = context;
         _userService = userService;
         _logger = logger;
         _httpClientFactory = httpClientFactory;
         _encryptionService = encryptionService;
+        _devOpsSyncService = devOpsSyncService;
     }
 
     // GET: api/devopstaskscandidates/aktivnost/{aktivnostId}
@@ -781,6 +784,32 @@ public class DevOpsTasksCandidatesController : ControllerBase
         {
             _logger.LogError(ex, "Error syncing DevOps users");
             return StatusCode(500, "Greška pri sinhronizaciji korisnika.");
+        }
+    }
+
+    // POST: api/devopstaskscandidates/sync-devops-now
+    [HttpPost("sync-devops-now")]
+    public async Task<ActionResult<DevOpsDailySyncResult>> SyncDevOpsTasksNow(CancellationToken cancellationToken)
+    {
+        try
+        {
+            var currentUser = await _userService.EnsureUserExistsAsync(User);
+            if (currentUser.Role != "Admin")
+            {
+                return Forbid();
+            }
+
+            var result = await _devOpsSyncService.RefreshAllLinkedTasksAsync(cancellationToken);
+            return Ok(result);
+        }
+        catch (OperationCanceledException)
+        {
+            return StatusCode(499, "DevOps sync je otkazan.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error running manual DevOps task sync");
+            return StatusCode(500, "Greška pri ručnom DevOps osvežavanju taskova.");
         }
     }
 
