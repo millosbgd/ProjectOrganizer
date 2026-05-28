@@ -77,7 +77,9 @@ builder.Services.AddScoped<OpenAIService>();
 builder.Services.AddScoped<UserService>();
 builder.Services.AddHttpClient<NbsService>();
 builder.Services.AddScoped<NotificationService>();
+builder.Services.AddScoped<DevOpsSyncService>();
 builder.Services.AddHostedService<NotificationBackgroundService>();
+builder.Services.AddHostedService<DevOpsSyncBackgroundService>();
 builder.Services.AddScoped<GoogleSheetsService>();
 
 builder.Services.AddControllers()

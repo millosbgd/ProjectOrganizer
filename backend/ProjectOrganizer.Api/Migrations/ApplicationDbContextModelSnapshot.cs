@@ -280,6 +280,28 @@ namespace ProjectOrganizer.Api.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("DevOpsAssignedTo")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<DateTime?>("DevOpsChangedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DevOpsState")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime?>("LastDevOpsSyncAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LastDevOpsSyncError")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("LastDevOpsSyncStatus")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
                     b.Property<string>("Estimation")
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");

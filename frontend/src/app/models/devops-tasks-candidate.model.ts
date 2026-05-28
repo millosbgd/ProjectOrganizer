@@ -21,6 +21,12 @@ export interface DevOpsTasksCandidate {
   createdAt: Date;
   devOpsWorkItemId?: number;
   devOpsUrl?: string;
+  devOpsState?: string;
+  devOpsAssignedTo?: string;
+  devOpsChangedDate?: string;
+  lastDevOpsSyncAt?: string;
+  lastDevOpsSyncStatus?: string;
+  lastDevOpsSyncError?: string;
   statusHistory?: StatusHistoryEntry[];
   aktivnost?: {
     id: number;

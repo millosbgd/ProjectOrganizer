@@ -38,6 +38,22 @@ public class DevOpsTasksCandidate
     [MaxLength(500)]
     public string? DevOpsUrl { get; set; }
 
+    [MaxLength(100)]
+    public string? DevOpsState { get; set; }
+
+    [MaxLength(255)]
+    public string? DevOpsAssignedTo { get; set; }
+
+    public DateTime? DevOpsChangedDate { get; set; }
+
+    public DateTime? LastDevOpsSyncAt { get; set; }
+
+    [MaxLength(50)]
+    public string? LastDevOpsSyncStatus { get; set; }
+
+    [MaxLength(1000)]
+    public string? LastDevOpsSyncError { get; set; }
+
     public ICollection<DevOpsTaskStatusHistory>? StatusHistory { get; set; }
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

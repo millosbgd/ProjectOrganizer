@@ -73,6 +73,12 @@ public class DevOpsTasksCandidatesController : ControllerBase
                 c.CreatedAt,
                 c.DevOpsWorkItemId,
                 c.DevOpsUrl,
+                c.DevOpsState,
+                c.DevOpsAssignedTo,
+                c.DevOpsChangedDate,
+                c.LastDevOpsSyncAt,
+                c.LastDevOpsSyncStatus,
+                c.LastDevOpsSyncError,
                 User = c.User == null ? null : new
                 {
                     c.User.Id,
@@ -151,6 +157,12 @@ public class DevOpsTasksCandidatesController : ControllerBase
                 c.CreatedAt,
                 c.DevOpsWorkItemId,
                 c.DevOpsUrl,
+                c.DevOpsState,
+                c.DevOpsAssignedTo,
+                c.DevOpsChangedDate,
+                c.LastDevOpsSyncAt,
+                c.LastDevOpsSyncStatus,
+                c.LastDevOpsSyncError,
                 Aktivnost = c.Aktivnost == null ? null : new
                 {
                     c.Aktivnost.Id,

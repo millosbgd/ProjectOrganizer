@@ -178,6 +178,40 @@ az webapp deployment source config-zip --resource-group rg-projectorganizer-dev 
 
 Kada radiš nove feature-e:
 
+### DevOps dnevni sync taskova (47_AddDevOpsSyncMetadata)
+
+**Ovaj deployment uključuje:**
+- ✅ Backend dnevni background sync u 07:00
+- ✅ Osvežavanje DevOps taskova PAT tokenom korisnika koji ih je kreirao
+- ✅ Nova metadata polja u `DevOpsTasksCandidates`
+- ✅ Minimalna notifikacija posle sync-a
+
+### Koraci:
+
+1. **SQL migracija (već izvršena ako si pustio skriptu):**
+   ```sql
+   -- database/47_AddDevOpsSyncMetadata.sql
+   ```
+
+2. **Backend deploy:**
+   ```powershell
+   .\deploy-backend.ps1
+   ```
+
+3. **Commit/push na deploy branch:**
+   ```powershell
+   git add .
+   git commit -m "Add daily DevOps task sync"
+   git push origin deploy
+   ```
+
+4. **Verifikacija:**
+   - Proveri App Service logs posle deploy-a
+   - Background servis treba da loguje sledeće zakazano DevOps osvežavanje
+   - Sync će se automatski izvršiti sledećeg dana u 07:00
+
+**Napomena:** SQL migracija mora biti izvršena pre backend deploy-a, jer backend očekuje nova DevOps sync polja.
+
 ### 1. Frontend + Backend promene:
 
 ```powershell
