@@ -1,0 +1,89 @@
+<div class="modal-backdrop" *ngIf="isOpen">
+  <div class="modal-content">
+    <div class="modal-header">
+      <div>
+        <h3>Zbirni unos BAU aktivnosti</h3>
+        <span class="date-label">{{ datum | date:'dd.MM.yyyy' }}</span>
+      </div>
+      <button type="button" class="close-btn" (click)="onClose()" title="Zatvori">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <div class="grid-shell">
+        <table class="bau-grid">
+          <thead>
+            <tr>
+              <th>Klijent</th>
+              <th>Tip aktivnosti</th>
+              <th>Trajanje</th>
+              <th>Detalji</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let row of rows; let i = index">
+              <td>
+                <select [(ngModel)]="row.klijentId" [name]="'klijent-' + row.localId">
+                  <option [ngValue]="null">Izaberite klijenta</option>
+                  <option *ngFor="let klijent of klijenti" [ngValue]="klijent.id">
+                    {{ klijent.naziv }}
+                  </option>
+                </select>
+              </td>
+              <td>
+                <select [(ngModel)]="row.bauTipAktivnosti" [name]="'tip-' + row.localId">
+                  <option value="">Izaberite tip</option>
+                  <option *ngFor="let type of bauTypes" [value]="type.code">
+                    {{ type.value }}
+                  </option>
+                </select>
+              </td>
+              <td>
+                <div class="duration-options">
+                  <label *ngFor="let option of durationOptions" class="duration-option">
+                    <input
+                      type="radio"
+                      [name]="'trajanje-' + row.localId"
+                      [value]="option"
+                      [(ngModel)]="row.trajanjeMinuta"
+                    />
+                    <span>{{ option }}</span>
+                  </label>
+                </div>
+              </td>
+              <td>
+                <input
+                  type="text"
+                  [(ngModel)]="row.detalji"
+                  [name]="'detalji-' + row.localId"
+                />
+              </td>
+              <td class="row-actions">
+                <button type="button" class="btn-icon" (click)="removeRow(row)" title="Ukloni red">
+                  <span class="material-icons">delete</span>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <button type="button" class="btn-secondary add-row" (click)="addRow()">
+        <span class="material-icons">add</span>
+        Dodaj red
+      </button>
+    </div>
+
+    <div class="modal-footer">
+      <div class="error-message" *ngIf="validationError">{{ validationError }}</div>
+      <div class="footer-actions">
+        <button type="button" class="btn-secondary" (click)="onClose()">Otkaži</button>
+        <button type="button" class="btn-primary" (click)="save()" [disabled]="isSaving">
+          {{ isSaving ? 'Čuvam...' : 'Sačuvaj BAU aktivnosti' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

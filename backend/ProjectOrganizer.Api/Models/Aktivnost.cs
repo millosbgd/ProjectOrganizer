@@ -32,6 +32,13 @@ public class Aktivnost
     // BAU (Business As Usual) - not tied to a specific project
     public bool Bau { get; set; } = false;
 
+    public int? KlijentId { get; set; }
+
+    [MaxLength(100)]
+    public string? BauTipAktivnosti { get; set; }
+
+    public int? BauTrajanjeMinuta { get; set; }
+
     // Nullable for BAU activities - no project assignment
     public int? ProjekatId { get; set; }
 
@@ -52,6 +59,9 @@ public class Aktivnost
     // Navigation properties
     [ForeignKey("ProjekatId")]
     public Projekat? Projekat { get; set; }
+
+    [ForeignKey("KlijentId")]
+    public Klijent? Klijent { get; set; }
 
     [ForeignKey("ProjectImplementationItemId")]
     public ProjectImplementationItem? ProjectImplementationItem { get; set; }

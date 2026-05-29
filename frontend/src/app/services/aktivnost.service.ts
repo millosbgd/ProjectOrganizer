@@ -4,6 +4,23 @@ import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { Aktivnost } from '../models/aktivnost.model';
 
+export interface BauBatchCreateRow {
+  klijentId: number | null;
+  bauTipAktivnosti: string;
+  trajanjeMinuta: number | null;
+  detalji?: string;
+}
+
+export interface BauBatchCreateRequest {
+  datum: string;
+  rows: BauBatchCreateRow[];
+}
+
+export interface BauBatchCreateResult {
+  count: number;
+  activityIds: number[];
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -27,6 +44,10 @@ export class AktivnostService {
 
   create(aktivnost: Aktivnost): Observable<Aktivnost> {
     return this.http.post<Aktivnost>(this.apiUrl, aktivnost);
+  }
+
+  createBauBatch(request: BauBatchCreateRequest): Observable<BauBatchCreateResult> {
+    return this.http.post<BauBatchCreateResult>(`${this.apiUrl}/bau-batch`, request);
   }
 
   update(id: number, aktivnost: Aktivnost): Observable<void> {

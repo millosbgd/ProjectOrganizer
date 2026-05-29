@@ -76,6 +76,13 @@ namespace ProjectOrganizer.Api.Migrations
                     b.Property<bool>("Bau")
                         .HasColumnType("bit");
 
+                    b.Property<string>("BauTipAktivnosti")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int?>("BauTrajanjeMinuta")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
@@ -92,6 +99,9 @@ namespace ProjectOrganizer.Api.Migrations
 
                     b.Property<DateTime?>("EndUtc")
                         .HasColumnType("datetime2");
+
+                    b.Property<int?>("KlijentId")
+                        .HasColumnType("int");
 
                     b.Property<string>("Opis")
                         .IsRequired()
@@ -122,6 +132,8 @@ namespace ProjectOrganizer.Api.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CreatedBy");
+
+                    b.HasIndex("KlijentId");
 
                     b.HasIndex("ProjectImplementationItemId");
 
@@ -1003,6 +1015,11 @@ namespace ProjectOrganizer.Api.Migrations
                         .WithMany()
                         .HasForeignKey("ProjectImplementationItemId");
 
+                    b.HasOne("ProjectOrganizer.Api.Models.Klijent", "Klijent")
+                        .WithMany()
+                        .HasForeignKey("KlijentId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("ProjectOrganizer.Api.Models.Projekat", "Projekat")
                         .WithMany("Aktivnosti")
                         .HasForeignKey("ProjekatId")
@@ -1011,6 +1028,8 @@ namespace ProjectOrganizer.Api.Migrations
                     b.Navigation("CreatedByUser");
 
                     b.Navigation("ProjectImplementationItem");
+
+                    b.Navigation("Klijent");
 
                     b.Navigation("Projekat");
                 });

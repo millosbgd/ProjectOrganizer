@@ -77,6 +77,7 @@ public class ApplicationDbContext : DbContext
         {
             entity.ToTable("Aktivnosti");
             entity.HasIndex(e => e.ProjekatId);
+            entity.HasIndex(e => e.KlijentId);
             entity.HasIndex(e => e.Status);
 
             // Configure UTC DateTime properties
@@ -92,6 +93,11 @@ public class ApplicationDbContext : DbContext
                 .WithMany(p => p.Aktivnosti)
                 .HasForeignKey(a => a.ProjekatId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(a => a.Klijent)
+                .WithMany()
+                .HasForeignKey(a => a.KlijentId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
 
         // CodebookEntity configuration

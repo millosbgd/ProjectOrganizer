@@ -2,6 +2,15 @@
   <div class="header">
     <h2>Kalendar aktivnosti</h2>
     <div class="header-actions">
+      <button
+        *ngIf="isDayView"
+        class="btn-bau-batch"
+        type="button"
+        (click)="openBauBatchModal()"
+        title="Zbirni unos BAU aktivnosti">
+        <span class="material-icons">playlist_add</span>
+        <span>BAU unos</span>
+      </button>
       <button class="btn-icon-minimal" routerLink="/aktivnosti" title="Prikaži listu aktivnosti">
         <span class="material-icons">checklist</span>
       </button>
@@ -27,3 +36,12 @@
   (delete)="onAktivnostDeleted($event)"
   (refreshNeeded)="refreshCalendar()">
 </app-aktivnost-modal>
+
+<app-bau-batch-modal
+  [isOpen]="showBauBatchModal"
+  [datum]="selectedDay"
+  [klijenti]="klijenti"
+  [bauTypes]="bauTypes"
+  (close)="closeBauBatchModal()"
+  (saved)="onBauBatchSaved()">
+</app-bau-batch-modal>

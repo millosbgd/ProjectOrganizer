@@ -11,6 +11,10 @@ import { CalendarActivity } from '../../models/calendar-activity.model';
 import { AktivnostService } from '../../services/aktivnost.service';
 import { Aktivnost } from '../../models/aktivnost.model';
 import { AktivnostModalComponent } from '../aktivnost-modal/aktivnost-modal.component';
+import { BauBatchModalComponent } from '../bau-batch-modal/bau-batch-modal.component';
+import { KlijentService } from '../../services/klijent.service';
+import { Klijent } from '../../models/klijent.model';
+import { CodebookEntry, CodebookService } from '../../services/codebook.service';
 
 // Custom Serbian Latin locale configuration
 const serbianLatinLocale = {
@@ -48,7 +52,7 @@ const serbianLatinLocale = {
 @Component({
   selector: 'app-calendar',
   standalone: true,
-  imports: [CommonModule, RouterModule, FullCalendarModule, AktivnostModalComponent],
+  imports: [CommonModule, RouterModule, FullCalendarModule, AktivnostModalComponent, BauBatchModalComponent],
   templateUrl: './calendar.component.html',
   styleUrls: ['./calendar.component.css']
 })
@@ -90,6 +94,11 @@ export class CalendarComponent implements OnInit {
   loading = false;
   error: string | null = null;
   showAktivnostModal = false;
+  showBauBatchModal = false;
+  isDayView = false;
+  selectedDay = new Date();
+  klijenti: Klijent[] = [];
+  bauTypes: CodebookEntry[] = [];
   currentAktivnost: Aktivnost = {
     id: 0,
     opis: '',
@@ -103,11 +112,13 @@ export class CalendarComponent implements OnInit {
 
   constructor(
     private calendarService: CalendarService,
-    private aktivnostService: AktivnostService
+    private aktivnostService: AktivnostService,
+    private klijentService: KlijentService,
+    private codebookService: CodebookService
   ) {}
 
   ngOnInit(): void {
-    // Initial load will be triggered by datesSet
+    this.loadBauBatchLookups();
   }
 
   loadEvents(fetchInfo: any, successCallback: any, failureCallback: any): void {
@@ -174,8 +185,8 @@ export class CalendarComponent implements OnInit {
   }
 
   handleDatesSet(dateInfo: any): void {
-    // This is called when the user navigates to a different date range
-    // Events will be automatically refetched via loadEvents
+    this.isDayView = dateInfo.view.type === 'timeGridDay';
+    this.selectedDay = dateInfo.start;
   }
 
   handleEventClick(clickInfo: EventClickArg): void {
@@ -273,6 +284,19 @@ export class CalendarComponent implements OnInit {
     window.location.reload();
   }
 
+  openBauBatchModal(): void {
+    this.showBauBatchModal = true;
+  }
+
+  closeBauBatchModal(): void {
+    this.showBauBatchModal = false;
+  }
+
+  onBauBatchSaved(): void {
+    this.showBauBatchModal = false;
+    this.refreshCalendar();
+  }
+
   onAktivnostDeleted(id: number): void {
     // Activity was deleted from modal, refresh the calendar
     window.location.reload();
@@ -282,5 +306,25 @@ export class CalendarComponent implements OnInit {
     // BAU activities: olive-green (darker for better text contrast)
     // Project activities: darker blue (darker than header)
     return isBau ? '#7cb342' : '#2980b9';
+  }
+
+  private loadBauBatchLookups(): void {
+    this.klijentService.getAll().subscribe({
+      next: (data) => {
+        this.klijenti = data;
+      },
+      error: (err) => {
+        console.error('Error loading clients:', err);
+      }
+    });
+
+    this.codebookService.getByEntityName('BauActivityType').subscribe({
+      next: (data) => {
+        this.bauTypes = data;
+      },
+      error: (err) => {
+        console.error('Error loading BAU activity types:', err);
+      }
+    });
   }
 }

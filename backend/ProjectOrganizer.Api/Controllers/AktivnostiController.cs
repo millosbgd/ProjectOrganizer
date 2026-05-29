@@ -134,6 +134,97 @@ public class AktivnostiController : ControllerBase
         return CreatedAtAction(nameof(GetAktivnost), new { id = aktivnost.Id }, aktivnost);
     }
 
+    // POST: api/Aktivnosti/bau-batch
+    [HttpPost("bau-batch")]
+    public async Task<ActionResult<BauBatchCreateResultDto>> CreateBauBatch([FromBody] BauBatchCreateRequest request)
+    {
+        if (request.Rows == null || request.Rows.Count == 0)
+            return BadRequest(new { message = "Unesite najmanje jednu BAU aktivnost." });
+
+        var durationOptions = new HashSet<int> { 15, 30, 45, 60, 90 };
+        var rows = request.Rows
+            .Where(r => r != null && (r.KlijentId > 0 || !string.IsNullOrWhiteSpace(r.BauTipAktivnosti) || r.TrajanjeMinuta > 0))
+            .ToList();
+
+        if (rows.Count == 0)
+            return BadRequest(new { message = "Unesite najmanje jednu popunjenu BAU aktivnost." });
+
+        for (var i = 0; i < rows.Count; i++)
+        {
+            var row = rows[i];
+            if (row.KlijentId <= 0)
+                return BadRequest(new { message = $"Red {i + 1}: klijent je obavezan." });
+            if (string.IsNullOrWhiteSpace(row.BauTipAktivnosti))
+                return BadRequest(new { message = $"Red {i + 1}: tip aktivnosti je obavezan." });
+            if (!durationOptions.Contains(row.TrajanjeMinuta))
+                return BadRequest(new { message = $"Red {i + 1}: trajanje mora biti 15, 30, 45, 60 ili 90 minuta." });
+        }
+
+        var clientIds = rows.Select(r => r.KlijentId).Distinct().ToList();
+        var existingClientIds = await _context.Klijenti
+            .Where(k => clientIds.Contains(k.Id))
+            .Select(k => k.Id)
+            .ToListAsync();
+
+        var missingClientId = clientIds.FirstOrDefault(id => !existingClientIds.Contains(id));
+        if (missingClientId > 0)
+            return BadRequest(new { message = $"Klijent sa ID {missingClientId} ne postoji." });
+
+        var allowedBauTypes = await _context.Codebooks
+            .Include(c => c.EntityType)
+            .Where(c => c.EntityType!.Name == "BauActivityType" && c.IsActive && c.EntityType.IsActive)
+            .Select(c => new { c.Code, c.Value })
+            .ToListAsync();
+
+        var allowedCodes = allowedBauTypes.Select(t => t.Code).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var typeLabels = allowedBauTypes.ToDictionary(t => t.Code, t => t.Value, StringComparer.OrdinalIgnoreCase);
+
+        for (var i = 0; i < rows.Count; i++)
+        {
+            if (!allowedCodes.Contains(rows[i].BauTipAktivnosti.Trim()))
+                return BadRequest(new { message = $"Red {i + 1}: izabrani tip BAU aktivnosti nije važeći." });
+        }
+
+        var currentUser = await _userService.EnsureUserExistsAsync(User);
+        var now = DateTime.UtcNow;
+        var datum = request.Datum.Date;
+
+        var aktivnosti = rows.Select(row =>
+        {
+            var typeCode = row.BauTipAktivnosti.Trim();
+            var typeLabel = typeLabels.GetValueOrDefault(typeCode, typeCode);
+
+            return new Aktivnost
+            {
+                Opis = typeLabel,
+                Detalji = row.Detalji?.Trim() ?? string.Empty,
+                Datum = datum,
+                StartUtc = null,
+                EndUtc = null,
+                Status = "Završeno",
+                Vrsta = "BAU",
+                Bau = true,
+                KlijentId = row.KlijentId,
+                BauTipAktivnosti = typeCode,
+                BauTrajanjeMinuta = row.TrajanjeMinuta,
+                ProjekatId = null,
+                ProjectImplementationItemId = null,
+                CreatedBy = currentUser.Id,
+                CreatedAt = now,
+                UpdatedAt = now
+            };
+        }).ToList();
+
+        _context.Aktivnosti.AddRange(aktivnosti);
+        await _context.SaveChangesAsync();
+
+        return Ok(new BauBatchCreateResultDto
+        {
+            Count = aktivnosti.Count,
+            ActivityIds = aktivnosti.Select(a => a.Id).ToList()
+        });
+    }
+
     // PUT: api/Aktivnosti/5
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateAktivnost(int id, Aktivnost aktivnost)
@@ -793,4 +884,24 @@ public class TaskDto
 public class GenerateOfferRequest
 {
     public List<int> AktivnostIds { get; set; } = new();
+}
+
+public class BauBatchCreateRequest
+{
+    public DateTime Datum { get; set; }
+    public List<BauBatchCreateRowDto> Rows { get; set; } = new();
+}
+
+public class BauBatchCreateRowDto
+{
+    public int KlijentId { get; set; }
+    public string BauTipAktivnosti { get; set; } = string.Empty;
+    public int TrajanjeMinuta { get; set; }
+    public string? Detalji { get; set; }
+}
+
+public class BauBatchCreateResultDto
+{
+    public int Count { get; set; }
+    public List<int> ActivityIds { get; set; } = new();
 }

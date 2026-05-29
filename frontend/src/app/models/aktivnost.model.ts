@@ -8,6 +8,9 @@ export interface Aktivnost {
   status: string;
   vrsta: string;
   bau?: boolean;
+  klijentId?: number | null;
+  bauTipAktivnosti?: string | null;
+  bauTrajanjeMinuta?: number | null;
   projekatId: number | null;
   projectImplementationItemId?: number;
   projekat?: {
