@@ -60,10 +60,16 @@ export class CalendarComponent implements OnInit {
   calendarOptions = signal<CalendarOptions>({
     plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin],
     initialView: 'dayGridMonth',
+    customButtons: {
+      bauBatch: {
+        text: 'BAU unos',
+        click: this.openBauBatchModal.bind(this)
+      }
+    },
     headerToolbar: {
       left: 'prev,next today',
       center: 'title',
-      right: 'dayGridMonth,timeGridWeek,timeGridDay'
+      right: 'dayGridMonth,timeGridWeek,timeGridDay bauBatch'
     },
     editable: true,
     selectable: true,
@@ -187,6 +193,7 @@ export class CalendarComponent implements OnInit {
   handleDatesSet(dateInfo: any): void {
     this.isDayView = dateInfo.view.type === 'timeGridDay';
     this.selectedDay = dateInfo.start;
+    setTimeout(() => this.updateBauBatchToolbarButton(), 0);
   }
 
   handleEventClick(clickInfo: EventClickArg): void {
@@ -285,6 +292,10 @@ export class CalendarComponent implements OnInit {
   }
 
   openBauBatchModal(): void {
+    if (!this.isDayView) {
+      return;
+    }
+
     this.showBauBatchModal = true;
   }
 
@@ -326,5 +337,13 @@ export class CalendarComponent implements OnInit {
         console.error('Error loading BAU activity types:', err);
       }
     });
+  }
+
+  private updateBauBatchToolbarButton(): void {
+    const button = document.querySelector('.fc-bauBatch-button') as HTMLButtonElement | null;
+    if (!button) return;
+
+    button.style.display = this.isDayView ? '' : 'none';
+    button.title = 'Zbirni unos BAU aktivnosti';
   }
 }
