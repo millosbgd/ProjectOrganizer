@@ -58,4 +58,12 @@ export class CalendarService {
   scheduleBauDay(datum: string): Observable<ScheduleBauDayResult> {
     return this.http.post<ScheduleBauDayResult>(`${this.apiUrl}/schedule-bau-day`, { datum });
   }
+
+  exportDailyReport(datum: string): Observable<Blob> {
+    const params = new HttpParams().set('datum', datum);
+    return this.http.get(`${this.apiUrl}/daily-report`, {
+      params,
+      responseType: 'blob'
+    });
+  }
 }

@@ -68,12 +68,16 @@ export class CalendarComponent implements OnInit {
       scheduleBau: {
         text: 'Rasporedi BAU',
         click: this.scheduleBauDay.bind(this)
+      },
+      dailyReport: {
+        text: 'Daily Report',
+        click: this.exportDailyReport.bind(this)
       }
     },
     headerToolbar: {
       left: 'prev,next today',
       center: 'title',
-      right: 'dayGridMonth,timeGridWeek,timeGridDay bauBatch scheduleBau'
+      right: 'dayGridMonth,timeGridWeek,timeGridDay bauBatch scheduleBau dailyReport'
     },
     editable: true,
     selectable: true,
@@ -338,6 +342,32 @@ export class CalendarComponent implements OnInit {
     });
   }
 
+  exportDailyReport(): void {
+    if (!this.isDayView) {
+      return;
+    }
+
+    this.error = null;
+    const datum = this.formatDateOnly(this.selectedDay);
+    this.calendarService.exportDailyReport(datum).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `Daily_Report_${datum}.xlsx`;
+        link.click();
+        window.URL.revokeObjectURL(url);
+      },
+      error: (err) => {
+        console.error('Error exporting daily report:', err);
+        this.error = 'Greška pri exportu dnevnog izveštaja';
+        setTimeout(() => {
+          this.error = null;
+        }, 5000);
+      }
+    });
+  }
+
   onAktivnostDeleted(id: number): void {
     // Activity was deleted from modal, refresh the calendar
     window.location.reload();
@@ -386,6 +416,7 @@ export class CalendarComponent implements OnInit {
   private updateBauBatchToolbarButton(): void {
     const bauBatchButton = document.querySelector('.fc-bauBatch-button') as HTMLButtonElement | null;
     const scheduleBauButton = document.querySelector('.fc-scheduleBau-button') as HTMLButtonElement | null;
+    const dailyReportButton = document.querySelector('.fc-dailyReport-button') as HTMLButtonElement | null;
 
     if (bauBatchButton) {
       bauBatchButton.style.display = this.isDayView ? '' : 'none';
@@ -395,6 +426,11 @@ export class CalendarComponent implements OnInit {
     if (scheduleBauButton) {
       scheduleBauButton.style.display = this.isDayView ? '' : 'none';
       scheduleBauButton.title = 'Rasporedi BAU aktivnosti od 08:00 do 16:00';
+    }
+
+    if (dailyReportButton) {
+      dailyReportButton.style.display = this.isDayView ? '' : 'none';
+      dailyReportButton.title = 'Export dnevnog izveštaja u Excel';
     }
   }
 

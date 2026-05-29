@@ -4,7 +4,9 @@ using Microsoft.EntityFrameworkCore;
 using ProjectOrganizer.Api.Data;
 using ProjectOrganizer.Api.Models;
 using ProjectOrganizer.Api.Services;
+using System.IO.Compression;
 using System.Security.Claims;
+using System.Text;
 
 namespace ProjectOrganizer.Api.Controllers;
 
@@ -244,6 +246,268 @@ public class ActivitiesController : ControllerBase
         });
     }
 
+    /// <summary>
+    /// Export a print-ready A4 Excel daily report for the selected local day.
+    /// </summary>
+    [HttpGet("daily-report")]
+    public async Task<IActionResult> ExportDailyReport([FromQuery] DateTime datum)
+    {
+        var currentUser = await _userService.EnsureUserExistsAsync(User);
+        var timeZone = ResolveBelgradeTimeZone();
+        var localDay = datum.Date;
+        var localNextDay = localDay.AddDays(1);
+        var dayStartUtc = ConvertLocalToUtc(localDay, timeZone);
+        var dayEndUtc = ConvertLocalToUtc(localNextDay, timeZone);
+
+        var activities = await _context.Aktivnosti
+            .Include(a => a.Klijent)
+            .Include(a => a.Projekat)
+                .ThenInclude(p => p!.Klijent)
+            .Where(a => a.CreatedBy == currentUser.Id
+                && (
+                    (a.StartUtc.HasValue && a.EndUtc.HasValue && a.StartUtc < dayEndUtc && a.EndUtc > dayStartUtc)
+                    || (!a.StartUtc.HasValue && a.Datum >= localDay && a.Datum < localNextDay)
+                ))
+            .OrderBy(a => a.StartUtc ?? a.Datum)
+            .ThenBy(a => a.Id)
+            .ToListAsync();
+
+        var bauTypeLabels = await _context.Codebooks
+            .Include(c => c.EntityType)
+            .Where(c => c.EntityType != null
+                && c.EntityType.Name == "BauActivityType"
+                && c.IsActive)
+            .ToDictionaryAsync(c => c.Code, c => c.Value);
+
+        var reportRows = activities.Select(a => ToDailyReportRow(a, bauTypeLabels, timeZone)).ToList();
+        var fileBytes = BuildDailyReportWorkbook(reportRows, localDay, currentUser.Name ?? currentUser.Email ?? "Korisnik");
+        var fileName = $"Daily_Report_{localDay:yyyy-MM-dd}.xlsx";
+
+        return File(
+            fileBytes,
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            fileName);
+    }
+
+    private static DailyReportRowDto ToDailyReportRow(
+        Aktivnost activity,
+        Dictionary<string, string> bauTypeLabels,
+        TimeZoneInfo timeZone)
+    {
+        var startLocal = activity.StartUtc.HasValue
+            ? TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(activity.StartUtc.Value, DateTimeKind.Utc), timeZone)
+            : (DateTime?)null;
+        var endLocal = activity.EndUtc.HasValue
+            ? TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(activity.EndUtc.Value, DateTimeKind.Utc), timeZone)
+            : (DateTime?)null;
+
+        var durationMinutes = activity.StartUtc.HasValue && activity.EndUtc.HasValue
+            ? Math.Max(0, (int)Math.Round((activity.EndUtc.Value - activity.StartUtc.Value).TotalMinutes))
+            : activity.BauTrajanjeMinuta ?? 0;
+
+        var bauTypeCode = activity.BauTipAktivnosti ?? string.Empty;
+        var typeLabel = activity.Bau
+            ? bauTypeLabels.GetValueOrDefault(bauTypeCode, bauTypeCode)
+            : activity.Vrsta;
+        var clientOrProject = activity.Bau
+            ? activity.Klijent?.Naziv ?? "BAU"
+            : activity.Projekat?.Naziv ?? "Projektna aktivnost";
+
+        if (!activity.Bau && activity.Projekat?.Klijent != null)
+            clientOrProject = $"{activity.Projekat.Klijent.Naziv} / {clientOrProject}";
+
+        return new DailyReportRowDto
+        {
+            TimeRange = startLocal.HasValue && endLocal.HasValue ? $"{startLocal:HH:mm} - {endLocal:HH:mm}" : "",
+            ClientOrProject = clientOrProject,
+            ActivityType = typeLabel,
+            Description = activity.Opis,
+            Details = activity.Detalji,
+            DurationMinutes = durationMinutes,
+            IsBau = activity.Bau
+        };
+    }
+
+    private static byte[] BuildDailyReportWorkbook(List<DailyReportRowDto> rows, DateTime localDay, string userName)
+    {
+        using var stream = new MemoryStream();
+        using (var archive = new ZipArchive(stream, ZipArchiveMode.Create, leaveOpen: true))
+        {
+            AddZipEntry(archive, "[Content_Types].xml", BuildContentTypesXml());
+            AddZipEntry(archive, "_rels/.rels", BuildRootRelsXml());
+            AddZipEntry(archive, "xl/workbook.xml", BuildWorkbookXml());
+            AddZipEntry(archive, "xl/_rels/workbook.xml.rels", BuildWorkbookRelsXml());
+            AddZipEntry(archive, "xl/styles.xml", BuildStylesXml());
+            AddZipEntry(archive, "xl/worksheets/sheet1.xml", BuildDailyReportSheetXml(rows, localDay, userName));
+        }
+
+        return stream.ToArray();
+    }
+
+    private static string BuildDailyReportSheetXml(List<DailyReportRowDto> rows, DateTime localDay, string userName)
+    {
+        var totalMinutes = rows.Sum(r => r.DurationMinutes);
+        var bauMinutes = rows.Where(r => r.IsBau).Sum(r => r.DurationMinutes);
+        var projectMinutes = rows.Where(r => !r.IsBau).Sum(r => r.DurationMinutes);
+
+        var sb = new StringBuilder();
+        sb.Append("""<?xml version="1.0" encoding="UTF-8" standalone="yes"?>""");
+        sb.Append("""<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">""");
+        sb.Append("""<sheetPr><pageSetUpPr fitToPage="1"/></sheetPr>""");
+        sb.Append("<dimension ref=\"A1:F").Append(Math.Max(16, rows.Count + 11)).Append("\"/>");
+        sb.Append("""<sheetViews><sheetView workbookViewId="0"/></sheetViews>""");
+        sb.Append("""<sheetFormatPr defaultRowHeight="18"/>""");
+        sb.Append("""<cols><col min="1" max="1" width="14" customWidth="1"/><col min="2" max="2" width="28" customWidth="1"/><col min="3" max="3" width="20" customWidth="1"/><col min="4" max="4" width="30" customWidth="1"/><col min="5" max="5" width="42" customWidth="1"/><col min="6" max="6" width="11" customWidth="1"/></cols>""");
+        sb.Append("<sheetData>");
+
+        AppendRow(sb, 1, new[] { Cell("A1", "DAILY REPORT", 1) }, height: 26);
+        AppendRow(sb, 2, new[] { Cell("A2", $"Datum: {localDay:dd.MM.yyyy}", 2), Cell("D2", $"Korisnik: {userName}", 2) });
+        AppendRow(sb, 4, new[] { Cell("A4", "Ukupno aktivnosti", 8), Cell("B4", rows.Count.ToString(), 9), Cell("D4", "Ukupno vreme", 8), Cell("E4", FormatMinutes(totalMinutes), 9) });
+        AppendRow(sb, 5, new[] { Cell("A5", "BAU vreme", 8), Cell("B5", FormatMinutes(bauMinutes), 9), Cell("D5", "Projektno vreme", 8), Cell("E5", FormatMinutes(projectMinutes), 9) });
+        AppendRow(sb, 7, new[]
+        {
+            Cell("A7", "Vreme", 4),
+            Cell("B7", "Klijent / Projekat", 4),
+            Cell("C7", "Tip aktivnosti", 4),
+            Cell("D7", "Aktivnost", 4),
+            Cell("E7", "Detalji", 4),
+            Cell("F7", "Trajanje", 4)
+        });
+
+        var rowIndex = 8;
+        foreach (var row in rows)
+        {
+            AppendRow(sb, rowIndex, new[]
+            {
+                Cell($"A{rowIndex}", row.TimeRange, 6),
+                Cell($"B{rowIndex}", row.ClientOrProject, 5),
+                Cell($"C{rowIndex}", row.ActivityType, 5),
+                Cell($"D{rowIndex}", row.Description, 5),
+                Cell($"E{rowIndex}", row.Details, 5),
+                Cell($"F{rowIndex}", FormatMinutes(row.DurationMinutes), 7)
+            }, height: 42);
+            rowIndex++;
+        }
+
+        if (rows.Count == 0)
+        {
+            AppendRow(sb, rowIndex, new[] { Cell($"A{rowIndex}", "Nema aktivnosti za izabrani dan.", 5) }, height: 28);
+            rowIndex++;
+        }
+
+        rowIndex += 2;
+        AppendRow(sb, rowIndex, new[] { Cell($"A{rowIndex}", "Napomena", 3) });
+        rowIndex++;
+        AppendRow(sb, rowIndex, new[] { Cell($"A{rowIndex}", "Izveštaj je generisan iz ProjectOrganizer dnevnog kalendara.", 10) });
+
+        sb.Append("</sheetData>");
+        sb.Append("<mergeCells count=\"4\"><mergeCell ref=\"A1:F1\"/><mergeCell ref=\"A2:C2\"/><mergeCell ref=\"D2:F2\"/><mergeCell ref=\"A")
+            .Append(rowIndex)
+            .Append(":F")
+            .Append(rowIndex)
+            .Append("\"/></mergeCells>");
+        sb.Append("""<printOptions horizontalCentered="1"/>""");
+        sb.Append("""<pageMargins left="0.35" right="0.35" top="0.55" bottom="0.55" header="0.2" footer="0.2"/>""");
+        sb.Append("""<pageSetup paperSize="9" orientation="portrait" fitToWidth="1" fitToHeight="0"/>""");
+        sb.Append("</worksheet>");
+        return sb.ToString();
+    }
+
+    private static void AppendRow(StringBuilder sb, int rowIndex, IEnumerable<string> cells, double? height = null)
+    {
+        sb.Append("<row r=\"").Append(rowIndex).Append('"');
+        if (height.HasValue)
+            sb.Append(" ht=\"").Append(height.Value.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)).Append("\" customHeight=\"1\"");
+        sb.Append('>');
+        foreach (var cell in cells)
+            sb.Append(cell);
+        sb.Append("</row>");
+    }
+
+    private static string Cell(string reference, string value, int styleIndex)
+        => $"""<c r="{reference}" s="{styleIndex}" t="inlineStr"><is><t>{EscapeXml(value)}</t></is></c>""";
+
+    private static string EscapeXml(string? value)
+    {
+        if (string.IsNullOrEmpty(value))
+            return string.Empty;
+
+        var clean = new string(value.Where(ch =>
+            ch == 0x9
+            || ch == 0xA
+            || ch == 0xD
+            || (ch >= 0x20 && ch <= 0xD7FF)
+            || (ch >= 0xE000 && ch <= 0xFFFD)).ToArray());
+
+        return System.Security.SecurityElement.Escape(clean) ?? string.Empty;
+    }
+
+    private static string FormatMinutes(int minutes)
+    {
+        var hours = minutes / 60;
+        var remaining = minutes % 60;
+        return hours > 0 ? $"{hours}h {remaining:00}m" : $"{remaining}m";
+    }
+
+    private static void AddZipEntry(ZipArchive archive, string path, string content)
+    {
+        var entry = archive.CreateEntry(path, CompressionLevel.Optimal);
+        using var writer = new StreamWriter(entry.Open(), new UTF8Encoding(false));
+        writer.Write(content);
+    }
+
+    private static string BuildContentTypesXml() =>
+        """<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>""";
+
+    private static string BuildRootRelsXml() =>
+        """<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>""";
+
+    private static string BuildWorkbookXml() =>
+        """<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Daily Report" sheetId="1" r:id="rId1"/></sheets></workbook>""";
+
+    private static string BuildWorkbookRelsXml() =>
+        """<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>""";
+
+    private static string BuildStylesXml() =>
+        """
+        <styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+          <fonts count="5">
+            <font><sz val="11"/><color rgb="FF1F2937"/><name val="Calibri"/></font>
+            <font><b/><sz val="18"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font>
+            <font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font>
+            <font><b/><sz val="11"/><color rgb="FF1F2937"/><name val="Calibri"/></font>
+            <font><i/><sz val="10"/><color rgb="FF64748B"/><name val="Calibri"/></font>
+          </fonts>
+          <fills count="6">
+            <fill><patternFill patternType="none"/></fill>
+            <fill><patternFill patternType="gray125"/></fill>
+            <fill><patternFill patternType="solid"><fgColor rgb="FF1F4E79"/><bgColor indexed="64"/></patternFill></fill>
+            <fill><patternFill patternType="solid"><fgColor rgb="FF2563EB"/><bgColor indexed="64"/></patternFill></fill>
+            <fill><patternFill patternType="solid"><fgColor rgb="FFEFF6FF"/><bgColor indexed="64"/></patternFill></fill>
+            <fill><patternFill patternType="solid"><fgColor rgb="FFF8FAFC"/><bgColor indexed="64"/></patternFill></fill>
+          </fills>
+          <borders count="2">
+            <border><left/><right/><top/><bottom/><diagonal/></border>
+            <border><left style="thin"><color rgb="FFE2E8F0"/></left><right style="thin"><color rgb="FFE2E8F0"/></right><top style="thin"><color rgb="FFE2E8F0"/></top><bottom style="thin"><color rgb="FFE2E8F0"/></bottom><diagonal/></border>
+          </borders>
+          <cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>
+          <cellXfs count="11">
+            <xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>
+            <xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1"><alignment horizontal="center" vertical="center"/></xf>
+            <xf numFmtId="0" fontId="3" fillId="0" borderId="0" xfId="0" applyFont="1"><alignment vertical="center"/></xf>
+            <xf numFmtId="0" fontId="2" fillId="3" borderId="0" xfId="0" applyFont="1" applyFill="1"><alignment horizontal="left" vertical="center"/></xf>
+            <xf numFmtId="0" fontId="2" fillId="2" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf>
+            <xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyBorder="1"><alignment vertical="top" wrapText="1"/></xf>
+            <xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyBorder="1"><alignment horizontal="center" vertical="top" wrapText="1"/></xf>
+            <xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyBorder="1"><alignment horizontal="right" vertical="top"/></xf>
+            <xf numFmtId="0" fontId="3" fillId="4" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1"><alignment vertical="center"/></xf>
+            <xf numFmtId="0" fontId="3" fillId="5" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1"><alignment horizontal="right" vertical="center"/></xf>
+            <xf numFmtId="0" fontId="4" fillId="0" borderId="0" xfId="0" applyFont="1"><alignment vertical="top" wrapText="1"/></xf>
+          </cellXfs>
+          <cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>
+        </styleSheet>
+        """.TrimStart();
+
     private static List<ScaledBauDuration> ScaleDurationsToAvailableTime(
         List<(Aktivnost Activity, int RequestedMinutes)> activities,
         int totalFreeMinutes)
@@ -411,3 +675,14 @@ public class ScheduleBauActivityDto
 }
 
 public record ScaledBauDuration(Aktivnost Activity, int RequestedMinutes, int ScheduledMinutes);
+
+public class DailyReportRowDto
+{
+    public string TimeRange { get; set; } = string.Empty;
+    public string ClientOrProject { get; set; } = string.Empty;
+    public string ActivityType { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public string Details { get; set; } = string.Empty;
+    public int DurationMinutes { get; set; }
+    public bool IsBau { get; set; }
+}

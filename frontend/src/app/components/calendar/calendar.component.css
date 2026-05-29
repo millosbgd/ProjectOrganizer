@@ -75,7 +75,8 @@
 }
 
 :host ::ng-deep .fc-bauBatch-button,
-:host ::ng-deep .fc-scheduleBau-button {
+:host ::ng-deep .fc-scheduleBau-button,
+:host ::ng-deep .fc-dailyReport-button {
   background-color: #ffffff;
   border-color: #9ca3af;
   color: #1f2937;
@@ -83,7 +84,8 @@
 }
 
 :host ::ng-deep .fc-bauBatch-button:hover,
-:host ::ng-deep .fc-scheduleBau-button:hover {
+:host ::ng-deep .fc-scheduleBau-button:hover,
+:host ::ng-deep .fc-dailyReport-button:hover {
   background-color: #eff6ff;
   border-color: #2563eb;
   color: #1d4ed8;
