@@ -54,11 +54,11 @@
                 </div>
               </td>
               <td>
-                <input
-                  type="text"
+                <textarea
                   [(ngModel)]="row.detalji"
                   [name]="'detalji-' + row.localId"
-                />
+                  rows="3"
+                ></textarea>
               </td>
               <td class="row-actions">
                 <button type="button" class="btn-icon" (click)="removeRow(row)" title="Ukloni red">

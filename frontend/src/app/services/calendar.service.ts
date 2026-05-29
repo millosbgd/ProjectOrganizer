@@ -4,6 +4,20 @@ import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { CalendarActivity, UpdateActivityTimeDto } from '../models/calendar-activity.model';
 
+export interface ScheduleBauDayActivity {
+  id: number;
+  startUtc: string;
+  endUtc: string;
+  durationMinutes: number;
+}
+
+export interface ScheduleBauDayResult {
+  scheduledCount: number;
+  totalBauMinutes: number;
+  fixedActivityCount: number;
+  activities: ScheduleBauDayActivity[];
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -32,5 +46,13 @@ export class CalendarService {
    */
   updateActivityTime(id: number, dto: UpdateActivityTimeDto): Observable<void> {
     return this.http.patch<void>(`${this.apiUrl}/${id}/time`, dto);
+  }
+
+  /**
+   * Automatically schedule BAU activities for one local day into the 08:00-16:00 window.
+   * Existing non-BAU activities for that day stay fixed.
+   */
+  scheduleBauDay(datum: string): Observable<ScheduleBauDayResult> {
+    return this.http.post<ScheduleBauDayResult>(`${this.apiUrl}/schedule-bau-day`, { datum });
   }
 }

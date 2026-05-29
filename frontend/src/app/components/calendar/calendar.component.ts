@@ -64,12 +64,16 @@ export class CalendarComponent implements OnInit {
       bauBatch: {
         text: 'BAU unos',
         click: this.openBauBatchModal.bind(this)
+      },
+      scheduleBau: {
+        text: 'Rasporedi BAU',
+        click: this.scheduleBauDay.bind(this)
       }
     },
     headerToolbar: {
       left: 'prev,next today',
       center: 'title',
-      right: 'dayGridMonth,timeGridWeek,timeGridDay bauBatch'
+      right: 'dayGridMonth,timeGridWeek,timeGridDay bauBatch scheduleBau'
     },
     editable: true,
     selectable: true,
@@ -308,6 +312,27 @@ export class CalendarComponent implements OnInit {
     this.refreshCalendar();
   }
 
+  scheduleBauDay(): void {
+    if (!this.isDayView) {
+      return;
+    }
+
+    this.error = null;
+    this.calendarService.scheduleBauDay(this.formatDateOnly(this.selectedDay)).subscribe({
+      next: (result) => {
+        alert(`Raspoređeno je ${result.scheduledCount} BAU aktivnosti (${result.totalBauMinutes} min).`);
+        this.refreshCalendar();
+      },
+      error: (err) => {
+        console.error('Error scheduling BAU activities:', err);
+        this.error = err.error?.message || 'Greška pri raspoređivanju BAU aktivnosti';
+        setTimeout(() => {
+          this.error = null;
+        }, 5000);
+      }
+    });
+  }
+
   onAktivnostDeleted(id: number): void {
     // Activity was deleted from modal, refresh the calendar
     window.location.reload();
@@ -340,10 +365,24 @@ export class CalendarComponent implements OnInit {
   }
 
   private updateBauBatchToolbarButton(): void {
-    const button = document.querySelector('.fc-bauBatch-button') as HTMLButtonElement | null;
-    if (!button) return;
+    const bauBatchButton = document.querySelector('.fc-bauBatch-button') as HTMLButtonElement | null;
+    const scheduleBauButton = document.querySelector('.fc-scheduleBau-button') as HTMLButtonElement | null;
 
-    button.style.display = this.isDayView ? '' : 'none';
-    button.title = 'Zbirni unos BAU aktivnosti';
+    if (bauBatchButton) {
+      bauBatchButton.style.display = this.isDayView ? '' : 'none';
+      bauBatchButton.title = 'Zbirni unos BAU aktivnosti';
+    }
+
+    if (scheduleBauButton) {
+      scheduleBauButton.style.display = this.isDayView ? '' : 'none';
+      scheduleBauButton.title = 'Rasporedi BAU aktivnosti od 08:00 do 16:00';
+    }
+  }
+
+  private formatDateOnly(date: Date): string {
+    const year = date.getFullYear();
+    const month = `${date.getMonth() + 1}`.padStart(2, '0');
+    const day = `${date.getDate()}`.padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 }

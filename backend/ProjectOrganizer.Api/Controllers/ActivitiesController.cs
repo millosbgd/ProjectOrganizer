@@ -124,6 +124,183 @@ public class ActivitiesController : ControllerBase
             throw;
         }
     }
+
+    /// <summary>
+    /// Schedule BAU activities for a selected day into the 08:00-16:00 work window.
+    /// Non-BAU activities are treated as fixed intervals and are never moved.
+    /// </summary>
+    [HttpPost("schedule-bau-day")]
+    public async Task<ActionResult<ScheduleBauDayResultDto>> ScheduleBauDay([FromBody] ScheduleBauDayRequestDto dto)
+    {
+        var currentUser = await _userService.EnsureUserExistsAsync(User);
+        var timeZone = ResolveBelgradeTimeZone();
+        var localDay = dto.Datum.Date;
+
+        var workStartLocal = localDay.AddHours(8);
+        var workEndLocal = localDay.AddHours(16);
+        var localNextDay = localDay.AddDays(1);
+        var workStartUtc = ConvertLocalToUtc(workStartLocal, timeZone);
+        var workEndUtc = ConvertLocalToUtc(workEndLocal, timeZone);
+
+        var fixedActivities = await _context.Aktivnosti
+            .Where(a => a.CreatedBy == currentUser.Id
+                && !a.Bau
+                && a.StartUtc.HasValue
+                && a.EndUtc.HasValue
+                && a.StartUtc < workEndUtc
+                && a.EndUtc > workStartUtc)
+            .OrderBy(a => a.StartUtc)
+            .ToListAsync();
+
+        var busyIntervals = fixedActivities
+            .Select(a => (
+                Start: a.StartUtc!.Value < workStartUtc ? workStartUtc : a.StartUtc.Value,
+                End: a.EndUtc!.Value > workEndUtc ? workEndUtc : a.EndUtc.Value
+            ))
+            .Where(i => i.End > i.Start)
+            .OrderBy(i => i.Start)
+            .ToList();
+
+        var freeSlots = BuildFreeSlots(workStartUtc, workEndUtc, busyIntervals);
+
+        var bauActivities = await _context.Aktivnosti
+            .Where(a => a.CreatedBy == currentUser.Id
+                && a.Bau
+                && a.Datum >= localDay
+                && a.Datum < localNextDay)
+            .ToListAsync();
+
+        if (bauActivities.Count == 0)
+            return BadRequest(new { message = "Nema BAU aktivnosti za izabrani dan." });
+
+        var invalidDuration = bauActivities.FirstOrDefault(a => !a.BauTrajanjeMinuta.HasValue || a.BauTrajanjeMinuta <= 0);
+        if (invalidDuration != null)
+            return BadRequest(new { message = $"BAU aktivnost #{invalidDuration.Id} nema validno trajanje." });
+
+        var totalBauMinutes = bauActivities.Sum(a => a.BauTrajanjeMinuta!.Value);
+        var totalFreeMinutes = freeSlots.Sum(s => (int)(s.End - s.Start).TotalMinutes);
+
+        if (totalBauMinutes > totalFreeMinutes)
+        {
+            return BadRequest(new
+            {
+                message = $"Nema dovoljno slobodnog vremena za BAU aktivnosti. Potrebno: {totalBauMinutes} min, slobodno: {totalFreeMinutes} min."
+            });
+        }
+
+        var slots = freeSlots.ToList();
+        var scheduled = new List<ScheduleBauActivityDto>();
+
+        foreach (var activity in bauActivities
+            .OrderByDescending(a => a.BauTrajanjeMinuta)
+            .ThenBy(a => a.CreatedAt)
+            .ThenBy(a => a.Id))
+        {
+            var duration = TimeSpan.FromMinutes(activity.BauTrajanjeMinuta!.Value);
+            var slotIndex = slots.FindIndex(s => s.End - s.Start >= duration);
+
+            if (slotIndex < 0)
+            {
+                return BadRequest(new { message = "BAU aktivnosti ne mogu da se uklope u postojeće slobodne vremenske slotove." });
+            }
+
+            var slot = slots[slotIndex];
+            var start = slot.Start;
+            var end = start.Add(duration);
+
+            activity.StartUtc = start;
+            activity.EndUtc = end;
+            activity.UpdatedAt = DateTime.UtcNow;
+
+            scheduled.Add(new ScheduleBauActivityDto
+            {
+                Id = activity.Id,
+                StartUtc = start,
+                EndUtc = end,
+                DurationMinutes = activity.BauTrajanjeMinuta.Value
+            });
+
+            slots[slotIndex] = (end, slot.End);
+            if (slots[slotIndex].End <= slots[slotIndex].Start)
+                slots.RemoveAt(slotIndex);
+        }
+
+        await _context.SaveChangesAsync();
+
+        return Ok(new ScheduleBauDayResultDto
+        {
+            ScheduledCount = scheduled.Count,
+            TotalBauMinutes = totalBauMinutes,
+            FixedActivityCount = fixedActivities.Count,
+            Activities = scheduled.OrderBy(a => a.StartUtc).ToList()
+        });
+    }
+
+    private static List<(DateTime Start, DateTime End)> BuildFreeSlots(
+        DateTime workStartUtc,
+        DateTime workEndUtc,
+        List<(DateTime Start, DateTime End)> busyIntervals)
+    {
+        var freeSlots = new List<(DateTime Start, DateTime End)>();
+        var cursor = workStartUtc;
+
+        foreach (var interval in MergeIntervals(busyIntervals))
+        {
+            if (interval.Start > cursor)
+                freeSlots.Add((cursor, interval.Start));
+
+            if (interval.End > cursor)
+                cursor = interval.End;
+        }
+
+        if (cursor < workEndUtc)
+            freeSlots.Add((cursor, workEndUtc));
+
+        return freeSlots;
+    }
+
+    private static List<(DateTime Start, DateTime End)> MergeIntervals(List<(DateTime Start, DateTime End)> intervals)
+    {
+        var merged = new List<(DateTime Start, DateTime End)>();
+        foreach (var interval in intervals.OrderBy(i => i.Start))
+        {
+            if (merged.Count == 0 || interval.Start > merged[^1].End)
+            {
+                merged.Add(interval);
+                continue;
+            }
+
+            if (interval.End > merged[^1].End)
+                merged[^1] = (merged[^1].Start, interval.End);
+        }
+
+        return merged;
+    }
+
+    private static DateTime ConvertLocalToUtc(DateTime localDateTime, TimeZoneInfo timeZone)
+    {
+        var unspecified = DateTime.SpecifyKind(localDateTime, DateTimeKind.Unspecified);
+        return TimeZoneInfo.ConvertTimeToUtc(unspecified, timeZone);
+    }
+
+    private static TimeZoneInfo ResolveBelgradeTimeZone()
+    {
+        foreach (var id in new[] { "Europe/Belgrade", "Central European Standard Time" })
+        {
+            try
+            {
+                return TimeZoneInfo.FindSystemTimeZoneById(id);
+            }
+            catch (TimeZoneNotFoundException)
+            {
+            }
+            catch (InvalidTimeZoneException)
+            {
+            }
+        }
+
+        return TimeZoneInfo.Utc;
+    }
 }
 
 /// <summary>
@@ -148,4 +325,25 @@ public class UpdateActivityTimeDto
 {
     public DateTime StartUtc { get; set; }
     public DateTime EndUtc { get; set; }
+}
+
+public class ScheduleBauDayRequestDto
+{
+    public DateTime Datum { get; set; }
+}
+
+public class ScheduleBauDayResultDto
+{
+    public int ScheduledCount { get; set; }
+    public int TotalBauMinutes { get; set; }
+    public int FixedActivityCount { get; set; }
+    public List<ScheduleBauActivityDto> Activities { get; set; } = new();
+}
+
+public class ScheduleBauActivityDto
+{
+    public int Id { get; set; }
+    public DateTime StartUtc { get; set; }
+    public DateTime EndUtc { get; set; }
+    public int DurationMinutes { get; set; }
 }
