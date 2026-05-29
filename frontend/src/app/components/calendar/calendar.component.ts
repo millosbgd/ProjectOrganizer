@@ -144,13 +144,15 @@ export class CalendarComponent implements OnInit {
           title: activity.title,
           start: activity.start,
           end: activity.end,
-          backgroundColor: this.getActivityColor(activity.bau),
-          borderColor: this.getActivityColor(activity.bau),
+          backgroundColor: this.getActivityColor(activity),
+          borderColor: this.getActivityColor(activity),
+          textColor: '#ffffff',
           extendedProps: {
             projectName: activity.projectName,
             projectId: activity.projectId,
             type: activity.type,
-            bau: activity.bau
+            bau: activity.bau,
+            bauTipAktivnosti: activity.bauTipAktivnosti
           }
         }));
         successCallback(events);
@@ -341,10 +343,24 @@ export class CalendarComponent implements OnInit {
     window.location.reload();
   }
 
-  getActivityColor(isBau: boolean): string {
-    // BAU activities: olive-green (darker for better text contrast)
-    // Project activities: darker blue (darker than header)
-    return isBau ? '#7cb342' : '#2980b9';
+  getActivityColor(activity: CalendarActivity): string {
+    if (!activity.bau) {
+      return '#2980b9';
+    }
+
+    const bauTypeColors: Record<string, string> = {
+      SUPPORT: '#2e7d32',
+      CONSULTING: '#6a1b9a',
+      ANALYSIS: '#ef6c00',
+      ADMIN: '#455a64',
+      COMMUNICATION: '#00838f',
+      DATABASE: '#5d4037',
+      PROG: '#c62828',
+      VERZ: '#ad1457'
+    };
+
+    const typeCode = activity.bauTipAktivnosti?.trim().toUpperCase() || '';
+    return bauTypeColors[typeCode] || '#7cb342';
   }
 
   private loadBauBatchLookups(): void {

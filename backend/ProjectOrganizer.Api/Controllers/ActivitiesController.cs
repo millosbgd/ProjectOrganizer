@@ -67,7 +67,8 @@ public class ActivitiesController : ControllerBase
                 Type = a.Vrsta,
                 ProjectName = a.Projekat != null ? a.Projekat.Naziv : "BAU",
                 ProjectId = a.ProjekatId,
-                Bau = a.Bau
+                Bau = a.Bau,
+                BauTipAktivnosti = a.BauTipAktivnosti
             })
             .ToListAsync();
 
@@ -373,6 +374,7 @@ public class CalendarActivityDto
     public string ProjectName { get; set; } = string.Empty;
     public int? ProjectId { get; set; }
     public bool Bau { get; set; }
+    public string? BauTipAktivnosti { get; set; }
 }
 
 /// <summary>

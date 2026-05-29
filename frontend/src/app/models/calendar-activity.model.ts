@@ -7,6 +7,7 @@ export interface CalendarActivity {
   projectName: string;
   projectId: number | null;
   bau: boolean;
+  bauTipAktivnosti?: string | null;
 }
 
 export interface UpdateActivityTimeDto {
