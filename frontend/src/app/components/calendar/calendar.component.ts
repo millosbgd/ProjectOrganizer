@@ -320,7 +320,10 @@ export class CalendarComponent implements OnInit {
     this.error = null;
     this.calendarService.scheduleBauDay(this.formatDateOnly(this.selectedDay)).subscribe({
       next: (result) => {
-        alert(`Raspoređeno je ${result.scheduledCount} BAU aktivnosti (${result.totalBauMinutes} min).`);
+        const scaleMessage = result.wasScaled
+          ? ` Uneto je ${result.totalBauMinutes} min, raspoređeno ${result.scheduledBauMinutes} min.`
+          : ` Ukupno ${result.totalBauMinutes} min.`;
+        alert(`Raspoređeno je ${result.scheduledCount} BAU aktivnosti.${scaleMessage}`);
         this.refreshCalendar();
       },
       error: (err) => {

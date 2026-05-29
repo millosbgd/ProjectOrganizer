@@ -180,23 +180,27 @@ public class ActivitiesController : ControllerBase
         var totalBauMinutes = bauActivities.Sum(a => a.BauTrajanjeMinuta!.Value);
         var totalFreeMinutes = freeSlots.Sum(s => (int)(s.End - s.Start).TotalMinutes);
 
-        if (totalBauMinutes > totalFreeMinutes)
+        if (totalFreeMinutes < bauActivities.Count)
         {
             return BadRequest(new
             {
-                message = $"Nema dovoljno slobodnog vremena za BAU aktivnosti. Potrebno: {totalBauMinutes} min, slobodno: {totalFreeMinutes} min."
+                message = $"Nema dovoljno slobodnog vremena za sve BAU aktivnosti. Slobodno: {totalFreeMinutes} min, aktivnosti: {bauActivities.Count}."
             });
         }
 
         var slots = freeSlots.ToList();
         var scheduled = new List<ScheduleBauActivityDto>();
+        var scaledDurations = ScaleDurationsToAvailableTime(
+            bauActivities.Select(a => (Activity: a, RequestedMinutes: a.BauTrajanjeMinuta!.Value)).ToList(),
+            totalFreeMinutes);
 
-        foreach (var activity in bauActivities
-            .OrderByDescending(a => a.BauTrajanjeMinuta)
-            .ThenBy(a => a.CreatedAt)
-            .ThenBy(a => a.Id))
+        foreach (var item in scaledDurations
+            .OrderByDescending(i => i.ScheduledMinutes)
+            .ThenBy(i => i.Activity.CreatedAt)
+            .ThenBy(i => i.Activity.Id))
         {
-            var duration = TimeSpan.FromMinutes(activity.BauTrajanjeMinuta!.Value);
+            var activity = item.Activity;
+            var duration = TimeSpan.FromMinutes(item.ScheduledMinutes);
             var slotIndex = slots.FindIndex(s => s.End - s.Start >= duration);
 
             if (slotIndex < 0)
@@ -217,7 +221,8 @@ public class ActivitiesController : ControllerBase
                 Id = activity.Id,
                 StartUtc = start,
                 EndUtc = end,
-                DurationMinutes = activity.BauTrajanjeMinuta.Value
+                RequestedDurationMinutes = item.RequestedMinutes,
+                DurationMinutes = item.ScheduledMinutes
             });
 
             slots[slotIndex] = (end, slot.End);
@@ -231,9 +236,61 @@ public class ActivitiesController : ControllerBase
         {
             ScheduledCount = scheduled.Count,
             TotalBauMinutes = totalBauMinutes,
+            ScheduledBauMinutes = scheduled.Sum(a => a.DurationMinutes),
+            WasScaled = totalBauMinutes > totalFreeMinutes,
             FixedActivityCount = fixedActivities.Count,
             Activities = scheduled.OrderBy(a => a.StartUtc).ToList()
         });
+    }
+
+    private static List<ScaledBauDuration> ScaleDurationsToAvailableTime(
+        List<(Aktivnost Activity, int RequestedMinutes)> activities,
+        int totalFreeMinutes)
+    {
+        var requestedTotal = activities.Sum(a => a.RequestedMinutes);
+        if (requestedTotal <= totalFreeMinutes)
+        {
+            return activities
+                .Select(a => new ScaledBauDuration(a.Activity, a.RequestedMinutes, a.RequestedMinutes))
+                .ToList();
+        }
+
+        var scaled = activities
+            .Select(a =>
+            {
+                var exact = (decimal)a.RequestedMinutes * totalFreeMinutes / requestedTotal;
+                var scheduled = Math.Max(1, (int)Math.Floor(exact));
+                return new
+                {
+                    a.Activity,
+                    a.RequestedMinutes,
+                    ScheduledMinutes = scheduled,
+                    Remainder = exact - scheduled
+                };
+            })
+            .ToList();
+
+        var remainingMinutes = totalFreeMinutes - scaled.Sum(a => a.ScheduledMinutes);
+        var orderedForRemainder = scaled
+            .OrderByDescending(a => a.Remainder)
+            .ThenByDescending(a => a.RequestedMinutes)
+            .ThenBy(a => a.Activity.CreatedAt)
+            .ThenBy(a => a.Activity.Id)
+            .ToList();
+
+        var extraByActivityId = orderedForRemainder.ToDictionary(a => a.Activity.Id, _ => 0);
+        for (var i = 0; i < remainingMinutes; i++)
+        {
+            var item = orderedForRemainder[i % orderedForRemainder.Count];
+            extraByActivityId[item.Activity.Id]++;
+        }
+
+        return scaled
+            .Select(a => new ScaledBauDuration(
+                a.Activity,
+                a.RequestedMinutes,
+                a.ScheduledMinutes + extraByActivityId[a.Activity.Id]))
+            .ToList();
     }
 
     private static List<(DateTime Start, DateTime End)> BuildFreeSlots(
@@ -336,6 +393,8 @@ public class ScheduleBauDayResultDto
 {
     public int ScheduledCount { get; set; }
     public int TotalBauMinutes { get; set; }
+    public int ScheduledBauMinutes { get; set; }
+    public bool WasScaled { get; set; }
     public int FixedActivityCount { get; set; }
     public List<ScheduleBauActivityDto> Activities { get; set; } = new();
 }
@@ -345,5 +404,8 @@ public class ScheduleBauActivityDto
     public int Id { get; set; }
     public DateTime StartUtc { get; set; }
     public DateTime EndUtc { get; set; }
+    public int RequestedDurationMinutes { get; set; }
     public int DurationMinutes { get; set; }
 }
+
+public record ScaledBauDuration(Aktivnost Activity, int RequestedMinutes, int ScheduledMinutes);

@@ -8,12 +8,15 @@ export interface ScheduleBauDayActivity {
   id: number;
   startUtc: string;
   endUtc: string;
+  requestedDurationMinutes: number;
   durationMinutes: number;
 }
 
 export interface ScheduleBauDayResult {
   scheduledCount: number;
   totalBauMinutes: number;
+  scheduledBauMinutes: number;
+  wasScaled: boolean;
   fixedActivityCount: number;
   activities: ScheduleBauDayActivity[];
 }
