@@ -24,6 +24,8 @@ public class DevOpsSyncBackgroundService : BackgroundService
             DailyRunAt,
             _timeZone.Id);
 
+        await RunMissedSyncIfNeededAsync(stoppingToken);
+
         while (!stoppingToken.IsCancellationRequested)
         {
             var delay = GetDelayUntilNextRun(DateTimeOffset.UtcNow);
@@ -35,6 +37,33 @@ public class DevOpsSyncBackgroundService : BackgroundService
                 break;
 
             await RunDailySyncAsync(stoppingToken);
+        }
+    }
+
+    private async Task RunMissedSyncIfNeededAsync(CancellationToken stoppingToken)
+    {
+        var utcNow = DateTimeOffset.UtcNow;
+        if (!HasTodayRunTimePassed(utcNow, out var localTodayRunUtc))
+            return;
+
+        try
+        {
+            using var scope = _scopeFactory.CreateScope();
+            var syncService = scope.ServiceProvider.GetRequiredService<DevOpsSyncService>();
+
+            var alreadySyncedToday = await syncService.HasLinkedTaskSyncSinceAsync(localTodayRunUtc, stoppingToken);
+            if (alreadySyncedToday)
+                return;
+
+            _logger.LogInformation("DevOps osvežavanje za danas nije zabeleženo nakon 07:00. Pokrećem catch-up sync.");
+            await RunDailySyncAsync(stoppingToken);
+        }
+        catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+        {
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Greška tokom catch-up DevOps osvežavanja.");
         }
     }
 
@@ -77,6 +106,18 @@ public class DevOpsSyncBackgroundService : BackgroundService
         var nextRunUtc = TimeZoneInfo.ConvertTimeToUtc(nextRunUnspecified, _timeZone);
 
         return nextRunUtc - utcNow.UtcDateTime;
+    }
+
+    private bool HasTodayRunTimePassed(DateTimeOffset utcNow, out DateTime localTodayRunUtc)
+    {
+        var localNow = TimeZoneInfo.ConvertTime(utcNow, _timeZone);
+        var localTodayStart = localNow.Date;
+        var todayRun = localTodayStart.Add(DailyRunAt.ToTimeSpan());
+
+        var todayRunUnspecified = DateTime.SpecifyKind(todayRun, DateTimeKind.Unspecified);
+        localTodayRunUtc = TimeZoneInfo.ConvertTimeToUtc(todayRunUnspecified, _timeZone);
+
+        return localNow.DateTime >= todayRun;
     }
 
     private static TimeZoneInfo ResolveBelgradeTimeZone()

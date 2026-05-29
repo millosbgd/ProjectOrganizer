@@ -82,6 +82,16 @@ public class DevOpsSyncService
         return result;
     }
 
+    public Task<bool> HasLinkedTaskSyncSinceAsync(DateTime utcFrom, CancellationToken cancellationToken = default)
+    {
+        return _context.DevOpsTasksCandidates
+            .AnyAsync(t =>
+                t.DevOpsUrl != null &&
+                t.DevOpsUrl != "" &&
+                t.LastDevOpsSyncAt >= utcFrom,
+                cancellationToken);
+    }
+
     private async Task<DevOpsDailySyncResult> RefreshUserTasksAsync(
         int userId,
         IReadOnlyCollection<DevOpsTasksCandidate> candidates,
