@@ -166,19 +166,24 @@
   margin-bottom: 12px;
 }
 
+.modal-top-section textarea {
+  min-height: 64px;
+  max-height: 96px;
+}
+
 .checklist-section {
-  flex: 1;
+  flex: 1 1 auto;
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  min-height: 0;
+  min-height: 260px;
   padding: 0 20px 4px;
 }
 
 .checklist-scroll-area {
   flex: 1;
   overflow-y: auto;
-  min-height: 0;
+  min-height: 220px;
   border: 1px solid #ddd;
   border-radius: 4px;
 }
@@ -398,4 +403,24 @@
 
 .checkbox-with-date .form-group {
   margin-bottom: 4px;
+}
+
+@media (max-height: 760px) {
+  .modal-header,
+  .modal-footer {
+    padding: 12px 20px;
+  }
+
+  .modal-top-section textarea {
+    min-height: 48px;
+    max-height: 64px;
+  }
+
+  .checklist-section {
+    min-height: 220px;
+  }
+
+  .checklist-scroll-area {
+    min-height: 180px;
+  }
 }
