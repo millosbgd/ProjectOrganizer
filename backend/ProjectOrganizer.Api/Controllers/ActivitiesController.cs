@@ -303,7 +303,7 @@ public class ActivitiesController : ControllerBase
             TimeRange = startLocal.HasValue && endLocal.HasValue ? $"{startLocal:HH:mm} - {endLocal:HH:mm}" : "",
             ClientOrProject = clientOrProject,
             ActivityType = typeLabel,
-            Description = activity.Opis,
+            Description = string.IsNullOrWhiteSpace(activity.OpisZaIzvestaj) ? activity.Opis : activity.OpisZaIzvestaj,
             Details = activity.Detalji,
             DurationMinutes = durationMinutes,
             IsBau = activity.Bau

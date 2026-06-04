@@ -89,7 +89,13 @@
               </ng-container>
             </span>
           </div>
-          <span class="scale-badge" *ngIf="preview.wasScaled">Prilagođeno radnom danu</span>
+          <button
+            type="button"
+            class="btn-ai"
+            (click)="generateReportDescriptions()"
+            [disabled]="isGeneratingReportDescriptions">
+            {{ isGeneratingReportDescriptions ? 'Generišem...' : 'AI opis za izveštaj' }}
+          </button>
         </div>
 
         <table class="preview-grid">
@@ -100,6 +106,7 @@
               <th>Tip aktivnosti</th>
               <th>Trajanje</th>
               <th>Detalji</th>
+              <th>Opis za izveštaj</th>
             </tr>
           </thead>
           <tbody>
@@ -116,6 +123,16 @@
                 </span>
               </td>
               <td>{{ item.detalji }}</td>
+              <td>
+                <textarea
+                  *ngIf="item.isBau"
+                  class="report-description-input"
+                  [ngModel]="item.opisZaIzvestaj"
+                  (ngModelChange)="updatePreviewReportDescription(item, $event)"
+                  [name]="'opis-izvestaj-' + item.rowIndex"
+                  rows="2"></textarea>
+                <span *ngIf="!item.isBau">{{ item.opisZaIzvestaj || '-' }}</span>
+              </td>
             </tr>
           </tbody>
         </table>

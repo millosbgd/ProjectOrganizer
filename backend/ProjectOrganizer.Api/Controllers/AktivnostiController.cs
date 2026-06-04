@@ -5,6 +5,7 @@ using ProjectOrganizer.Api.Data;
 using ProjectOrganizer.Api.Models;
 using ProjectOrganizer.Api.Services;
 using System.Security.Claims;
+using System.Text.Json;
 
 namespace ProjectOrganizer.Api.Controllers;
 
@@ -121,6 +122,7 @@ public class AktivnostiController : ControllerBase
         // Get current user and set as creator
         var currentUser = await _userService.EnsureUserExistsAsync(User);
         aktivnost.CreatedBy = currentUser.Id;
+        aktivnost.OpisZaIzvestaj ??= string.Empty;
 
         aktivnost.CreatedAt = DateTime.UtcNow;
         aktivnost.UpdatedAt = DateTime.UtcNow;
@@ -154,6 +156,7 @@ public class AktivnostiController : ControllerBase
             return new Aktivnost
             {
                 Opis = typeLabel,
+                OpisZaIzvestaj = row.OpisZaIzvestaj?.Trim() ?? string.Empty,
                 Detalji = row.Detalji?.Trim() ?? string.Empty,
                 Datum = datum,
                 StartUtc = row.StartUtc,
@@ -260,6 +263,7 @@ public class AktivnostiController : ControllerBase
                 BauTipAktivnosti = typeCode,
                 BauTipAktivnostiNaziv = validation.TypeLabels.GetValueOrDefault(typeCode, typeCode),
                 IsBau = true,
+                OpisZaIzvestaj = row.OpisZaIzvestaj?.Trim() ?? string.Empty,
                 Detalji = row.Detalji?.Trim() ?? string.Empty,
                 RequestedDurationMinutes = row.TrajanjeMinuta,
                 ScheduledDurationMinutes = item.ScheduledMinutes,
@@ -287,6 +291,7 @@ public class AktivnostiController : ControllerBase
                 BauTipAktivnosti = activity.Vrsta,
                 BauTipAktivnostiNaziv = activity.Vrsta,
                 IsBau = false,
+                OpisZaIzvestaj = activity.OpisZaIzvestaj,
                 Detalji = activity.Detalji,
                 RequestedDurationMinutes = durationMinutes,
                 ScheduledDurationMinutes = durationMinutes,
@@ -371,6 +376,115 @@ public class AktivnostiController : ControllerBase
         return new BauBatchValidationResult(rows, typeLabels, clientNames, null);
     }
 
+    // POST: api/Aktivnosti/bau-batch/generate-report-descriptions
+    [HttpPost("bau-batch/generate-report-descriptions")]
+    public async Task<ActionResult<BauBatchReportDescriptionsResultDto>> GenerateBauBatchReportDescriptions(
+        [FromBody] BauBatchReportDescriptionsRequestDto request)
+    {
+        var rows = request.Rows
+            .Where(r => r.RowIndex >= 0 && !string.IsNullOrWhiteSpace(r.BauTipAktivnostiNaziv))
+            .OrderBy(r => r.StartUtc)
+            .ThenBy(r => r.RowIndex)
+            .ToList();
+
+        if (rows.Count == 0)
+            return BadRequest(new { message = "Nema BAU aktivnosti za generisanje opisa za izveštaj." });
+
+        var currentUser = await _userService.EnsureUserExistsAsync(User);
+        var userSettings = await _context.UserSettings
+            .FirstOrDefaultAsync(s => s.UserId == currentUser.Auth0Id);
+
+        if (userSettings == null || string.IsNullOrWhiteSpace(userSettings.OpenAiApiKey))
+            return BadRequest(new { message = "Morate prvo konfigurisati OpenAI API ključ u podešavanjima." });
+
+        var apiKey = _encryptionService.Decrypt(userSettings.OpenAiApiKey);
+        if (string.IsNullOrWhiteSpace(apiKey))
+            return BadRequest(new { message = "OpenAI API ključ nije validan. Molimo ažurirajte ga u podešavanjima." });
+
+        var inputJson = JsonSerializer.Serialize(rows.Select(r => new
+        {
+            r.RowIndex,
+            Klijent = r.KlijentNaziv,
+            TipAktivnosti = r.BauTipAktivnostiNaziv,
+            Detalji = r.Detalji,
+            TrajanjeMinuta = r.ScheduledDurationMinutes,
+            Vreme = $"{r.StartUtc:HH:mm}-{r.EndUtc:HH:mm}"
+        }));
+
+        var prompt = $$"""
+            Ti si poslovni asistent koji priprema opise aktivnosti za dnevni izveštaj o radu.
+
+            Za svaku BAU aktivnost napiši kratak, profesionalan opis prilagođen izveštaju.
+
+            Pravila:
+            - Piši na srpskom jeziku, latinica.
+            - Opis treba da bude poslovan, konkretan i neutralan.
+            - Jedna rečenica po aktivnosti.
+            - Maksimalno 180 karaktera po opisu.
+            - Ne izmišljaj činjenice koje nisu u tipu aktivnosti ili detaljima.
+            - Ne pominji interna polja, šifre, JSON, trajanje ili vreme osim ako je bitno iz detalja.
+            - Vrati isključivo validan JSON niz bez markdown-a.
+
+            Format odgovora:
+            [
+              {"rowIndex": 0, "opisZaIzvestaj": "Profesionalni opis aktivnosti."}
+            ]
+
+            Aktivnosti:
+            {{inputJson}}
+            """;
+
+        var raw = await _openAIService.GenerateTextAsync(apiKey, prompt, userSettings.OpenAiModel);
+        var items = ParseReportDescriptionItems(raw);
+
+        if (items.Count == 0)
+            return BadRequest(new { message = "OpenAI nije vratio validne opise za izveštaj." });
+
+        return Ok(new BauBatchReportDescriptionsResultDto
+        {
+            Items = items
+        });
+    }
+
+    private static List<BauBatchReportDescriptionItemDto> ParseReportDescriptionItems(string raw)
+    {
+        raw = raw.Trim();
+        if (raw.StartsWith("```"))
+        {
+            var end = raw.LastIndexOf("```", StringComparison.Ordinal);
+            if (end > 0)
+            {
+                raw = raw[3..end].Trim();
+                if (raw.StartsWith("json", StringComparison.OrdinalIgnoreCase))
+                    raw = raw[4..].Trim();
+            }
+        }
+
+        using var doc = JsonDocument.Parse(raw);
+        if (doc.RootElement.ValueKind != JsonValueKind.Array)
+            return new List<BauBatchReportDescriptionItemDto>();
+
+        var result = new List<BauBatchReportDescriptionItemDto>();
+        foreach (var item in doc.RootElement.EnumerateArray())
+        {
+            if (!item.TryGetProperty("rowIndex", out var rowIndexElement)
+                || !item.TryGetProperty("opisZaIzvestaj", out var opisElement))
+                continue;
+
+            var opis = opisElement.GetString()?.Trim();
+            if (string.IsNullOrWhiteSpace(opis))
+                continue;
+
+            result.Add(new BauBatchReportDescriptionItemDto
+            {
+                RowIndex = rowIndexElement.GetInt32(),
+                OpisZaIzvestaj = opis
+            });
+        }
+
+        return result;
+    }
+
     // PUT: api/Aktivnosti/5
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateAktivnost(int id, Aktivnost aktivnost)
@@ -383,6 +497,7 @@ public class AktivnostiController : ControllerBase
             return NotFound();
 
         existingAktivnost.Opis = aktivnost.Opis;
+        existingAktivnost.OpisZaIzvestaj = aktivnost.OpisZaIzvestaj ?? string.Empty;
         existingAktivnost.Detalji = aktivnost.Detalji;
         existingAktivnost.Datum = aktivnost.Datum;
         existingAktivnost.StartUtc = aktivnost.StartUtc;
@@ -1044,6 +1159,7 @@ public class BauBatchCreateRowDto
     public string BauTipAktivnosti { get; set; } = string.Empty;
     public int TrajanjeMinuta { get; set; }
     public string? Detalji { get; set; }
+    public string? OpisZaIzvestaj { get; set; }
     public DateTime? StartUtc { get; set; }
     public DateTime? EndUtc { get; set; }
 }
@@ -1071,6 +1187,7 @@ public class BauBatchPreviewItemDto
     public string BauTipAktivnosti { get; set; } = string.Empty;
     public string BauTipAktivnostiNaziv { get; set; } = string.Empty;
     public bool IsBau { get; set; }
+    public string OpisZaIzvestaj { get; set; } = string.Empty;
     public string Detalji { get; set; } = string.Empty;
     public int RequestedDurationMinutes { get; set; }
     public int ScheduledDurationMinutes { get; set; }
@@ -1086,4 +1203,31 @@ public record BauBatchValidationResult(
 {
     public static BauBatchValidationResult WithError(ActionResult error) =>
         new(new List<BauBatchCreateRowDto>(), new Dictionary<string, string>(), new Dictionary<int, string>(), error);
+}
+
+public class BauBatchReportDescriptionsRequestDto
+{
+    public List<BauBatchReportDescriptionInputDto> Rows { get; set; } = new();
+}
+
+public class BauBatchReportDescriptionInputDto
+{
+    public int RowIndex { get; set; }
+    public string KlijentNaziv { get; set; } = string.Empty;
+    public string BauTipAktivnostiNaziv { get; set; } = string.Empty;
+    public string Detalji { get; set; } = string.Empty;
+    public int ScheduledDurationMinutes { get; set; }
+    public DateTime StartUtc { get; set; }
+    public DateTime EndUtc { get; set; }
+}
+
+public class BauBatchReportDescriptionsResultDto
+{
+    public List<BauBatchReportDescriptionItemDto> Items { get; set; } = new();
+}
+
+public class BauBatchReportDescriptionItemDto
+{
+    public int RowIndex { get; set; }
+    public string OpisZaIzvestaj { get; set; } = string.Empty;
 }

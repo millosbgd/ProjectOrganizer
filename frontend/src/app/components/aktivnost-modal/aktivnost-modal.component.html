@@ -102,8 +102,37 @@
       </div>
 
       <div class="form-group">
-        <label>Opis:</label>
-        <textarea class="opis-textarea" [(ngModel)]="aktivnost.opis" name="opis" rows="1" required></textarea>
+        <div class="opis-header">
+          <label>{{ opisMode === 'opis' ? 'Opis:' : 'Opis za izveštaj:' }}</label>
+          <div class="segmented-control">
+            <button
+              type="button"
+              [class.active]="opisMode === 'opis'"
+              (click)="opisMode = 'opis'">
+              Opis
+            </button>
+            <button
+              type="button"
+              [class.active]="opisMode === 'izvestaj'"
+              (click)="opisMode = 'izvestaj'">
+              Za izveštaj
+            </button>
+          </div>
+        </div>
+        <textarea
+          *ngIf="opisMode === 'opis'"
+          class="opis-textarea"
+          [(ngModel)]="aktivnost.opis"
+          name="opis"
+          rows="1"
+          required></textarea>
+        <textarea
+          *ngIf="opisMode === 'izvestaj'"
+          class="opis-textarea"
+          [(ngModel)]="aktivnost.opisZaIzvestaj"
+          name="opisZaIzvestaj"
+          rows="2"
+          maxlength="4000"></textarea>
       </div>
 
       <div class="form-group">

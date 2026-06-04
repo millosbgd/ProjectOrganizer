@@ -12,6 +12,9 @@ public class Aktivnost
     public string Opis { get; set; } = string.Empty;
 
     [MaxLength(4000)]
+    public string OpisZaIzvestaj { get; set; } = string.Empty;
+
+    [MaxLength(4000)]
     public string Detalji { get; set; } = string.Empty;
 
     [Required]

@@ -290,6 +290,40 @@
   margin-bottom: 8px;
 }
 
+.opis-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.opis-header label {
+  margin-bottom: 0;
+}
+
+.segmented-control {
+  display: inline-flex;
+  border: 1px solid #cbd5e1;
+  border-radius: 5px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.segmented-control button {
+  min-height: 30px;
+  padding: 0 10px;
+  border: 0;
+  background: #fff;
+  color: #2c3e50;
+  cursor: pointer;
+}
+
+.segmented-control button.active {
+  background: #5dade2;
+  color: #fff;
+}
+
 .ai-buttons {
   display: flex;
   gap: 8px;

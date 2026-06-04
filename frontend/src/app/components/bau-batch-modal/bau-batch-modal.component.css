@@ -272,6 +272,10 @@ textarea {
   color: #64748b;
 }
 
+.report-description-input {
+  min-height: 52px;
+}
+
 .footer-actions {
   display: flex;
   gap: 10px;
@@ -279,6 +283,7 @@ textarea {
 }
 
 .btn-primary,
+.btn-ai,
 .btn-secondary,
 .btn-danger {
   min-height: 38px;
@@ -294,6 +299,17 @@ textarea {
 .btn-primary {
   background: #5dade2;
   color: #fff;
+}
+
+.btn-ai {
+  background: #fff;
+  border-color: #5dade2;
+  color: #2c7fb8;
+}
+
+.btn-ai:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
 }
 
 .btn-primary:disabled {

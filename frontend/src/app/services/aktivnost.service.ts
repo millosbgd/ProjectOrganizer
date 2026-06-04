@@ -9,6 +9,7 @@ export interface BauBatchCreateRow {
   bauTipAktivnosti: string;
   trajanjeMinuta: number | null;
   detalji?: string;
+  opisZaIzvestaj?: string;
   startUtc?: string;
   endUtc?: string;
 }
@@ -30,6 +31,7 @@ export interface BauBatchPreviewItem {
   bauTipAktivnosti: string;
   bauTipAktivnostiNaziv: string;
   isBau: boolean;
+  opisZaIzvestaj: string;
   detalji: string;
   requestedDurationMinutes: number;
   scheduledDurationMinutes: number;
@@ -43,6 +45,25 @@ export interface BauBatchPreviewResult {
   wasScaled: boolean;
   fixedActivityCount: number;
   items: BauBatchPreviewItem[];
+}
+
+export interface BauBatchReportDescriptionInput {
+  rowIndex: number;
+  klijentNaziv: string;
+  bauTipAktivnostiNaziv: string;
+  detalji: string;
+  scheduledDurationMinutes: number;
+  startUtc: string;
+  endUtc: string;
+}
+
+export interface BauBatchReportDescriptionItem {
+  rowIndex: number;
+  opisZaIzvestaj: string;
+}
+
+export interface BauBatchReportDescriptionsResult {
+  items: BauBatchReportDescriptionItem[];
 }
 
 @Injectable({
@@ -76,6 +97,10 @@ export class AktivnostService {
 
   previewBauBatch(request: BauBatchCreateRequest): Observable<BauBatchPreviewResult> {
     return this.http.post<BauBatchPreviewResult>(`${this.apiUrl}/bau-batch/preview`, request);
+  }
+
+  generateBauBatchReportDescriptions(rows: BauBatchReportDescriptionInput[]): Observable<BauBatchReportDescriptionsResult> {
+    return this.http.post<BauBatchReportDescriptionsResult>(`${this.apiUrl}/bau-batch/generate-report-descriptions`, { rows });
   }
 
   update(id: number, aktivnost: Aktivnost): Observable<void> {

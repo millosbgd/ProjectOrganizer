@@ -1,6 +1,7 @@
 export interface Aktivnost {
   id: number;
   opis: string;
+  opisZaIzvestaj?: string;
   detalji: string;
   datum: Date;
   startUtc?: string;

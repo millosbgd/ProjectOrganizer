@@ -29,6 +29,7 @@ export class BauBatchModalComponent implements OnChanges {
   validationError = '';
   isSaving = false;
   isPreviewing = false;
+  isGeneratingReportDescriptions = false;
   preview: BauBatchPreviewResult | null = null;
 
   private nextLocalId = 1;
@@ -50,7 +51,8 @@ export class BauBatchModalComponent implements OnChanges {
       klijentId: null,
       bauTipAktivnosti: '',
       trajanjeMinuta: 30,
-      detalji: ''
+      detalji: '',
+      opisZaIzvestaj: ''
     });
   }
 
@@ -120,6 +122,7 @@ export class BauBatchModalComponent implements OnChanges {
       const previewItem = previewByRowIndex.get(index);
       return {
         ...row,
+        opisZaIzvestaj: previewItem?.opisZaIzvestaj || row.opisZaIzvestaj || '',
         startUtc: previewItem?.startUtc,
         endUtc: previewItem?.endUtc
       };
@@ -149,6 +152,64 @@ export class BauBatchModalComponent implements OnChanges {
 
   discardPreview(): void {
     this.clearPreview();
+  }
+
+  generateReportDescriptions(): void {
+    this.validationError = '';
+
+    if (!this.preview) {
+      this.validationError = 'Prvo rasporedite BAU aktivnosti.';
+      return;
+    }
+
+    const rows = this.preview.items
+      .filter(item => item.isBau && item.rowIndex !== null)
+      .map(item => ({
+        rowIndex: item.rowIndex as number,
+        klijentNaziv: item.klijentNaziv,
+        bauTipAktivnostiNaziv: item.bauTipAktivnostiNaziv,
+        detalji: item.detalji,
+        scheduledDurationMinutes: item.scheduledDurationMinutes,
+        startUtc: item.startUtc,
+        endUtc: item.endUtc
+      }));
+
+    if (rows.length === 0) {
+      this.validationError = 'Nema BAU aktivnosti za generisanje opisa.';
+      return;
+    }
+
+    this.isGeneratingReportDescriptions = true;
+    this.aktivnostService.generateBauBatchReportDescriptions(rows).subscribe({
+      next: (result) => {
+        const descriptions = new Map(result.items.map(item => [item.rowIndex, item.opisZaIzvestaj]));
+        this.preview = {
+          ...this.preview!,
+          items: this.preview!.items.map(item => item.isBau && item.rowIndex !== null
+            ? { ...item, opisZaIzvestaj: descriptions.get(item.rowIndex) || item.opisZaIzvestaj || '' }
+            : item)
+        };
+        this.isGeneratingReportDescriptions = false;
+      },
+      error: (error) => {
+        this.isGeneratingReportDescriptions = false;
+        this.validationError = error?.error?.message || 'Greška pri generisanju opisa za izveštaj.';
+      }
+    });
+  }
+
+  updatePreviewReportDescription(item: any, value: string): void {
+    if (!this.preview || !item.isBau || item.rowIndex === null) {
+      return;
+    }
+
+    this.preview = {
+      ...this.preview,
+      items: this.preview.items.map(previewItem =>
+        previewItem.isBau && previewItem.rowIndex === item.rowIndex
+          ? { ...previewItem, opisZaIzvestaj: value }
+          : previewItem)
+    };
   }
 
   clearPreview(): void {
@@ -181,6 +242,7 @@ export class BauBatchModalComponent implements OnChanges {
     this.validationError = '';
     this.isSaving = false;
     this.isPreviewing = false;
+    this.isGeneratingReportDescriptions = false;
     this.preview = null;
     this.rows = [];
     this.nextLocalId = 1;

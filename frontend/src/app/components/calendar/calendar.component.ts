@@ -65,10 +65,6 @@ export class CalendarComponent implements OnInit {
         text: 'BAU unos',
         click: this.openBauBatchModal.bind(this)
       },
-      scheduleBau: {
-        text: 'Rasporedi BAU',
-        click: this.scheduleBauDay.bind(this)
-      },
       dailyReport: {
         text: 'Daily Report',
         click: this.exportDailyReport.bind(this)
@@ -77,7 +73,7 @@ export class CalendarComponent implements OnInit {
     headerToolbar: {
       left: 'prev,next today',
       center: 'title',
-      right: 'dayGridMonth,timeGridWeek,timeGridDay bauBatch scheduleBau dailyReport'
+      right: 'dayGridMonth,timeGridWeek,timeGridDay bauBatch dailyReport'
     },
     editable: true,
     selectable: true,
@@ -415,17 +411,11 @@ export class CalendarComponent implements OnInit {
 
   private updateBauBatchToolbarButton(): void {
     const bauBatchButton = document.querySelector('.fc-bauBatch-button') as HTMLButtonElement | null;
-    const scheduleBauButton = document.querySelector('.fc-scheduleBau-button') as HTMLButtonElement | null;
     const dailyReportButton = document.querySelector('.fc-dailyReport-button') as HTMLButtonElement | null;
 
     if (bauBatchButton) {
       bauBatchButton.style.display = this.isDayView ? '' : 'none';
       bauBatchButton.title = 'Zbirni unos BAU aktivnosti';
-    }
-
-    if (scheduleBauButton) {
-      scheduleBauButton.style.display = this.isDayView ? '' : 'none';
-      scheduleBauButton.title = 'Rasporedi BAU aktivnosti od 08:00 do 16:00';
     }
 
     if (dailyReportButton) {

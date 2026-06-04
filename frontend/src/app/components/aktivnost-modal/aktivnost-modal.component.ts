@@ -51,6 +51,7 @@ export class AktivnostModalComponent implements OnChanges {
   validationError: string = ''; // Validation error message
   showSuccessMessage: boolean = false;
   isSaving: boolean = false;
+  opisMode: 'opis' | 'izvestaj' = 'opis';
 
   // Time fields
   readonly DURATION_STEP_MINUTES = 15; // 15 minutes per click
@@ -69,6 +70,8 @@ export class AktivnostModalComponent implements OnChanges {
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['isOpen'] && this.isOpen) {
+      this.opisMode = 'opis';
+      this.aktivnost.opisZaIzvestaj ??= '';
       this.loadProjekti();
       if (this.aktivnost.projekatId && this.aktivnost.projekatId > 0) {
         this.loadImplementationItems();
