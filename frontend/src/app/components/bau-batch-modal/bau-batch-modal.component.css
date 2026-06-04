@@ -231,6 +231,7 @@ textarea {
 
 .preview-grid {
   width: 100%;
+  min-width: 1320px;
   border-collapse: collapse;
 }
 
@@ -270,6 +271,11 @@ textarea {
 
 .preview-grid td:nth-child(4) span {
   color: #64748b;
+}
+
+.preview-grid :is(th, td):nth-child(5),
+.preview-grid :is(th, td):nth-child(6) {
+  width: 28%;
 }
 
 .report-description-input {
