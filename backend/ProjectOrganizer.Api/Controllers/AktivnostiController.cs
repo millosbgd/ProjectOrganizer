@@ -138,69 +138,26 @@ public class AktivnostiController : ControllerBase
     [HttpPost("bau-batch")]
     public async Task<ActionResult<BauBatchCreateResultDto>> CreateBauBatch([FromBody] BauBatchCreateRequest request)
     {
-        if (request.Rows == null || request.Rows.Count == 0)
-            return BadRequest(new { message = "Unesite najmanje jednu BAU aktivnost." });
-
-        var durationOptions = new HashSet<int> { 15, 30, 45, 60, 90 };
-        var rows = request.Rows
-            .Where(r => r != null && (r.KlijentId > 0 || !string.IsNullOrWhiteSpace(r.BauTipAktivnosti) || r.TrajanjeMinuta > 0))
-            .ToList();
-
-        if (rows.Count == 0)
-            return BadRequest(new { message = "Unesite najmanje jednu popunjenu BAU aktivnost." });
-
-        for (var i = 0; i < rows.Count; i++)
-        {
-            var row = rows[i];
-            if (row.KlijentId <= 0)
-                return BadRequest(new { message = $"Red {i + 1}: klijent je obavezan." });
-            if (string.IsNullOrWhiteSpace(row.BauTipAktivnosti))
-                return BadRequest(new { message = $"Red {i + 1}: tip aktivnosti je obavezan." });
-            if (!durationOptions.Contains(row.TrajanjeMinuta))
-                return BadRequest(new { message = $"Red {i + 1}: trajanje mora biti 15, 30, 45, 60 ili 90 minuta." });
-        }
-
-        var clientIds = rows.Select(r => r.KlijentId).Distinct().ToList();
-        var existingClientIds = await _context.Klijenti
-            .Where(k => clientIds.Contains(k.Id))
-            .Select(k => k.Id)
-            .ToListAsync();
-
-        var missingClientId = clientIds.FirstOrDefault(id => !existingClientIds.Contains(id));
-        if (missingClientId > 0)
-            return BadRequest(new { message = $"Klijent sa ID {missingClientId} ne postoji." });
-
-        var allowedBauTypes = await _context.Codebooks
-            .Include(c => c.EntityType)
-            .Where(c => c.EntityType!.Name == "BauActivityType" && c.IsActive && c.EntityType.IsActive)
-            .Select(c => new { c.Code, c.Value })
-            .ToListAsync();
-
-        var allowedCodes = allowedBauTypes.Select(t => t.Code).ToHashSet(StringComparer.OrdinalIgnoreCase);
-        var typeLabels = allowedBauTypes.ToDictionary(t => t.Code, t => t.Value, StringComparer.OrdinalIgnoreCase);
-
-        for (var i = 0; i < rows.Count; i++)
-        {
-            if (!allowedCodes.Contains(rows[i].BauTipAktivnosti.Trim()))
-                return BadRequest(new { message = $"Red {i + 1}: izabrani tip BAU aktivnosti nije važeći." });
-        }
+        var validation = await ValidateBauBatchRequest(request);
+        if (validation.Error != null)
+            return validation.Error;
 
         var currentUser = await _userService.EnsureUserExistsAsync(User);
         var now = DateTime.UtcNow;
         var datum = request.Datum.Date;
 
-        var aktivnosti = rows.Select(row =>
+        var aktivnosti = validation.Rows.Select(row =>
         {
             var typeCode = row.BauTipAktivnosti.Trim();
-            var typeLabel = typeLabels.GetValueOrDefault(typeCode, typeCode);
+            var typeLabel = validation.TypeLabels.GetValueOrDefault(typeCode, typeCode);
 
             return new Aktivnost
             {
                 Opis = typeLabel,
                 Detalji = row.Detalji?.Trim() ?? string.Empty,
                 Datum = datum,
-                StartUtc = null,
-                EndUtc = null,
+                StartUtc = row.StartUtc,
+                EndUtc = row.EndUtc,
                 Status = "Završeno",
                 Vrsta = "BAU",
                 Bau = true,
@@ -223,6 +180,159 @@ public class AktivnostiController : ControllerBase
             Count = aktivnosti.Count,
             ActivityIds = aktivnosti.Select(a => a.Id).ToList()
         });
+    }
+
+    // POST: api/Aktivnosti/bau-batch/preview
+    [HttpPost("bau-batch/preview")]
+    public async Task<ActionResult<BauBatchPreviewResultDto>> PreviewBauBatch([FromBody] BauBatchCreateRequest request)
+    {
+        var validation = await ValidateBauBatchRequest(request);
+        if (validation.Error != null)
+            return validation.Error;
+
+        var currentUser = await _userService.EnsureUserExistsAsync(User);
+        var timeZone = ActivitiesController.ResolveBelgradeTimeZone();
+        var localDay = request.Datum.Date;
+        var workStartLocal = localDay.AddHours(8);
+        var workEndLocal = localDay.AddHours(16);
+        var workStartUtc = ActivitiesController.ConvertLocalToUtc(workStartLocal, timeZone);
+        var workEndUtc = ActivitiesController.ConvertLocalToUtc(workEndLocal, timeZone);
+
+        var fixedActivities = await _context.Aktivnosti
+            .Where(a => a.CreatedBy == currentUser.Id
+                && !a.Bau
+                && a.StartUtc.HasValue
+                && a.EndUtc.HasValue
+                && a.StartUtc < workEndUtc
+                && a.EndUtc > workStartUtc)
+            .OrderBy(a => a.StartUtc)
+            .ToListAsync();
+
+        var busyIntervals = fixedActivities
+            .Select(a => (
+                Start: a.StartUtc!.Value < workStartUtc ? workStartUtc : a.StartUtc.Value,
+                End: a.EndUtc!.Value > workEndUtc ? workEndUtc : a.EndUtc.Value
+            ))
+            .Where(i => i.End > i.Start)
+            .OrderBy(i => i.Start)
+            .ToList();
+
+        var freeSlots = ActivitiesController.BuildFreeSlots(workStartUtc, workEndUtc, busyIntervals);
+        var totalFreeMinutes = freeSlots.Sum(s => (int)(s.End - s.Start).TotalMinutes);
+
+        if (totalFreeMinutes < validation.Rows.Count)
+        {
+            return BadRequest(new
+            {
+                message = $"Nema dovoljno slobodnog vremena za sve BAU aktivnosti. Slobodno: {totalFreeMinutes} min, aktivnosti: {validation.Rows.Count}."
+            });
+        }
+
+        var now = DateTime.UtcNow;
+        var transientActivities = validation.Rows
+            .Select((row, index) => new Aktivnost
+            {
+                Id = -(index + 1),
+                Bau = true,
+                KlijentId = row.KlijentId,
+                BauTipAktivnosti = row.BauTipAktivnosti.Trim(),
+                BauTrajanjeMinuta = row.TrajanjeMinuta,
+                CreatedAt = now.AddTicks(index),
+                UpdatedAt = now
+            })
+            .ToList();
+
+        var plan = ActivitiesController.BuildBauSchedulePlan(transientActivities, freeSlots);
+        var clientsById = validation.ClientNames;
+        var items = plan.Select(item =>
+        {
+            var rowIndex = Math.Abs(item.Activity.Id) - 1;
+            var row = validation.Rows[rowIndex];
+            var typeCode = row.BauTipAktivnosti.Trim();
+
+            return new BauBatchPreviewItemDto
+            {
+                RowIndex = rowIndex,
+                KlijentId = row.KlijentId,
+                KlijentNaziv = clientsById.GetValueOrDefault(row.KlijentId, "Klijent"),
+                BauTipAktivnosti = typeCode,
+                BauTipAktivnostiNaziv = validation.TypeLabels.GetValueOrDefault(typeCode, typeCode),
+                Detalji = row.Detalji?.Trim() ?? string.Empty,
+                RequestedDurationMinutes = row.TrajanjeMinuta,
+                ScheduledDurationMinutes = item.ScheduledMinutes,
+                StartUtc = item.StartUtc,
+                EndUtc = item.EndUtc
+            };
+        }).OrderBy(i => i.StartUtc).ToList();
+
+        var requestedMinutes = validation.Rows.Sum(r => r.TrajanjeMinuta);
+        var scheduledMinutes = items.Sum(i => i.ScheduledDurationMinutes);
+
+        return Ok(new BauBatchPreviewResultDto
+        {
+            TotalRequestedMinutes = requestedMinutes,
+            TotalScheduledMinutes = scheduledMinutes,
+            WasScaled = requestedMinutes != scheduledMinutes,
+            FixedActivityCount = fixedActivities.Count,
+            Items = items
+        });
+    }
+
+    private async Task<BauBatchValidationResult> ValidateBauBatchRequest(BauBatchCreateRequest request)
+    {
+        if (request.Rows == null || request.Rows.Count == 0)
+            return BauBatchValidationResult.WithError(BadRequest(new { message = "Unesite najmanje jednu BAU aktivnost." }));
+
+        var durationOptions = new HashSet<int> { 15, 30, 45, 60, 90 };
+        var rows = request.Rows
+            .Where(r => r != null && (r.KlijentId > 0 || !string.IsNullOrWhiteSpace(r.BauTipAktivnosti) || r.TrajanjeMinuta > 0 || !string.IsNullOrWhiteSpace(r.Detalji)))
+            .ToList();
+
+        if (rows.Count == 0)
+            return BauBatchValidationResult.WithError(BadRequest(new { message = "Unesite najmanje jednu popunjenu BAU aktivnost." }));
+
+        for (var i = 0; i < rows.Count; i++)
+        {
+            var row = rows[i];
+            if (row.KlijentId <= 0)
+                return BauBatchValidationResult.WithError(BadRequest(new { message = $"Red {i + 1}: klijent je obavezan." }));
+            if (string.IsNullOrWhiteSpace(row.BauTipAktivnosti))
+                return BauBatchValidationResult.WithError(BadRequest(new { message = $"Red {i + 1}: tip aktivnosti je obavezan." }));
+            if (!durationOptions.Contains(row.TrajanjeMinuta))
+                return BauBatchValidationResult.WithError(BadRequest(new { message = $"Red {i + 1}: trajanje mora biti 15, 30, 45, 60 ili 90 minuta." }));
+            if ((row.StartUtc.HasValue && !row.EndUtc.HasValue) || (!row.StartUtc.HasValue && row.EndUtc.HasValue))
+                return BauBatchValidationResult.WithError(BadRequest(new { message = $"Red {i + 1}: vreme početka i završetka moraju biti zadata zajedno." }));
+            if (row.StartUtc.HasValue && row.EndUtc.HasValue && row.EndUtc <= row.StartUtc)
+                return BauBatchValidationResult.WithError(BadRequest(new { message = $"Red {i + 1}: vreme završetka mora biti posle vremena početka." }));
+        }
+
+        var clientIds = rows.Select(r => r.KlijentId).Distinct().ToList();
+        var clients = await _context.Klijenti
+            .Where(k => clientIds.Contains(k.Id))
+            .Select(k => new { k.Id, k.Naziv })
+            .ToListAsync();
+
+        var clientNames = clients.ToDictionary(k => k.Id, k => k.Naziv);
+        var missingClientId = clientIds.FirstOrDefault(id => !clientNames.ContainsKey(id));
+        if (missingClientId > 0)
+            return BauBatchValidationResult.WithError(BadRequest(new { message = $"Klijent sa ID {missingClientId} ne postoji." }));
+
+        var allowedBauTypes = await _context.Codebooks
+            .Include(c => c.EntityType)
+            .Where(c => c.EntityType!.Name == "BauActivityType" && c.IsActive && c.EntityType.IsActive)
+            .Select(c => new { c.Code, c.Value })
+            .ToListAsync();
+
+        var allowedCodes = allowedBauTypes.Select(t => t.Code).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var typeLabels = allowedBauTypes.ToDictionary(t => t.Code, t => t.Value, StringComparer.OrdinalIgnoreCase);
+
+        for (var i = 0; i < rows.Count; i++)
+        {
+            if (!allowedCodes.Contains(rows[i].BauTipAktivnosti.Trim()))
+                return BauBatchValidationResult.WithError(BadRequest(new { message = $"Red {i + 1}: izabrani tip BAU aktivnosti nije važeći." }));
+        }
+
+        return new BauBatchValidationResult(rows, typeLabels, clientNames, null);
     }
 
     // PUT: api/Aktivnosti/5
@@ -898,10 +1008,45 @@ public class BauBatchCreateRowDto
     public string BauTipAktivnosti { get; set; } = string.Empty;
     public int TrajanjeMinuta { get; set; }
     public string? Detalji { get; set; }
+    public DateTime? StartUtc { get; set; }
+    public DateTime? EndUtc { get; set; }
 }
 
 public class BauBatchCreateResultDto
 {
     public int Count { get; set; }
     public List<int> ActivityIds { get; set; } = new();
+}
+
+public class BauBatchPreviewResultDto
+{
+    public int TotalRequestedMinutes { get; set; }
+    public int TotalScheduledMinutes { get; set; }
+    public bool WasScaled { get; set; }
+    public int FixedActivityCount { get; set; }
+    public List<BauBatchPreviewItemDto> Items { get; set; } = new();
+}
+
+public class BauBatchPreviewItemDto
+{
+    public int RowIndex { get; set; }
+    public int KlijentId { get; set; }
+    public string KlijentNaziv { get; set; } = string.Empty;
+    public string BauTipAktivnosti { get; set; } = string.Empty;
+    public string BauTipAktivnostiNaziv { get; set; } = string.Empty;
+    public string Detalji { get; set; } = string.Empty;
+    public int RequestedDurationMinutes { get; set; }
+    public int ScheduledDurationMinutes { get; set; }
+    public DateTime StartUtc { get; set; }
+    public DateTime EndUtc { get; set; }
+}
+
+public record BauBatchValidationResult(
+    List<BauBatchCreateRowDto> Rows,
+    Dictionary<string, string> TypeLabels,
+    Dictionary<int, string> ClientNames,
+    ActionResult? Error)
+{
+    public static BauBatchValidationResult WithError(ActionResult error) =>
+        new(new List<BauBatchCreateRowDto>(), new Dictionary<string, string>(), new Dictionary<int, string>(), error);
 }

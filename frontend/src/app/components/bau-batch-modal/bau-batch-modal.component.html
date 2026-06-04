@@ -25,7 +25,7 @@
           <tbody>
             <tr *ngFor="let row of rows; let i = index">
               <td>
-                <select [(ngModel)]="row.klijentId" [name]="'klijent-' + row.localId">
+                <select [(ngModel)]="row.klijentId" (ngModelChange)="clearPreview()" [name]="'klijent-' + row.localId">
                   <option [ngValue]="null">Izaberite klijenta</option>
                   <option *ngFor="let klijent of klijenti" [ngValue]="klijent.id">
                     {{ klijent.naziv }}
@@ -33,7 +33,7 @@
                 </select>
               </td>
               <td>
-                <select [(ngModel)]="row.bauTipAktivnosti" [name]="'tip-' + row.localId">
+                <select [(ngModel)]="row.bauTipAktivnosti" (ngModelChange)="clearPreview()" [name]="'tip-' + row.localId">
                   <option value="">Izaberite tip</option>
                   <option *ngFor="let type of bauTypes" [value]="type.code">
                     {{ type.value }}
@@ -48,6 +48,7 @@
                       [name]="'trajanje-' + row.localId"
                       [value]="option"
                       [(ngModel)]="row.trajanjeMinuta"
+                      (ngModelChange)="clearPreview()"
                     />
                     <span>{{ option }}</span>
                   </label>
@@ -56,6 +57,7 @@
               <td>
                 <textarea
                   [(ngModel)]="row.detalji"
+                  (ngModelChange)="clearPreview()"
                   [name]="'detalji-' + row.localId"
                   rows="3"
                 ></textarea>
@@ -74,14 +76,62 @@
         <span class="material-icons">add</span>
         Dodaj red
       </button>
+
+      <div class="preview-shell" *ngIf="preview">
+        <div class="preview-header">
+          <div>
+            <h4>Projektovani raspored</h4>
+            <span>
+              {{ formatMinutes(preview.totalRequestedMinutes) }} uneto,
+              {{ formatMinutes(preview.totalScheduledMinutes) }} raspoređeno
+              <ng-container *ngIf="preview.fixedActivityCount > 0">
+                · {{ preview.fixedActivityCount }} fiksnih aktivnosti
+              </ng-container>
+            </span>
+          </div>
+          <span class="scale-badge" *ngIf="preview.wasScaled">Prilagođeno radnom danu</span>
+        </div>
+
+        <table class="preview-grid">
+          <thead>
+            <tr>
+              <th>Vreme</th>
+              <th>Klijent</th>
+              <th>Tip aktivnosti</th>
+              <th>Trajanje</th>
+              <th>Detalji</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of preview.items">
+              <td>{{ formatTime(item.startUtc) }} - {{ formatTime(item.endUtc) }}</td>
+              <td>{{ item.klijentNaziv }}</td>
+              <td>{{ item.bauTipAktivnostiNaziv }}</td>
+              <td>
+                {{ formatMinutes(item.scheduledDurationMinutes) }}
+                <span *ngIf="item.scheduledDurationMinutes !== item.requestedDurationMinutes">
+                  / {{ formatMinutes(item.requestedDurationMinutes) }}
+                </span>
+              </td>
+              <td>{{ item.detalji }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
     <div class="modal-footer">
       <div class="error-message" *ngIf="validationError">{{ validationError }}</div>
       <div class="footer-actions">
-        <button type="button" class="btn-secondary" (click)="onClose()">Otkaži</button>
-        <button type="button" class="btn-primary" (click)="save()" [disabled]="isSaving">
-          {{ isSaving ? 'Čuvam...' : 'Sačuvaj BAU aktivnosti' }}
+        <button type="button" class="btn-secondary" (click)="onClose()">Zatvori</button>
+        <button type="button" class="btn-secondary" *ngIf="preview" (click)="discardPreview()" [disabled]="isSaving">
+          Odustani
+        </button>
+        <button type="button" class="btn-primary" *ngIf="!preview" (click)="previewSchedule()" [disabled]="isPreviewing">
+          {{ isPreviewing ? 'Raspoređujem...' : 'Raspodeli' }}
+        </button>
+        <button type="button" class="btn-primary" *ngIf="preview" (click)="confirmSave()" [disabled]="isSaving">
+          {{ isSaving ? 'Čuvam...' : 'Potvrdi' }}
         </button>
       </div>
     </div>

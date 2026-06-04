@@ -490,7 +490,7 @@ public class ActivitiesController : ControllerBase
         </styleSheet>
         """.TrimStart();
 
-    private static List<ScheduleBauPlanItem> BuildBauSchedulePlan(
+    public static List<ScheduleBauPlanItem> BuildBauSchedulePlan(
         List<Aktivnost> activities,
         List<(DateTime Start, DateTime End)> freeSlots)
     {
@@ -621,7 +621,7 @@ public class ActivitiesController : ControllerBase
             .ToList();
     }
 
-    private static List<(DateTime Start, DateTime End)> BuildFreeSlots(
+    public static List<(DateTime Start, DateTime End)> BuildFreeSlots(
         DateTime workStartUtc,
         DateTime workEndUtc,
         List<(DateTime Start, DateTime End)> busyIntervals)
@@ -662,13 +662,13 @@ public class ActivitiesController : ControllerBase
         return merged;
     }
 
-    private static DateTime ConvertLocalToUtc(DateTime localDateTime, TimeZoneInfo timeZone)
+    public static DateTime ConvertLocalToUtc(DateTime localDateTime, TimeZoneInfo timeZone)
     {
         var unspecified = DateTime.SpecifyKind(localDateTime, DateTimeKind.Unspecified);
         return TimeZoneInfo.ConvertTimeToUtc(unspecified, timeZone);
     }
 
-    private static TimeZoneInfo ResolveBelgradeTimeZone()
+    public static TimeZoneInfo ResolveBelgradeTimeZone()
     {
         foreach (var id in new[] { "Europe/Belgrade", "Central European Standard Time" })
         {

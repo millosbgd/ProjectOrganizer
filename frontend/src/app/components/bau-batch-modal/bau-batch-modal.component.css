@@ -190,6 +190,87 @@ textarea {
   gap: 6px;
 }
 
+.preview-shell {
+  margin-top: 18px;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #f8fbff;
+}
+
+.preview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border-bottom: 1px solid #dbeafe;
+}
+
+.preview-header h4 {
+  margin: 0 0 3px;
+  color: #1f2937;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.preview-header span {
+  color: #64748b;
+  font-size: 13px;
+}
+
+.scale-badge {
+  flex-shrink: 0;
+  padding: 5px 8px;
+  border: 1px solid #93c5fd;
+  border-radius: 6px;
+  background: #eff6ff;
+  color: #1d4ed8 !important;
+  font-weight: 700;
+}
+
+.preview-grid {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.preview-grid th,
+.preview-grid td {
+  padding: 9px 12px;
+  border-bottom: 1px solid #e5e7eb;
+  text-align: left;
+  vertical-align: top;
+  color: #1f2937;
+  font-size: 13px;
+}
+
+.preview-grid th {
+  background: #eff6ff;
+  color: #334155;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.preview-grid tr:last-child td {
+  border-bottom: 0;
+}
+
+.preview-grid td:first-child {
+  width: 130px;
+  white-space: nowrap;
+  font-weight: 700;
+}
+
+.preview-grid td:nth-child(4) {
+  width: 120px;
+  white-space: nowrap;
+}
+
+.preview-grid td:nth-child(4) span {
+  color: #64748b;
+}
+
 .footer-actions {
   display: flex;
   gap: 10px;
@@ -245,6 +326,7 @@ textarea {
 
   .footer-actions {
     width: 100%;
+    flex-wrap: wrap;
   }
 
   .btn-primary,
