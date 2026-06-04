@@ -199,6 +199,8 @@ public class AktivnostiController : ControllerBase
         var workEndUtc = ActivitiesController.ConvertLocalToUtc(workEndLocal, timeZone);
 
         var fixedActivities = await _context.Aktivnosti
+            .Include(a => a.Projekat)
+                .ThenInclude(p => p!.Klijent)
             .Where(a => a.CreatedBy == currentUser.Id
                 && !a.Bau
                 && a.StartUtc.HasValue
@@ -244,7 +246,7 @@ public class AktivnostiController : ControllerBase
 
         var plan = ActivitiesController.BuildBauSchedulePlan(transientActivities, freeSlots);
         var clientsById = validation.ClientNames;
-        var items = plan.Select(item =>
+        var bauItems = plan.Select(item =>
         {
             var rowIndex = Math.Abs(item.Activity.Id) - 1;
             var row = validation.Rows[rowIndex];
@@ -257,16 +259,50 @@ public class AktivnostiController : ControllerBase
                 KlijentNaziv = clientsById.GetValueOrDefault(row.KlijentId, "Klijent"),
                 BauTipAktivnosti = typeCode,
                 BauTipAktivnostiNaziv = validation.TypeLabels.GetValueOrDefault(typeCode, typeCode),
+                IsBau = true,
                 Detalji = row.Detalji?.Trim() ?? string.Empty,
                 RequestedDurationMinutes = row.TrajanjeMinuta,
                 ScheduledDurationMinutes = item.ScheduledMinutes,
                 StartUtc = item.StartUtc,
                 EndUtc = item.EndUtc
             };
-        }).OrderBy(i => i.StartUtc).ToList();
+        });
+
+        var fixedItems = fixedActivities.Select(activity =>
+        {
+            var start = activity.StartUtc!.Value < workStartUtc ? workStartUtc : activity.StartUtc.Value;
+            var end = activity.EndUtc!.Value > workEndUtc ? workEndUtc : activity.EndUtc.Value;
+            var projectName = activity.Projekat != null
+                ? activity.Projekat.Klijent != null
+                    ? $"{activity.Projekat.Klijent.Naziv} / {activity.Projekat.Naziv}"
+                    : activity.Projekat.Naziv
+                : "Projektna aktivnost";
+            var durationMinutes = Math.Max(1, (int)Math.Round((end - start).TotalMinutes));
+
+            return new BauBatchPreviewItemDto
+            {
+                RowIndex = null,
+                KlijentId = activity.KlijentId ?? 0,
+                KlijentNaziv = projectName,
+                BauTipAktivnosti = activity.Vrsta,
+                BauTipAktivnostiNaziv = activity.Vrsta,
+                IsBau = false,
+                Detalji = activity.Detalji,
+                RequestedDurationMinutes = durationMinutes,
+                ScheduledDurationMinutes = durationMinutes,
+                StartUtc = start,
+                EndUtc = end
+            };
+        });
+
+        var items = bauItems
+            .Concat(fixedItems)
+            .OrderBy(i => i.StartUtc)
+            .ThenBy(i => i.IsBau)
+            .ToList();
 
         var requestedMinutes = validation.Rows.Sum(r => r.TrajanjeMinuta);
-        var scheduledMinutes = items.Sum(i => i.ScheduledDurationMinutes);
+        var scheduledMinutes = items.Where(i => i.IsBau).Sum(i => i.ScheduledDurationMinutes);
 
         return Ok(new BauBatchPreviewResultDto
         {
@@ -1029,11 +1065,12 @@ public class BauBatchPreviewResultDto
 
 public class BauBatchPreviewItemDto
 {
-    public int RowIndex { get; set; }
+    public int? RowIndex { get; set; }
     public int KlijentId { get; set; }
     public string KlijentNaziv { get; set; } = string.Empty;
     public string BauTipAktivnosti { get; set; } = string.Empty;
     public string BauTipAktivnostiNaziv { get; set; } = string.Empty;
+    public bool IsBau { get; set; }
     public string Detalji { get; set; } = string.Empty;
     public int RequestedDurationMinutes { get; set; }
     public int ScheduledDurationMinutes { get; set; }

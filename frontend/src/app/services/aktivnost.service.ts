@@ -24,11 +24,12 @@ export interface BauBatchCreateResult {
 }
 
 export interface BauBatchPreviewItem {
-  rowIndex: number;
+  rowIndex: number | null;
   klijentId: number;
   klijentNaziv: string;
   bauTipAktivnosti: string;
   bauTipAktivnostiNaziv: string;
+  isBau: boolean;
   detalji: string;
   requestedDurationMinutes: number;
   scheduledDurationMinutes: number;

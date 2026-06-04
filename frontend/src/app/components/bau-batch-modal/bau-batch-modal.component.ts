@@ -111,7 +111,11 @@ export class BauBatchModalComponent implements OnChanges {
     }
 
     const filledRows = this.getFilledRows();
-    const previewByRowIndex = new Map(this.preview.items.map(item => [item.rowIndex, item]));
+    const previewByRowIndex = new Map(
+      this.preview.items
+        .filter(item => item.isBau && item.rowIndex !== null)
+        .map(item => [item.rowIndex as number, item])
+    );
     const rowsWithSchedule = filledRows.map((row, index) => {
       const previewItem = previewByRowIndex.get(index);
       return {

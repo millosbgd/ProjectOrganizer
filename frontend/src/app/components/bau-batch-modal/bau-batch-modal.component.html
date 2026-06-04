@@ -103,13 +103,15 @@
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let item of preview.items">
+            <tr *ngFor="let item of preview.items" [class.fixed-row]="!item.isBau" [class.bau-row]="item.isBau">
               <td>{{ formatTime(item.startUtc) }} - {{ formatTime(item.endUtc) }}</td>
               <td>{{ item.klijentNaziv }}</td>
-              <td>{{ item.bauTipAktivnostiNaziv }}</td>
+              <td>
+                {{ item.isBau ? item.bauTipAktivnostiNaziv : 'Ne-BAU · ' + item.bauTipAktivnostiNaziv }}
+              </td>
               <td>
                 {{ formatMinutes(item.scheduledDurationMinutes) }}
-                <span *ngIf="item.scheduledDurationMinutes !== item.requestedDurationMinutes">
+                <span *ngIf="item.isBau && item.scheduledDurationMinutes !== item.requestedDurationMinutes">
                   / {{ formatMinutes(item.requestedDurationMinutes) }}
                 </span>
               </td>
@@ -124,7 +126,7 @@
       <div class="error-message" *ngIf="validationError">{{ validationError }}</div>
       <div class="footer-actions">
         <button type="button" class="btn-secondary" (click)="onClose()">Zatvori</button>
-        <button type="button" class="btn-secondary" *ngIf="preview" (click)="discardPreview()" [disabled]="isSaving">
+        <button type="button" class="btn-danger" *ngIf="preview" (click)="discardPreview()" [disabled]="isSaving">
           Odustani
         </button>
         <button type="button" class="btn-primary" *ngIf="!preview" (click)="previewSchedule()" [disabled]="isPreviewing">
