@@ -304,7 +304,6 @@ public class ActivitiesController : ControllerBase
             ClientOrProject = clientOrProject,
             ActivityType = typeLabel,
             Description = string.IsNullOrWhiteSpace(activity.OpisZaIzvestaj) ? activity.Opis : activity.OpisZaIzvestaj,
-            Details = activity.Detalji,
             DurationMinutes = durationMinutes,
             IsBau = activity.Bau
         };
@@ -336,10 +335,10 @@ public class ActivitiesController : ControllerBase
         sb.Append("""<?xml version="1.0" encoding="UTF-8" standalone="yes"?>""");
         sb.Append("""<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">""");
         sb.Append("""<sheetPr><pageSetUpPr fitToPage="1"/></sheetPr>""");
-        sb.Append("<dimension ref=\"A1:F").Append(Math.Max(16, rows.Count + 11)).Append("\"/>");
+        sb.Append("<dimension ref=\"A1:E").Append(Math.Max(16, rows.Count + 11)).Append("\"/>");
         sb.Append("""<sheetViews><sheetView workbookViewId="0"/></sheetViews>""");
         sb.Append("""<sheetFormatPr defaultRowHeight="18"/>""");
-        sb.Append("""<cols><col min="1" max="1" width="14" customWidth="1"/><col min="2" max="2" width="28" customWidth="1"/><col min="3" max="3" width="20" customWidth="1"/><col min="4" max="4" width="30" customWidth="1"/><col min="5" max="5" width="42" customWidth="1"/><col min="6" max="6" width="11" customWidth="1"/></cols>""");
+        sb.Append("""<cols><col min="1" max="1" width="14" customWidth="1"/><col min="2" max="2" width="30" customWidth="1"/><col min="3" max="3" width="20" customWidth="1"/><col min="4" max="4" width="54" customWidth="1"/><col min="5" max="5" width="11" customWidth="1"/></cols>""");
         sb.Append("<sheetData>");
 
         AppendRow(sb, 1, new[] { Cell("A1", "DAILY REPORT", 1) }, height: 26);
@@ -351,9 +350,8 @@ public class ActivitiesController : ControllerBase
             Cell("A7", "Vreme", 4),
             Cell("B7", "Klijent / Projekat", 4),
             Cell("C7", "Tip aktivnosti", 4),
-            Cell("D7", "Aktivnost", 4),
-            Cell("E7", "Detalji", 4),
-            Cell("F7", "Trajanje", 4)
+            Cell("D7", "Opis za izveštaj", 4),
+            Cell("E7", "Trajanje", 4)
         });
 
         var rowIndex = 8;
@@ -365,8 +363,7 @@ public class ActivitiesController : ControllerBase
                 Cell($"B{rowIndex}", row.ClientOrProject, 5),
                 Cell($"C{rowIndex}", row.ActivityType, 5),
                 Cell($"D{rowIndex}", row.Description, 5),
-                Cell($"E{rowIndex}", row.Details, 5),
-                Cell($"F{rowIndex}", FormatMinutes(row.DurationMinutes), 7)
+                Cell($"E{rowIndex}", FormatMinutes(row.DurationMinutes), 7)
             }, height: 42);
             rowIndex++;
         }
@@ -383,9 +380,9 @@ public class ActivitiesController : ControllerBase
         AppendRow(sb, rowIndex, new[] { Cell($"A{rowIndex}", "Izveštaj je generisan iz ProjectOrganizer dnevnog kalendara.", 10) });
 
         sb.Append("</sheetData>");
-        sb.Append("<mergeCells count=\"4\"><mergeCell ref=\"A1:F1\"/><mergeCell ref=\"A2:C2\"/><mergeCell ref=\"D2:F2\"/><mergeCell ref=\"A")
+        sb.Append("<mergeCells count=\"4\"><mergeCell ref=\"A1:E1\"/><mergeCell ref=\"A2:C2\"/><mergeCell ref=\"D2:E2\"/><mergeCell ref=\"A")
             .Append(rowIndex)
-            .Append(":F")
+            .Append(":E")
             .Append(rowIndex)
             .Append("\"/></mergeCells>");
         sb.Append("""<printOptions horizontalCentered="1"/>""");
@@ -746,7 +743,6 @@ public class DailyReportRowDto
     public string ClientOrProject { get; set; } = string.Empty;
     public string ActivityType { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
-    public string Details { get; set; } = string.Empty;
     public int DurationMinutes { get; set; }
     public bool IsBau { get; set; }
 }
