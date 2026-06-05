@@ -118,6 +118,13 @@
               Za izveštaj
             </button>
           </div>
+          <button
+            type="button"
+            class="btn-ai-small btn-ai-minimal"
+            (click)="generateReportDescription()"
+            [disabled]="isGeneratingReportDescription">
+            {{ isGeneratingReportDescription ? 'Generišem...' : 'Generiši opis' }}
+          </button>
         </div>
         <textarea
           *ngIf="opisMode === 'opis'"

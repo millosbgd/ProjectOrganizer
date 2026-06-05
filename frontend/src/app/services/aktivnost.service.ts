@@ -66,6 +66,20 @@ export interface BauBatchReportDescriptionsResult {
   items: BauBatchReportDescriptionItem[];
 }
 
+export interface AktivnostReportDescriptionRequest {
+  projekatNaziv?: string;
+  stavkaImplementacijeNaziv?: string;
+  vrsta?: string;
+  status?: string;
+  opis?: string;
+  detalji?: string;
+  vreme?: string;
+}
+
+export interface AktivnostReportDescriptionResult {
+  opisZaIzvestaj: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -101,6 +115,10 @@ export class AktivnostService {
 
   generateBauBatchReportDescriptions(rows: BauBatchReportDescriptionInput[]): Observable<BauBatchReportDescriptionsResult> {
     return this.http.post<BauBatchReportDescriptionsResult>(`${this.apiUrl}/bau-batch/generate-report-descriptions`, { rows });
+  }
+
+  generateReportDescription(request: AktivnostReportDescriptionRequest): Observable<AktivnostReportDescriptionResult> {
+    return this.http.post<AktivnostReportDescriptionResult>(`${this.apiUrl}/generate-report-description`, request);
   }
 
   update(id: number, aktivnost: Aktivnost): Observable<void> {

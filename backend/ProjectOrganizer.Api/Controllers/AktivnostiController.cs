@@ -411,28 +411,7 @@ public class AktivnostiController : ControllerBase
             Vreme = $"{r.StartUtc:HH:mm}-{r.EndUtc:HH:mm}"
         }));
 
-        var prompt = $$"""
-            Ti si poslovni asistent koji priprema opise aktivnosti za dnevni izveštaj o radu.
-
-            Za svaku BAU aktivnost napiši kratak, profesionalan opis prilagođen izveštaju.
-
-            Pravila:
-            - Piši na srpskom jeziku, latinica.
-            - Opis treba da bude poslovan, konkretan i neutralan.
-            - Jedna rečenica po aktivnosti.
-            - Maksimalno 180 karaktera po opisu.
-            - Ne izmišljaj činjenice koje nisu u tipu aktivnosti ili detaljima.
-            - Ne pominji interna polja, šifre, JSON, trajanje ili vreme osim ako je bitno iz detalja.
-            - Vrati isključivo validan JSON niz bez markdown-a.
-
-            Format odgovora:
-            [
-              {"rowIndex": 0, "opisZaIzvestaj": "Profesionalni opis aktivnosti."}
-            ]
-
-            Aktivnosti:
-            {{inputJson}}
-            """;
+        var prompt = BuildReportDescriptionsPrompt(inputJson);
 
         var raw = await _openAIService.GenerateTextAsync(apiKey, prompt, userSettings.OpenAiModel);
         var items = ParseReportDescriptionItems(raw);
@@ -444,6 +423,82 @@ public class AktivnostiController : ControllerBase
         {
             Items = items
         });
+    }
+
+    // POST: api/Aktivnosti/generate-report-description
+    [HttpPost("generate-report-description")]
+    public async Task<ActionResult<AktivnostReportDescriptionResultDto>> GenerateReportDescription(
+        [FromBody] AktivnostReportDescriptionRequestDto request)
+    {
+        if (string.IsNullOrWhiteSpace(request.Opis) && string.IsNullOrWhiteSpace(request.Detalji))
+            return BadRequest(new { message = "Unesite opis ili detalje aktivnosti za generisanje opisa za izveštaj." });
+
+        var currentUser = await _userService.EnsureUserExistsAsync(User);
+        var userSettings = await _context.UserSettings
+            .FirstOrDefaultAsync(s => s.UserId == currentUser.Auth0Id);
+
+        if (userSettings == null || string.IsNullOrWhiteSpace(userSettings.OpenAiApiKey))
+            return BadRequest(new { message = "Morate prvo konfigurisati OpenAI API ključ u podešavanjima." });
+
+        var apiKey = _encryptionService.Decrypt(userSettings.OpenAiApiKey);
+        if (string.IsNullOrWhiteSpace(apiKey))
+            return BadRequest(new { message = "OpenAI API ključ nije validan. Molimo ažurirajte ga u podešavanjima." });
+
+        var inputJson = JsonSerializer.Serialize(new[]
+        {
+            new
+            {
+                RowIndex = 0,
+                Projekat = request.ProjekatNaziv,
+                StavkaImplementacije = request.StavkaImplementacijeNaziv,
+                Vrsta = request.Vrsta,
+                Status = request.Status,
+                Opis = request.Opis,
+                Detalji = request.Detalji,
+                Vreme = request.Vreme
+            }
+        });
+
+        var prompt = BuildReportDescriptionsPrompt(inputJson);
+        var raw = await _openAIService.GenerateTextAsync(apiKey, prompt, userSettings.OpenAiModel);
+        var item = ParseReportDescriptionItems(raw).FirstOrDefault(i => i.RowIndex == 0);
+
+        if (item == null)
+            return BadRequest(new { message = "OpenAI nije vratio validan opis za izveštaj." });
+
+        return Ok(new AktivnostReportDescriptionResultDto
+        {
+            OpisZaIzvestaj = item.OpisZaIzvestaj
+        });
+    }
+
+    private static string BuildReportDescriptionsPrompt(string inputJson)
+    {
+        return $$"""
+            Ti si poslovni asistent koji priprema opise aktivnosti za dnevni izveštaj o radu.
+
+            Za svaku aktivnost napiši kratak, profesionalan opis prilagođen izveštaju.
+
+            Pravila:
+            - Piši na srpskom jeziku, latinica.
+            - Opis treba da bude poslovan, konkretan i neutralan.
+            - Koristi prošlo vreme.
+            - Piši u trećem licu, bez korišćenja prvog lica jednine ili množine.
+            - Tri do pet rečenica po aktivnosti.
+            - Aktivnosti formuliši kao pregled izvršenog rada tokom dana (npr. „Pružena je podrška u procesu obračuna zarada...", „Izvršena je provera podataka...").
+            - Ako je aktivnost previše jednostavna, proširi sa opštim poslovnim izrazima tako da dobije profesionalniji izgled.
+            - Ukoliko je aktivnost apstraktna ili neprofesionalno formulisana (npr. ne radim ništa, ladim se, hvatam krivine itd.), preformuliši je u neutralnu opštu aktivnost poput "Rad na ličnom usavršavanju" ili "Rad na unapređenju internih izveštaja"; oblast SQL/data analize pominji samo ako tip aktivnosti ili detalji daju takav kontekst.
+            - Ne pominji interna polja, šifre, JSON, trajanje ili vreme osim ako je bitno iz detalja.
+            - Vrati isključivo validan JSON niz bez markdown-a.
+
+            Format odgovora:
+            [
+              {"rowIndex": 0, "opisZaIzvestaj": "Profesionalni opis aktivnosti."}
+            ]
+
+            Aktivnosti:
+            {{inputJson}}
+            """;
     }
 
     private static List<BauBatchReportDescriptionItemDto> ParseReportDescriptionItems(string raw)
@@ -460,29 +515,39 @@ public class AktivnostiController : ControllerBase
             }
         }
 
-        using var doc = JsonDocument.Parse(raw);
-        if (doc.RootElement.ValueKind != JsonValueKind.Array)
-            return new List<BauBatchReportDescriptionItemDto>();
-
-        var result = new List<BauBatchReportDescriptionItemDto>();
-        foreach (var item in doc.RootElement.EnumerateArray())
+        try
         {
-            if (!item.TryGetProperty("rowIndex", out var rowIndexElement)
-                || !item.TryGetProperty("opisZaIzvestaj", out var opisElement))
-                continue;
+            using var doc = JsonDocument.Parse(raw);
+            if (doc.RootElement.ValueKind != JsonValueKind.Array)
+                return new List<BauBatchReportDescriptionItemDto>();
 
-            var opis = opisElement.GetString()?.Trim();
-            if (string.IsNullOrWhiteSpace(opis))
-                continue;
-
-            result.Add(new BauBatchReportDescriptionItemDto
+            var result = new List<BauBatchReportDescriptionItemDto>();
+            foreach (var item in doc.RootElement.EnumerateArray())
             {
-                RowIndex = rowIndexElement.GetInt32(),
-                OpisZaIzvestaj = opis
-            });
-        }
+                if (!item.TryGetProperty("rowIndex", out var rowIndexElement)
+                    || !item.TryGetProperty("opisZaIzvestaj", out var opisElement))
+                    continue;
 
-        return result;
+                if (rowIndexElement.ValueKind != JsonValueKind.Number)
+                    continue;
+
+                var opis = opisElement.GetString()?.Trim();
+                if (string.IsNullOrWhiteSpace(opis))
+                    continue;
+
+                result.Add(new BauBatchReportDescriptionItemDto
+                {
+                    RowIndex = rowIndexElement.GetInt32(),
+                    OpisZaIzvestaj = opis
+                });
+            }
+
+            return result;
+        }
+        catch (JsonException)
+        {
+            return new List<BauBatchReportDescriptionItemDto>();
+        }
     }
 
     // PUT: api/Aktivnosti/5
@@ -1229,5 +1294,21 @@ public class BauBatchReportDescriptionsResultDto
 public class BauBatchReportDescriptionItemDto
 {
     public int RowIndex { get; set; }
+    public string OpisZaIzvestaj { get; set; } = string.Empty;
+}
+
+public class AktivnostReportDescriptionRequestDto
+{
+    public string? ProjekatNaziv { get; set; }
+    public string? StavkaImplementacijeNaziv { get; set; }
+    public string? Vrsta { get; set; }
+    public string? Status { get; set; }
+    public string? Opis { get; set; }
+    public string? Detalji { get; set; }
+    public string? Vreme { get; set; }
+}
+
+public class AktivnostReportDescriptionResultDto
+{
     public string OpisZaIzvestaj { get; set; } = string.Empty;
 }

@@ -52,6 +52,7 @@ export class AktivnostModalComponent implements OnChanges {
   showSuccessMessage: boolean = false;
   isSaving: boolean = false;
   opisMode: 'opis' | 'izvestaj' = 'opis';
+  isGeneratingReportDescription: boolean = false;
 
   // Time fields
   readonly DURATION_STEP_MINUTES = 15; // 15 minutes per click
@@ -142,6 +143,11 @@ export class AktivnostModalComponent implements OnChanges {
   getProjektNaziv(): string {
     const projekat = this.projekti.find(p => p.id === this.aktivnost.projekatId);
     return projekat ? `${projekat.brojProjekta} - ${projekat.naziv}` : '';
+  }
+
+  getImplementationItemNaziv(): string {
+    const item = this.implementationItems.find(i => i.id === this.aktivnost.projectImplementationItemId);
+    return item?.implementationItemNaziv || '';
   }
 
   loadImplementationItems(): void {
@@ -448,6 +454,38 @@ export class AktivnostModalComponent implements OnChanges {
         alert('Greška prilikom generisanja taskova. Pokušajte ponovo.');
         this.isGeneratingZapisnik = false;
         this.showZapisnikModal = false;
+      }
+    });
+  }
+
+  generateReportDescription(): void {
+    this.validationError = '';
+
+    if (!this.aktivnost.opis?.trim() && !this.aktivnost.detalji?.trim()) {
+      this.validationError = '⚠️ Unesite opis ili detalje aktivnosti za generisanje opisa za izveštaj.';
+      return;
+    }
+
+    this.isGeneratingReportDescription = true;
+    this.opisMode = 'izvestaj';
+
+    this.aktivnostService.generateReportDescription({
+      projekatNaziv: this.aktivnost.bau ? undefined : this.getProjektNaziv(),
+      stavkaImplementacijeNaziv: this.aktivnost.bau ? undefined : this.getImplementationItemNaziv(),
+      vrsta: this.aktivnost.vrsta,
+      status: this.aktivnost.status,
+      opis: this.aktivnost.opis,
+      detalji: this.aktivnost.detalji,
+      vreme: this.startTime && this.endTime ? `${this.startTime}-${this.endTime}` : undefined
+    }).subscribe({
+      next: (response) => {
+        this.aktivnost.opisZaIzvestaj = response.opisZaIzvestaj;
+        this.isGeneratingReportDescription = false;
+      },
+      error: (error) => {
+        console.error('Greška pri generisanju opisa za izveštaj:', error);
+        this.validationError = error?.error?.message || '⚠️ Greška prilikom generisanja opisa za izveštaj.';
+        this.isGeneratingReportDescription = false;
       }
     });
   }
