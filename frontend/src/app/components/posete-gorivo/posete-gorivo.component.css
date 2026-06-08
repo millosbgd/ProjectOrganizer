@@ -91,6 +91,38 @@
   width: 100%;
   border-collapse: collapse;
   font-size: 0.875rem;
+  table-layout: fixed;
+}
+
+.visits-table .client-col {
+  width: 22%;
+}
+
+.visits-table .activity-col {
+  width: 34%;
+}
+
+.visits-table .city-col {
+  width: 14%;
+}
+
+.visits-table .km-col {
+  width: 13%;
+}
+
+.visits-table .fuel-col {
+  width: 10%;
+}
+
+.fuel-table .date-col,
+.fuel-table .quantity-col,
+.fuel-table .unit-price-col,
+.fuel-table .total-price-col {
+  width: 22%;
+}
+
+.data-table .actions-col {
+  width: 112px;
 }
 
 .data-table thead {
@@ -106,6 +138,11 @@
   text-transform: uppercase;
   font-size: 0.75rem;
   letter-spacing: 0.05em;
+}
+
+.data-table th.number-column,
+.data-table th.total-column {
+  text-align: right;
 }
 
 .data-table tbody tr {
@@ -128,6 +165,9 @@
 
 .primary-column {
   font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .activity-column {
@@ -140,6 +180,13 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   color: #4b5563;
+}
+
+.city-column,
+.date-column {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .number-column {

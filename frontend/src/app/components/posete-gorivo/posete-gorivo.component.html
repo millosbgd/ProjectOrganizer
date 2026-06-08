@@ -29,14 +29,22 @@
       <div *ngIf="visits.length === 0" class="no-data">Nema unetih poseta.</div>
 
       <div class="table-container" *ngIf="visits.length > 0">
-        <table class="data-table">
+        <table class="data-table visits-table">
+          <colgroup>
+            <col class="client-col">
+            <col class="activity-col">
+            <col class="city-col">
+            <col class="km-col">
+            <col class="fuel-col">
+            <col class="actions-col">
+          </colgroup>
           <thead>
             <tr>
               <th>Klijent</th>
               <th>Aktivnost</th>
               <th>Grad</th>
-              <th>Kilometraža</th>
-              <th>Gorivo (l)</th>
+              <th class="number-column">Kilometraža (km)</th>
+              <th class="number-column">Gorivo (l)</th>
               <th class="actions-column">Akcije</th>
             </tr>
           </thead>
@@ -48,9 +56,9 @@
                   {{ getActivityLabel(visit.aktivnost) }}
                 </span>
               </td>
-              <td>{{ visit.grad }}</td>
-              <td class="number-column">{{ formatDecimal(visit.kilometraza) }} km</td>
-              <td class="number-column">{{ formatDecimal(visit.gorivoLitara) }} l</td>
+              <td class="city-column">{{ visit.grad }}</td>
+              <td class="number-column">{{ formatDecimal(visit.kilometraza) }}</td>
+              <td class="number-column">{{ formatDecimal(visit.gorivoLitara) }}</td>
               <td class="actions-column">
                 <button class="btn-icon-minimal" (click)="editVisit(visit)" title="Izmeni">
                   <span class="material-icons">edit</span>
@@ -69,20 +77,27 @@
       <div *ngIf="fuelPurchases.length === 0" class="no-data">Nema unetih sipanja goriva.</div>
 
       <div class="table-container" *ngIf="fuelPurchases.length > 0">
-        <table class="data-table">
+        <table class="data-table fuel-table">
+          <colgroup>
+            <col class="date-col">
+            <col class="quantity-col">
+            <col class="unit-price-col">
+            <col class="total-price-col">
+            <col class="actions-col">
+          </colgroup>
           <thead>
             <tr>
               <th>Datum</th>
-              <th>Količina</th>
-              <th>Jedinična cena</th>
-              <th>Ukupna cena</th>
+              <th class="number-column">Količina (l)</th>
+              <th class="number-column">Jed. cena</th>
+              <th class="number-column total-column">Ukupno</th>
               <th class="actions-column">Akcije</th>
             </tr>
           </thead>
           <tbody>
             <tr *ngFor="let fuelPurchase of fuelPurchases">
-              <td class="primary-column">{{ formatDate(fuelPurchase.datum) }}</td>
-              <td class="number-column">{{ formatDecimal(fuelPurchase.kolicina) }} l</td>
+              <td class="date-column primary-column">{{ formatDate(fuelPurchase.datum) }}</td>
+              <td class="number-column">{{ formatDecimal(fuelPurchase.kolicina) }}</td>
               <td class="number-column">{{ formatDecimal(fuelPurchase.jedinicnaCena) }}</td>
               <td class="number-column total-column">{{ formatDecimal(fuelPurchase.ukupnaCena) }}</td>
               <td class="actions-column">
