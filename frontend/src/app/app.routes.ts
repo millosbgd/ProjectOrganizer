@@ -11,6 +11,7 @@ import { ImplementationModelsListComponent } from './components/implementation-m
 import { ImplementationModelEditComponent } from './components/implementation-model-edit/implementation-model-edit.component';
 import { CalendarComponent } from './components/calendar/calendar.component';
 import { AktivnostiListComponent } from './components/aktivnosti-list/aktivnosti-list.component';
+import { PoseteGorivoComponent } from './components/posete-gorivo/posete-gorivo.component';
 export const routes: Routes = [
   { path: '', redirectTo: '/dashboard', pathMatch: 'full' },
   { 
@@ -46,6 +47,11 @@ export const routes: Routes = [
   { 
     path: 'aktivnosti', 
     component: AktivnostiListComponent,
+    canActivate: [AuthGuard]
+  },
+  {
+    path: 'posete-gorivo',
+    component: PoseteGorivoComponent,
     canActivate: [AuthGuard]
   },
   { 

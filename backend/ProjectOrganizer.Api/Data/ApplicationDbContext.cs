@@ -35,6 +35,8 @@ public class ApplicationDbContext : DbContext
     public DbSet<DailyTask> DailyTasks { get; set; }
     public DbSet<Mail> Mailovi { get; set; }
     public DbSet<DevOpsUser> DevOpsUsers { get; set; }
+    public DbSet<ClientVisit> ClientVisits { get; set; }
+    public DbSet<FuelPurchase> FuelPurchases { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -280,6 +282,43 @@ public class ApplicationDbContext : DbContext
                 .OnDelete(DeleteBehavior.Cascade);
         });
 
+        // ClientVisit configuration
+        modelBuilder.Entity<ClientVisit>(entity =>
+        {
+            entity.ToTable("ClientVisits");
+            entity.HasIndex(e => e.KlijentId);
+            entity.HasIndex(e => e.AktivnostId);
+            entity.HasIndex(e => e.CreatedBy);
+
+            entity.HasOne(v => v.Klijent)
+                .WithMany()
+                .HasForeignKey(v => v.KlijentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(v => v.Aktivnost)
+                .WithMany()
+                .HasForeignKey(v => v.AktivnostId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(v => v.CreatedByUser)
+                .WithMany()
+                .HasForeignKey(v => v.CreatedBy)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        // FuelPurchase configuration
+        modelBuilder.Entity<FuelPurchase>(entity =>
+        {
+            entity.ToTable("FuelPurchases");
+            entity.HasIndex(e => e.Datum);
+            entity.HasIndex(e => e.CreatedBy);
+
+            entity.HasOne(p => p.CreatedByUser)
+                .WithMany()
+                .HasForeignKey(p => p.CreatedBy)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
         // Mail configuration
         modelBuilder.Entity<Mail>(entity =>
         {
@@ -304,6 +343,10 @@ public class ApplicationDbContext : DbContext
                 aktivnost.UpdatedAt = DateTime.UtcNow;
             else if (entry.Entity is UserSettings userSettings)
                 userSettings.UpdatedAt = DateTime.UtcNow;
+            else if (entry.Entity is ClientVisit clientVisit)
+                clientVisit.UpdatedAt = DateTime.UtcNow;
+            else if (entry.Entity is FuelPurchase fuelPurchase)
+                fuelPurchase.UpdatedAt = DateTime.UtcNow;
         }
 
         return base.SaveChangesAsync(cancellationToken);

@@ -29,6 +29,7 @@ export class SidebarNavComponent implements OnDestroy {
     { key: 'klijenti', route: '/klijenti', icon: 'people', label: 'Klijenti' },
     { key: 'aktivnosti', route: '/aktivnosti', icon: 'checklist', label: 'Aktivnosti' },
     { key: 'kalendar', route: '/kalendar', icon: 'calendar_today', label: 'Kalendar' },
+    { key: 'posete-gorivo', route: '/posete-gorivo', icon: 'local_gas_station', label: 'Posete i gorivo' },
     { key: 'implementation-models', route: '/implementation-models', icon: 'build', label: 'Modeli Implementacije' },
     { key: 'admin-users', route: '/admin/users', icon: 'manage_accounts', label: 'Korisnici' },
     { key: 'settings', route: '/settings', icon: 'settings', label: 'Podešavanja' }

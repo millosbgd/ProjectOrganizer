@@ -1,0 +1,195 @@
+<div class="module-container">
+  <div class="header">
+    <h2>Posete i gorivo</h2>
+    <div class="header-actions">
+      <button *ngIf="activeTab === 'visits'" class="btn-icon-minimal" (click)="addVisit()" title="Dodaj posetu">
+        <span class="material-icons">add</span>
+      </button>
+      <button *ngIf="activeTab === 'fuel'" class="btn-icon-minimal" (click)="addFuelPurchase()" title="Dodaj sipanje goriva">
+        <span class="material-icons">add</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-button" [class.active]="activeTab === 'visits'" (click)="setActiveTab('visits')">
+      <span class="material-icons">location_on</span>
+      <span>Posete klijentima</span>
+    </button>
+    <button class="tab-button" [class.active]="activeTab === 'fuel'" (click)="setActiveTab('fuel')">
+      <span class="material-icons">local_gas_station</span>
+      <span>Sipanja goriva</span>
+    </button>
+  </div>
+
+  <div *ngIf="loading" class="loading">Učitavanje...</div>
+
+  <ng-container *ngIf="!loading">
+    <div *ngIf="activeTab === 'visits'">
+      <div *ngIf="visits.length === 0" class="no-data">Nema unetih poseta.</div>
+
+      <div class="table-container" *ngIf="visits.length > 0">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Klijent</th>
+              <th>Aktivnost</th>
+              <th>Grad</th>
+              <th>Kilometraža</th>
+              <th>Gorivo (l)</th>
+              <th class="actions-column">Akcije</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let visit of visits">
+              <td class="primary-column">{{ visit.klijent?.naziv || '-' }}</td>
+              <td class="activity-column">
+                <span class="activity-text" [title]="getActivityLabel(visit.aktivnost)">
+                  {{ getActivityLabel(visit.aktivnost) }}
+                </span>
+              </td>
+              <td>{{ visit.grad }}</td>
+              <td class="number-column">{{ formatDecimal(visit.kilometraza) }} km</td>
+              <td class="number-column">{{ formatDecimal(visit.gorivoLitara) }} l</td>
+              <td class="actions-column">
+                <button class="btn-icon-minimal" (click)="editVisit(visit)" title="Izmeni">
+                  <span class="material-icons">edit</span>
+                </button>
+                <button class="btn-icon-minimal danger" (click)="deleteVisit(visit)" title="Obriši">
+                  <span class="material-icons">delete</span>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div *ngIf="activeTab === 'fuel'">
+      <div *ngIf="fuelPurchases.length === 0" class="no-data">Nema unetih sipanja goriva.</div>
+
+      <div class="table-container" *ngIf="fuelPurchases.length > 0">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Datum</th>
+              <th>Količina</th>
+              <th>Jedinična cena</th>
+              <th>Ukupna cena</th>
+              <th class="actions-column">Akcije</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let fuelPurchase of fuelPurchases">
+              <td class="primary-column">{{ formatDate(fuelPurchase.datum) }}</td>
+              <td class="number-column">{{ formatDecimal(fuelPurchase.kolicina) }} l</td>
+              <td class="number-column">{{ formatDecimal(fuelPurchase.jedinicnaCena) }}</td>
+              <td class="number-column total-column">{{ formatDecimal(fuelPurchase.ukupnaCena) }}</td>
+              <td class="actions-column">
+                <button class="btn-icon-minimal" (click)="editFuelPurchase(fuelPurchase)" title="Izmeni">
+                  <span class="material-icons">edit</span>
+                </button>
+                <button class="btn-icon-minimal danger" (click)="deleteFuelPurchase(fuelPurchase)" title="Obriši">
+                  <span class="material-icons">delete</span>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </ng-container>
+</div>
+
+<div class="modal-overlay" *ngIf="visitModalOpen" (click)="closeVisitModal()">
+  <div class="form-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>{{ selectedVisit.id > 0 ? 'Izmena posete' : 'Nova poseta' }}</h3>
+      <button class="btn-close" (click)="closeVisitModal()" title="Zatvori">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <div class="form-grid">
+        <label>
+          <span>Klijent</span>
+          <select [(ngModel)]="selectedVisit.klijentId" name="visitKlijentId">
+            <option [ngValue]="0">Izaberite klijenta</option>
+            <option *ngFor="let klijent of klijenti" [ngValue]="klijent.id">{{ klijent.naziv }}</option>
+          </select>
+        </label>
+
+        <label>
+          <span>Aktivnost</span>
+          <select [(ngModel)]="selectedVisit.aktivnostId" name="visitAktivnostId">
+            <option [ngValue]="0">Izaberite aktivnost</option>
+            <option *ngFor="let aktivnost of aktivnosti" [ngValue]="aktivnost.id">
+              {{ formatDate(aktivnost.datum) }} - {{ aktivnost.opis }}
+            </option>
+          </select>
+        </label>
+
+        <label>
+          <span>Grad</span>
+          <input type="text" [(ngModel)]="selectedVisit.grad" name="visitGrad" maxlength="100">
+        </label>
+
+        <label>
+          <span>Kilometraža</span>
+          <input type="number" [(ngModel)]="selectedVisit.kilometraza" name="visitKilometraza" min="0" step="0.01">
+        </label>
+
+        <label>
+          <span>Gorivo (l)</span>
+          <input type="number" [(ngModel)]="selectedVisit.gorivoLitara" name="visitGorivoLitara" min="0" step="0.01">
+        </label>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="closeVisitModal()">Otkaži</button>
+      <button class="btn-primary" (click)="saveVisit()">Sačuvaj</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" *ngIf="fuelModalOpen" (click)="closeFuelModal()">
+  <div class="form-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>{{ selectedFuelPurchase.id > 0 ? 'Izmena sipanja goriva' : 'Novo sipanje goriva' }}</h3>
+      <button class="btn-close" (click)="closeFuelModal()" title="Zatvori">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <div class="form-grid">
+        <label>
+          <span>Datum</span>
+          <input type="date" [(ngModel)]="selectedFuelPurchase.datum" name="fuelDatum">
+        </label>
+
+        <label>
+          <span>Količina</span>
+          <input type="number" [(ngModel)]="selectedFuelPurchase.kolicina" (ngModelChange)="recalculateFuelTotal()" name="fuelKolicina" min="0" step="0.01">
+        </label>
+
+        <label>
+          <span>Jedinična cena</span>
+          <input type="number" [(ngModel)]="selectedFuelPurchase.jedinicnaCena" (ngModelChange)="recalculateFuelTotal()" name="fuelJedinicnaCena" min="0" step="0.01">
+        </label>
+
+        <label>
+          <span>Ukupna cena</span>
+          <input type="number" [ngModel]="selectedFuelPurchase.ukupnaCena" name="fuelUkupnaCena" readonly>
+        </label>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="closeFuelModal()">Otkaži</button>
+      <button class="btn-primary" (click)="saveFuelPurchase()">Sačuvaj</button>
+    </div>
+  </div>
+</div>
