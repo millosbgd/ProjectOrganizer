@@ -6,44 +6,9 @@
 
   <!-- Navigation Links -->
   <nav class="sidebar-nav">
-    <a routerLink="/dashboard" routerLinkActive="active" class="nav-item">
-      <span class="material-icons">dashboard</span>
-      <span class="nav-text">Dashboard</span>
-    </a>
-    
-    <a routerLink="/projekti" routerLinkActive="active" class="nav-item">
-      <span class="material-icons">folder</span>
-      <span class="nav-text">Projekti</span>
-    </a>
-    
-    <a routerLink="/klijenti" routerLinkActive="active" class="nav-item">
-      <span class="material-icons">people</span>
-      <span class="nav-text">Klijenti</span>
-    </a>
-    
-    <a routerLink="/aktivnosti" routerLinkActive="active" class="nav-item">
-      <span class="material-icons">checklist</span>
-      <span class="nav-text">Aktivnosti</span>
-    </a>
-    
-    <a routerLink="/kalendar" routerLinkActive="active" class="nav-item">
-      <span class="material-icons">calendar_today</span>
-      <span class="nav-text">Kalendar</span>
-    </a>
-    
-    <a routerLink="/implementation-models" routerLinkActive="active" class="nav-item">
-      <span class="material-icons">build</span>
-      <span class="nav-text">Modeli Implementacije</span>
-    </a>
-    
-    <a routerLink="/admin/users" routerLinkActive="active" class="nav-item">
-      <span class="material-icons">manage_accounts</span>
-      <span class="nav-text">Korisnici</span>
-    </a>
-    
-    <a routerLink="/settings" routerLinkActive="active" class="nav-item">
-      <span class="material-icons">settings</span>
-      <span class="nav-text">Podešavanja</span>
+    <a *ngFor="let item of visibleMenuItems" [routerLink]="item.route" routerLinkActive="active" class="nav-item">
+      <span class="material-icons">{{ item.icon }}</span>
+      <span class="nav-text">{{ item.label }}</span>
     </a>
   </nav>
 </aside>

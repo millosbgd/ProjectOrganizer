@@ -19,6 +19,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<UserSettings> UserSettings { get; set; }
     public DbSet<User> Users { get; set; }
     public DbSet<ProjectPermission> ProjectPermissions { get; set; }
+    public DbSet<UserMenuPermission> UserMenuPermissions { get; set; }
     public DbSet<DevOpsTasksCandidate> DevOpsTasksCandidates { get; set; }
     public DbSet<DevOpsTaskStatusHistory> DevOpsTaskStatusHistory { get; set; }
     public DbSet<CodebookEntity> CodebookEntities { get; set; }
@@ -105,6 +106,18 @@ public class ApplicationDbContext : DbContext
         {
             entity.ToTable("CodebookEntities");
             entity.HasIndex(e => e.Name).IsUnique();
+        });
+
+        // UserMenuPermission configuration
+        modelBuilder.Entity<UserMenuPermission>(entity =>
+        {
+            entity.ToTable("UserMenuPermissions");
+            entity.HasIndex(e => new { e.UserId, e.MenuKey }).IsUnique();
+
+            entity.HasOne(p => p.User)
+                .WithMany()
+                .HasForeignKey(p => p.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         // Codebook configuration

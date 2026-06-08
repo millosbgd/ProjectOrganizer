@@ -42,6 +42,30 @@ public class UsersController : ControllerBase
         }
     }
 
+    // GET: api/users/me/menu-permissions - Get visible menu keys for current user
+    [HttpGet("me/menu-permissions")]
+    public async Task<ActionResult<IEnumerable<string>>> GetCurrentUserMenuPermissions()
+    {
+        try
+        {
+            var currentUser = await _userService.EnsureUserExistsAsync(User);
+
+            var menuKeys = await _context.UserMenuPermissions
+                .Where(p => p.UserId == currentUser.Id)
+                .Select(p => p.MenuKey)
+                .Distinct()
+                .OrderBy(menuKey => menuKey)
+                .ToListAsync();
+
+            return Ok(menuKeys);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting current user menu permissions");
+            return StatusCode(500, "Error retrieving menu permissions");
+        }
+    }
+
     // GET: api/users - Get all users (Admin only)
     [HttpGet]
     public async Task<ActionResult<IEnumerable<User>>> GetAllUsers()

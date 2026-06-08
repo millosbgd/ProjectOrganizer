@@ -496,10 +496,10 @@ public class GoogleSheetsService
                 spreadsheetId = existingSpreadsheetId;
                 await EnsureInternalSheetExistsAndClearAsync(spreadsheetId);
             }
-            catch (GoogleApiException gex) when (gex.HttpStatusCode == System.Net.HttpStatusCode.NotFound)
+            catch (GoogleApiException gex) when (ShouldCreateNewInternalSpreadsheet(gex))
             {
                 _logger.LogWarning(gex,
-                    "Stored internal spreadsheet {SpreadsheetId} was not found. Creating a new internal sheet for project {ProjectId}.",
+                    "Stored internal spreadsheet {SpreadsheetId} could not be reused. Creating a new internal sheet for project {ProjectId}.",
                     existingSpreadsheetId, projekat.Id);
 
                 spreadsheetId = await CreateInternalSpreadsheetAsync(projekat);
@@ -513,6 +513,13 @@ public class GoogleSheetsService
         await WriteInternalDataAsync(spreadsheetId, projekat, items);
 
         return spreadsheetId;
+    }
+
+    private static bool ShouldCreateNewInternalSpreadsheet(GoogleApiException exception)
+    {
+        return exception.HttpStatusCode == System.Net.HttpStatusCode.NotFound
+            || exception.HttpStatusCode == System.Net.HttpStatusCode.Forbidden
+            || exception.HttpStatusCode == System.Net.HttpStatusCode.BadRequest;
     }
 
     private async Task<string> CreateInternalSpreadsheetAsync(Projekat projekat)

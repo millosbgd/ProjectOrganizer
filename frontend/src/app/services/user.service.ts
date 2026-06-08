@@ -16,6 +16,10 @@ export class UserService {
     return this.http.get<User>(`${this.apiUrl}/me`);
   }
 
+  getCurrentUserMenuPermissions(): Observable<string[]> {
+    return this.http.get<string[]>(`${this.apiUrl}/me/menu-permissions`);
+  }
+
   getAllUsers(): Observable<User[]> {
     return this.http.get<User[]>(this.apiUrl);
   }
