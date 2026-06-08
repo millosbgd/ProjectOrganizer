@@ -77,6 +77,24 @@ export class PoseteGorivoComponent implements OnInit {
     this.visitModalOpen = true;
   }
 
+  onVisitClientChange(): void {
+    const selectedClient = this.klijenti.find(k => k.id === Number(this.selectedVisit.klijentId));
+    this.selectedVisit.grad = selectedClient?.grad || '';
+
+    if (!this.filteredAktivnosti.some(a => a.id === this.selectedVisit.aktivnostId)) {
+      this.selectedVisit.aktivnostId = 0;
+    }
+  }
+
+  get filteredAktivnosti(): Aktivnost[] {
+    const selectedClientId = Number(this.selectedVisit.klijentId || 0);
+    if (!selectedClientId) {
+      return [];
+    }
+
+    return this.aktivnosti.filter(aktivnost => aktivnost.projekat?.klijentId === selectedClientId);
+  }
+
   saveVisit(): void {
     if (!this.selectedVisit.klijentId || !this.selectedVisit.aktivnostId) {
       alert('Klijent i aktivnost su obavezni.');

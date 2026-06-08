@@ -18,6 +18,7 @@ export interface Aktivnost {
     id: number;
     naziv: string;
     brojProjekta: string;
+    klijentId?: number;
   };
   createdBy?: number;
   createdByUser?: {
