@@ -1,6 +1,7 @@
 export interface SablonPodrske {
   id: number;
   klijentId?: number | null;
+  naslov: string;
   opisZahteva: string;
   opisResenja: string;
   odgovorKlijentu: string;

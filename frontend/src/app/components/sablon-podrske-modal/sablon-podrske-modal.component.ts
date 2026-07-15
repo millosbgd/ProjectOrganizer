@@ -36,8 +36,8 @@ export class SablonPodrskeModalComponent implements OnChanges {
   onSave(): void {
     this.validationError = '';
 
-    if (!this.sablon.opisZahteva?.trim()) {
-      this.validationError = 'Opis zahteva je obavezan.';
+    if (!this.sablon.naslov?.trim()) {
+      this.validationError = 'Naslov je obavezan.';
       return;
     }
 
@@ -46,17 +46,13 @@ export class SablonPodrskeModalComponent implements OnChanges {
       return;
     }
 
-    if (!this.sablon.odgovorKlijentu?.trim()) {
-      this.validationError = 'Odgovor klijentu je obavezan.';
-      return;
-    }
-
     this.save.emit({
       ...this.sablon,
       klijentId: this.sablon.klijentId || null,
-      opisZahteva: this.sablon.opisZahteva.trim(),
+      naslov: this.sablon.naslov.trim(),
+      opisZahteva: this.sablon.opisZahteva?.trim() || '',
       opisResenja: this.sablon.opisResenja.trim(),
-      odgovorKlijentu: this.sablon.odgovorKlijentu.trim()
+      odgovorKlijentu: this.sablon.odgovorKlijentu?.trim() || ''
     });
   }
 
@@ -93,6 +89,7 @@ export class SablonPodrskeModalComponent implements OnChanges {
     return {
       id: 0,
       klijentId: null,
+      naslov: '',
       opisZahteva: '',
       opisResenja: '',
       odgovorKlijentu: ''

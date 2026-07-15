@@ -120,6 +120,7 @@ export class SabloniPodrskeListComponent implements OnInit {
     return {
       id: 0,
       klijentId: null,
+      naslov: '',
       opisZahteva: '',
       opisResenja: '',
       odgovorKlijentu: ''

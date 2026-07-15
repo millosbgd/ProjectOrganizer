@@ -19,13 +19,22 @@
       </div>
 
       <div class="form-group">
-        <label>Opis zahteva za podršku: *</label>
+        <label>Naslov: *</label>
+        <input
+          [(ngModel)]="sablon.naslov"
+          name="naslov"
+          maxlength="500"
+          required />
+        <div class="char-count">{{ sablon.naslov.length || 0 }}/500</div>
+      </div>
+
+      <div class="form-group">
+        <label>Opis zahteva za podršku:</label>
         <textarea
           [(ngModel)]="sablon.opisZahteva"
           name="opisZahteva"
           rows="4"
-          maxlength="500"
-          required></textarea>
+          maxlength="500"></textarea>
         <div class="char-count">{{ sablon.opisZahteva.length || 0 }}/500</div>
       </div>
 
@@ -41,13 +50,12 @@
       </div>
 
       <div class="form-group">
-        <label>Odgovor klijentu: *</label>
+        <label>Odgovor klijentu:</label>
         <textarea
           [(ngModel)]="sablon.odgovorKlijentu"
           name="odgovorKlijentu"
           rows="4"
-          maxlength="500"
-          required></textarea>
+          maxlength="500"></textarea>
         <div class="char-count">{{ sablon.odgovorKlijentu.length || 0 }}/500</div>
       </div>
     </div>

@@ -10,9 +10,10 @@ BEGIN
     (
         Id int IDENTITY(1,1) NOT NULL,
         KlijentId int NULL,
-        OpisZahteva nvarchar(500) NOT NULL,
+        Naslov nvarchar(500) NOT NULL,
+        OpisZahteva nvarchar(500) NOT NULL CONSTRAINT DF_SabloniPodrske_OpisZahteva DEFAULT(N''),
         OpisResenja nvarchar(500) NOT NULL,
-        OdgovorKlijentu nvarchar(500) NOT NULL,
+        OdgovorKlijentu nvarchar(500) NOT NULL CONSTRAINT DF_SabloniPodrske_OdgovorKlijentu DEFAULT(N''),
         Kreirao int NULL,
         Promenio int NULL,
         VremeKreiranja datetime2 NOT NULL,
@@ -39,6 +40,24 @@ IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_SabloniPodrske_Promen
 
 IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_SabloniPodrske_VremeKreiranja' AND object_id = OBJECT_ID(N'dbo.SabloniPodrske'))
     CREATE INDEX IX_SabloniPodrske_VremeKreiranja ON dbo.SabloniPodrske(VremeKreiranja);
+
+IF COL_LENGTH(N'dbo.SabloniPodrske', N'Naslov') IS NULL
+BEGIN
+    ALTER TABLE dbo.SabloniPodrske
+        ADD Naslov nvarchar(500) NOT NULL CONSTRAINT DF_SabloniPodrske_Naslov DEFAULT(N'');
+END;
+
+IF OBJECT_ID(N'DF_SabloniPodrske_OpisZahteva', N'D') IS NULL
+BEGIN
+    ALTER TABLE dbo.SabloniPodrske
+        ADD CONSTRAINT DF_SabloniPodrske_OpisZahteva DEFAULT(N'') FOR OpisZahteva;
+END;
+
+IF OBJECT_ID(N'DF_SabloniPodrske_OdgovorKlijentu', N'D') IS NULL
+BEGIN
+    ALTER TABLE dbo.SabloniPodrske
+        ADD CONSTRAINT DF_SabloniPodrske_OdgovorKlijentu DEFAULT(N'') FOR OdgovorKlijentu;
+END;
 
 IF OBJECT_ID(N'dbo.UserMenuPermissions', N'U') IS NOT NULL
 BEGIN

@@ -113,6 +113,7 @@ public class SabloniPodrskeController : ControllerBase
             var currentUser = await _userService.EnsureUserExistsAsync(User);
 
             existingSablon.KlijentId = sablon.KlijentId;
+            existingSablon.Naslov = sablon.Naslov;
             existingSablon.OpisZahteva = sablon.OpisZahteva;
             existingSablon.OpisResenja = sablon.OpisResenja;
             existingSablon.OdgovorKlijentu = sablon.OdgovorKlijentu;
@@ -147,18 +148,16 @@ public class SabloniPodrskeController : ControllerBase
         if (sablon.KlijentId.HasValue && !await _context.Klijenti.AnyAsync(k => k.Id == sablon.KlijentId.Value))
             return BadRequest("Klijent ne postoji.");
 
-        if (string.IsNullOrWhiteSpace(sablon.OpisZahteva))
-            return BadRequest("Opis zahteva je obavezan.");
+        if (string.IsNullOrWhiteSpace(sablon.Naslov))
+            return BadRequest("Naslov je obavezan.");
 
         if (string.IsNullOrWhiteSpace(sablon.OpisResenja))
             return BadRequest("Opis rešenja je obavezan.");
 
-        if (string.IsNullOrWhiteSpace(sablon.OdgovorKlijentu))
-            return BadRequest("Odgovor klijentu je obavezan.");
-
-        sablon.OpisZahteva = sablon.OpisZahteva.Trim();
+        sablon.Naslov = sablon.Naslov.Trim();
+        sablon.OpisZahteva = sablon.OpisZahteva?.Trim() ?? string.Empty;
         sablon.OpisResenja = sablon.OpisResenja.Trim();
-        sablon.OdgovorKlijentu = sablon.OdgovorKlijentu.Trim();
+        sablon.OdgovorKlijentu = sablon.OdgovorKlijentu?.Trim() ?? string.Empty;
 
         return null;
     }

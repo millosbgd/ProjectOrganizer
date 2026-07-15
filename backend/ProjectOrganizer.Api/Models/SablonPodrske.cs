@@ -11,13 +11,15 @@ public class SablonPodrske
 
     [Required]
     [MaxLength(500)]
+    public string Naslov { get; set; } = string.Empty;
+
+    [MaxLength(500)]
     public string OpisZahteva { get; set; } = string.Empty;
 
     [Required]
     [MaxLength(500)]
     public string OpisResenja { get; set; } = string.Empty;
 
-    [Required]
     [MaxLength(500)]
     public string OdgovorKlijentu { get; set; } = string.Empty;
 
