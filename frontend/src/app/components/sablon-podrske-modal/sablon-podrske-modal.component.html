@@ -1,0 +1,76 @@
+<div class="modal-backdrop" *ngIf="isOpen" (click)="onBackdropClick($event)">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div class="header-content">
+        <h3>{{ sablon.id && sablon.id > 0 ? 'Izmena šablona za podršku' : 'Novi šablon za podršku' }}</h3>
+      </div>
+      <button class="close-btn" (click)="onClose()">&times;</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Klijent:</label>
+        <select [(ngModel)]="sablon.klijentId" name="klijentId">
+          <option [ngValue]="null">- Bez klijenta -</option>
+          <option *ngFor="let klijent of klijenti" [ngValue]="klijent.id">
+            {{ klijent.naziv }}
+          </option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Opis zahteva za podršku: *</label>
+        <textarea
+          [(ngModel)]="sablon.opisZahteva"
+          name="opisZahteva"
+          rows="4"
+          maxlength="500"
+          required></textarea>
+        <div class="char-count">{{ sablon.opisZahteva.length || 0 }}/500</div>
+      </div>
+
+      <div class="form-group">
+        <label>Opis rešenja: *</label>
+        <textarea
+          [(ngModel)]="sablon.opisResenja"
+          name="opisResenja"
+          rows="4"
+          maxlength="500"
+          required></textarea>
+        <div class="char-count">{{ sablon.opisResenja.length || 0 }}/500</div>
+      </div>
+
+      <div class="form-group">
+        <label>Odgovor klijentu: *</label>
+        <textarea
+          [(ngModel)]="sablon.odgovorKlijentu"
+          name="odgovorKlijentu"
+          rows="4"
+          maxlength="500"
+          required></textarea>
+        <div class="char-count">{{ sablon.odgovorKlijentu.length || 0 }}/500</div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <div class="error-message" *ngIf="validationError">
+        <span class="material-icons">error_outline</span>
+        {{ validationError }}
+      </div>
+      <div class="footer-buttons">
+        <button type="button" class="btn-primary" (click)="onSave()" [disabled]="isSaving">
+          {{ isSaving ? 'Čuvam...' : 'Sačuvaj' }}
+        </button>
+        <button type="button" class="btn-secondary" (click)="onClose()">Otkaži</button>
+        <button
+          type="button"
+          class="btn-icon-minimal danger"
+          (click)="onDelete()"
+          *ngIf="sablon.id && sablon.id > 0"
+          title="Obriši šablon">
+          <span class="material-icons">delete</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

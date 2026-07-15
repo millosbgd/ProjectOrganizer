@@ -1,0 +1,76 @@
+<div class="sabloni-container">
+  <div class="header">
+    <h2>Šabloni za podršku</h2>
+    <div class="header-actions">
+      <button
+        class="btn-filter"
+        (click)="toggleShowAll()"
+        [title]="showAllTemplates ? 'Prikaži moje šablone' : 'Prikaži sve šablone'">
+        <span class="material-icons">{{ showAllTemplates ? 'groups' : 'person' }}</span>
+        <span>{{ showAllTemplates ? 'Prikaži moje šablone' : 'Prikaži sve šablone' }}</span>
+      </button>
+      <button class="btn-icon-minimal" (click)="addNewSablon()" title="Dodaj novi šablon">
+        <span class="material-icons">add</span>
+      </button>
+    </div>
+  </div>
+
+  <div *ngIf="loading" class="loading">Učitavanje...</div>
+
+  <div *ngIf="!loading && sabloni.length === 0" class="no-data">
+    {{ showAllTemplates ? 'Nema šablona za podršku.' : 'Nemate šablone za podršku.' }}
+  </div>
+
+  <div class="table-container" *ngIf="!loading && sabloni.length > 0">
+    <table class="sabloni-table">
+      <thead>
+        <tr>
+          <th>Klijent</th>
+          <th>Opis zahteva</th>
+          <th>Opis rešenja</th>
+          <th>Odgovor klijentu</th>
+          <th>Kreirao</th>
+          <th>Promenio</th>
+          <th>Vreme promene</th>
+          <th class="actions-column">Akcije</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let sablon of sabloni">
+          <td>
+            <span *ngIf="sablon.klijent" class="client-name">{{ sablon.klijent.naziv }}</span>
+            <span *ngIf="!sablon.klijent" class="no-client">-</span>
+          </td>
+          <td class="text-column">
+            <span class="text-preview" [title]="sablon.opisZahteva">{{ sablon.opisZahteva }}</span>
+          </td>
+          <td class="text-column">
+            <span class="text-preview" [title]="sablon.opisResenja">{{ sablon.opisResenja }}</span>
+          </td>
+          <td class="text-column">
+            <span class="text-preview" [title]="sablon.odgovorKlijentu">{{ sablon.odgovorKlijentu }}</span>
+          </td>
+          <td class="user-column">{{ sablon.kreiraoUser?.name || sablon.kreiraoUser?.email || '-' }}</td>
+          <td class="user-column">{{ sablon.promenioUser?.name || sablon.promenioUser?.email || '-' }}</td>
+          <td class="date-column">{{ formatDate(sablon.vremePromene) }}</td>
+          <td class="actions-column">
+            <button class="btn-icon-minimal" (click)="editSablon(sablon)" title="Izmeni">
+              <span class="material-icons">edit</span>
+            </button>
+            <button class="btn-icon-minimal danger" (click)="deleteSablonFromList(sablon.id)" title="Obriši">
+              <span class="material-icons">delete</span>
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<app-sablon-podrske-modal
+  [isOpen]="isModalOpen"
+  [sablon]="selectedSablon"
+  (save)="saveSablon($event)"
+  (close)="closeModal()"
+  (delete)="deleteSablon($event)">
+</app-sablon-podrske-modal>

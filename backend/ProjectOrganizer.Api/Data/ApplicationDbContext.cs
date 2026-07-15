@@ -37,6 +37,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<DevOpsUser> DevOpsUsers { get; set; }
     public DbSet<ClientVisit> ClientVisits { get; set; }
     public DbSet<FuelPurchase> FuelPurchases { get; set; }
+    public DbSet<SablonPodrske> SabloniPodrske { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -319,6 +320,31 @@ public class ApplicationDbContext : DbContext
                 .OnDelete(DeleteBehavior.SetNull);
         });
 
+        // SablonPodrske configuration
+        modelBuilder.Entity<SablonPodrske>(entity =>
+        {
+            entity.ToTable("SabloniPodrske");
+            entity.HasIndex(e => e.KlijentId);
+            entity.HasIndex(e => e.Kreirao);
+            entity.HasIndex(e => e.Promenio);
+            entity.HasIndex(e => e.VremeKreiranja);
+
+            entity.HasOne(s => s.Klijent)
+                .WithMany()
+                .HasForeignKey(s => s.KlijentId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasOne(s => s.KreiraoUser)
+                .WithMany()
+                .HasForeignKey(s => s.Kreirao)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasOne(s => s.PromenioUser)
+                .WithMany()
+                .HasForeignKey(s => s.Promenio)
+                .OnDelete(DeleteBehavior.NoAction);
+        });
+
         // Mail configuration
         modelBuilder.Entity<Mail>(entity =>
         {
@@ -347,6 +373,8 @@ public class ApplicationDbContext : DbContext
                 clientVisit.UpdatedAt = DateTime.UtcNow;
             else if (entry.Entity is FuelPurchase fuelPurchase)
                 fuelPurchase.UpdatedAt = DateTime.UtcNow;
+            else if (entry.Entity is SablonPodrske sablonPodrske)
+                sablonPodrske.VremePromene = DateTime.UtcNow;
         }
 
         return base.SaveChangesAsync(cancellationToken);
