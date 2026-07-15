@@ -10,17 +10,17 @@ public class SablonPodrske
     public int? KlijentId { get; set; }
 
     [Required]
-    [MaxLength(500)]
+    [MaxLength(2000)]
     public string Naslov { get; set; } = string.Empty;
 
-    [MaxLength(500)]
+    [MaxLength(2000)]
     public string OpisZahteva { get; set; } = string.Empty;
 
     [Required]
-    [MaxLength(500)]
+    [MaxLength(2000)]
     public string OpisResenja { get; set; } = string.Empty;
 
-    [MaxLength(500)]
+    [MaxLength(2000)]
     public string OdgovorKlijentu { get; set; } = string.Empty;
 
     public int? Kreirao { get; set; }

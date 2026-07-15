@@ -23,9 +23,9 @@
         <input
           [(ngModel)]="sablon.naslov"
           name="naslov"
-          maxlength="500"
+          maxlength="2000"
           required />
-        <div class="char-count">{{ sablon.naslov.length || 0 }}/500</div>
+        <div class="char-count">{{ sablon.naslov.length || 0 }}/2000</div>
       </div>
 
       <div class="form-group">
@@ -34,8 +34,8 @@
           [(ngModel)]="sablon.opisZahteva"
           name="opisZahteva"
           rows="4"
-          maxlength="500"></textarea>
-        <div class="char-count">{{ sablon.opisZahteva.length || 0 }}/500</div>
+          maxlength="2000"></textarea>
+        <div class="char-count">{{ sablon.opisZahteva.length || 0 }}/2000</div>
       </div>
 
       <div class="form-group">
@@ -44,9 +44,9 @@
           [(ngModel)]="sablon.opisResenja"
           name="opisResenja"
           rows="4"
-          maxlength="500"
+          maxlength="2000"
           required></textarea>
-        <div class="char-count">{{ sablon.opisResenja.length || 0 }}/500</div>
+        <div class="char-count">{{ sablon.opisResenja.length || 0 }}/2000</div>
       </div>
 
       <div class="form-group">
@@ -55,14 +55,18 @@
           [(ngModel)]="sablon.odgovorKlijentu"
           name="odgovorKlijentu"
           rows="4"
-          maxlength="500"></textarea>
-        <div class="char-count">{{ sablon.odgovorKlijentu.length || 0 }}/500</div>
+          maxlength="2000"></textarea>
+        <div class="char-count">{{ sablon.odgovorKlijentu.length || 0 }}/2000</div>
       </div>
     </div>
 
     <div class="modal-footer">
       <div class="error-message" *ngIf="validationError">
-        <span class="material-icons">error_outline</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
         {{ validationError }}
       </div>
       <div class="footer-buttons">
@@ -76,7 +80,10 @@
           (click)="onDelete()"
           *ngIf="sablon.id && sablon.id > 0"
           title="Obriši šablon">
-          <span class="material-icons">delete</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="3 6 5 6 21 6"></polyline>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+          </svg>
         </button>
       </div>
     </div>

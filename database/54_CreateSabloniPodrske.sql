@@ -10,10 +10,10 @@ BEGIN
     (
         Id int IDENTITY(1,1) NOT NULL,
         KlijentId int NULL,
-        Naslov nvarchar(500) NOT NULL,
-        OpisZahteva nvarchar(500) NOT NULL CONSTRAINT DF_SabloniPodrske_OpisZahteva DEFAULT(N''),
-        OpisResenja nvarchar(500) NOT NULL,
-        OdgovorKlijentu nvarchar(500) NOT NULL CONSTRAINT DF_SabloniPodrske_OdgovorKlijentu DEFAULT(N''),
+        Naslov nvarchar(2000) NOT NULL,
+        OpisZahteva nvarchar(2000) NOT NULL CONSTRAINT DF_SabloniPodrske_OpisZahteva DEFAULT(N''),
+        OpisResenja nvarchar(2000) NOT NULL,
+        OdgovorKlijentu nvarchar(2000) NOT NULL CONSTRAINT DF_SabloniPodrske_OdgovorKlijentu DEFAULT(N''),
         Kreirao int NULL,
         Promenio int NULL,
         VremeKreiranja datetime2 NOT NULL,
@@ -44,7 +44,27 @@ IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_SabloniPodrske_VremeK
 IF COL_LENGTH(N'dbo.SabloniPodrske', N'Naslov') IS NULL
 BEGIN
     ALTER TABLE dbo.SabloniPodrske
-        ADD Naslov nvarchar(500) NOT NULL CONSTRAINT DF_SabloniPodrske_Naslov DEFAULT(N'');
+        ADD Naslov nvarchar(2000) NOT NULL CONSTRAINT DF_SabloniPodrske_Naslov DEFAULT(N'');
+END;
+
+IF COL_LENGTH(N'dbo.SabloniPodrske', N'Naslov') IS NOT NULL
+BEGIN
+    ALTER TABLE dbo.SabloniPodrske ALTER COLUMN Naslov nvarchar(2000) NOT NULL;
+END;
+
+IF COL_LENGTH(N'dbo.SabloniPodrske', N'OpisZahteva') IS NOT NULL
+BEGIN
+    ALTER TABLE dbo.SabloniPodrske ALTER COLUMN OpisZahteva nvarchar(2000) NOT NULL;
+END;
+
+IF COL_LENGTH(N'dbo.SabloniPodrske', N'OpisResenja') IS NOT NULL
+BEGIN
+    ALTER TABLE dbo.SabloniPodrske ALTER COLUMN OpisResenja nvarchar(2000) NOT NULL;
+END;
+
+IF COL_LENGTH(N'dbo.SabloniPodrske', N'OdgovorKlijentu') IS NOT NULL
+BEGIN
+    ALTER TABLE dbo.SabloniPodrske ALTER COLUMN OdgovorKlijentu nvarchar(2000) NOT NULL;
 END;
 
 IF OBJECT_ID(N'DF_SabloniPodrske_OpisZahteva', N'D') IS NULL
