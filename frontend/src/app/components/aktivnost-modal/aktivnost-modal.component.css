@@ -105,20 +105,25 @@
 }
 
 .btn-documents {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
   border: 1px solid #5dade2;
   border-radius: 5px;
-  background: #fff;
-  color: #3498db;
+  background: transparent;
+  color: #5dade2;
   padding: 7px 12px;
   cursor: pointer;
   font-size: 13px;
   font-weight: 500;
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
 }
 
 .btn-documents:hover,
 .btn-documents.active {
-  background: #5dade2;
-  color: #fff;
+  background: rgba(93, 173, 226, 0.05);
+  border-color: #5dade2;
+  color: #3498db;
 }
 
 .modal-body {

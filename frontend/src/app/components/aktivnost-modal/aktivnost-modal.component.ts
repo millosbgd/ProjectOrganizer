@@ -725,6 +725,6 @@ export class AktivnostModalComponent implements OnChanges {
       'txt': '📝',
       'md': '📝'
     };
-    return icons[tipFajla.toLowerCase()] || '📎';
+    return icons[tipFajla.toLowerCase()] || '📄';
   }
 }
