@@ -636,7 +636,7 @@ export class ProjekatDetailComponent implements OnInit {
       'docx': '📝',
       'txt': '📝'
     };
-    return icons[tipFajla.toLowerCase()] || '📎';
+    return icons[tipFajla.toLowerCase()] || '📄';
   }
 
   toggleDokumentiSidebar(): void {

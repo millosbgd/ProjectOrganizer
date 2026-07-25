@@ -3,6 +3,21 @@
     <h2>{{ isNewMode ? 'Novi Projekat' : projekat.naziv }}</h2>
     <div class="header-actions">
       <button class="btn-secondary" routerLink="/projekti">Nazad</button>
+      <button *ngIf="!isNewMode" class="btn-icon-minimal" (click)="toggleDokumentiSidebar()" [class.active]="showDokumentiSidebar" [title]="'Dokumenti (' + dokumenti.length + ')'">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+        </svg>
+      </button>
+      <button *ngIf="!isNewMode" class="btn-icon-minimal" (click)="toggleNotesSidebar()" [class.active]="showNotesSidebar" [title]="'Beleške (' + notes.length + ')'">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+          <line x1="8" y1="9" x2="16" y2="9"></line>
+          <line x1="8" y1="13" x2="14" y2="13"></line>
+        </svg>
+      </button>
       <button *ngIf="!isEditMode && !isNewMode" class="btn-icon-minimal" (click)="isEditMode = true" title="Izmeni projekat">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
@@ -432,21 +447,10 @@
 
 
   </div>
-
-  <!-- Dokumenti Sidebar Toggle Button -->
-  <button *ngIf="!isNewMode" class="dokumenti-toggle-btn" (click)="toggleDokumentiSidebar()" [class.sidebar-open]="showDokumentiSidebar">
-    📎 Dokumenti ({{ dokumenti.length }})
-  </button>
-
-  <!-- Notes Sidebar Toggle Button -->
-  <button *ngIf="!isNewMode" class="notes-toggle-btn" (click)="toggleNotesSidebar()" [class.sidebar-open]="showNotesSidebar">
-    📝 Beleške ({{ notes.length }})
-  </button>
-
   <!-- Dokumenti Sidebar -->
   <div class="dokumenti-sidebar" *ngIf="!isNewMode" [class.open]="showDokumentiSidebar">
     <div class="sidebar-header">
-      <h3>📎 Dokumenti</h3>
+      <h3>Dokumenti</h3>
       <button class="btn-close" (click)="toggleDokumentiSidebar()">✕</button>
     </div>
     
@@ -498,7 +502,7 @@
   <!-- Notes Sidebar -->
   <div class="notes-sidebar" *ngIf="!isNewMode" [class.open]="showNotesSidebar">
     <div class="sidebar-header">
-      <h3>📝 Beleške</h3>
+      <h3>Beleške</h3>
       <button class="btn-close" (click)="toggleNotesSidebar()">✕</button>
     </div>
     
