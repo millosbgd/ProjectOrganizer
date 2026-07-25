@@ -28,7 +28,23 @@ public class DokumentiController : ControllerBase
     public async Task<ActionResult<IEnumerable<Dokument>>> GetByProjekatId(int projekatId)
     {
         var dokumenti = await _context.Dokumenti
-            .Where(d => d.ProjekatId == projekatId)
+            .Where(d => d.ProjekatId == projekatId || (d.Entity == "Projekat" && d.EntityId == projekatId))
+            .OrderByDescending(d => d.CreatedAt)
+            .ToListAsync();
+
+        return Ok(dokumenti);
+    }
+
+    // GET: api/dokumenti/entity/Aktivnost/5
+    [HttpGet("entity/{entity}/{entityId}")]
+    public async Task<ActionResult<IEnumerable<Dokument>>> GetByEntity(string entity, int entityId)
+    {
+        entity = NormalizeEntity(entity);
+        if (!await EntityExists(entity, entityId))
+            return NotFound($"{entity} nije pronađen");
+
+        var dokumenti = await _context.Dokumenti
+            .Where(d => d.Entity == entity && d.EntityId == entityId)
             .OrderByDescending(d => d.CreatedAt)
             .ToListAsync();
 
@@ -39,23 +55,34 @@ public class DokumentiController : ControllerBase
     [HttpPost("upload/{projekatId}")]
     public async Task<ActionResult<Dokument>> UploadDokument(int projekatId, IFormFile file)
     {
+        return await UploadForEntity("Projekat", projekatId, file);
+    }
+
+    // POST: api/dokumenti/upload/Aktivnost/5
+    [HttpPost("upload/{entity}/{entityId}")]
+    public async Task<ActionResult<Dokument>> UploadDokumentForEntity(string entity, int entityId, IFormFile file)
+    {
+        return await UploadForEntity(entity, entityId, file);
+    }
+
+    private async Task<ActionResult<Dokument>> UploadForEntity(string entity, int entityId, IFormFile file)
+    {
         if (file == null || file.Length == 0)
         {
             return BadRequest("Fajl nije prosleđen");
         }
 
-        // Proveri da li projekat postoji
-        var projekat = await _context.Projekti.FindAsync(projekatId);
-        if (projekat == null)
+        entity = NormalizeEntity(entity);
+        if (!await EntityExists(entity, entityId))
         {
-            return NotFound("Projekat nije pronađen");
+            return NotFound($"{entity} nije pronađen");
         }
 
         try
         {
             // Generiši unique blob name
             var extension = Path.GetExtension(file.FileName);
-            var blobName = $"{projekatId}/{Guid.NewGuid()}{extension}";
+            var blobName = $"{entity}/{entityId}/{Guid.NewGuid()}{extension}";
 
             // Upload u Blob Storage
             var containerClient = _blobServiceClient.GetBlobContainerClient(_containerName);
@@ -77,7 +104,9 @@ public class DokumentiController : ControllerBase
             // Kreiraj metadata zapis u bazi
             var dokument = new Dokument
             {
-                ProjekatId = projekatId,
+                ProjekatId = entity == "Projekat" ? entityId : null,
+                Entity = entity,
+                EntityId = entityId,
                 NazivFajla = file.FileName,
                 TipFajla = extension.TrimStart('.').ToLower(),
                 BlobUrl = blobClient.Uri.ToString(),
@@ -89,7 +118,7 @@ public class DokumentiController : ControllerBase
             _context.Dokumenti.Add(dokument);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetByProjekatId), new { projekatId = dokument.ProjekatId }, dokument);
+            return CreatedAtAction(nameof(GetByEntity), new { entity = dokument.Entity, entityId = dokument.EntityId }, dokument);
         }
         catch (Exception ex)
         {
@@ -110,8 +139,7 @@ public class DokumentiController : ControllerBase
         try
         {
             var containerClient = _blobServiceClient.GetBlobContainerClient(_containerName);
-            var blobName = dokument.BlobUrl.Split('/').Skip(4).Last(); // Extract blob name from URL
-            var blobClient = containerClient.GetBlobClient($"{dokument.ProjekatId}/{blobName.Split('/').Last()}");
+            var blobClient = containerClient.GetBlobClient(GetBlobName(dokument));
 
             if (!await blobClient.ExistsAsync())
             {
@@ -142,8 +170,7 @@ public class DokumentiController : ControllerBase
         {
             // Obriši iz Blob Storage
             var containerClient = _blobServiceClient.GetBlobContainerClient(_containerName);
-            var blobName = dokument.BlobUrl.Split('/').Skip(4).Last();
-            var blobClient = containerClient.GetBlobClient($"{dokument.ProjekatId}/{blobName.Split('/').Last()}");
+            var blobClient = containerClient.GetBlobClient(GetBlobName(dokument));
             
             await blobClient.DeleteIfExistsAsync();
 
@@ -157,5 +184,38 @@ public class DokumentiController : ControllerBase
         {
             return StatusCode(500, $"Greška pri brisanju: {ex.Message}");
         }
+    }
+
+    private string NormalizeEntity(string entity)
+    {
+        return entity.Trim().ToLowerInvariant() switch
+        {
+            "projekat" => "Projekat",
+            "aktivnost" => "Aktivnost",
+            "sablonpodrske" => "SablonPodrske",
+            _ => entity.Trim()
+        };
+    }
+
+    private async Task<bool> EntityExists(string entity, int entityId)
+    {
+        return entity switch
+        {
+            "Projekat" => await _context.Projekti.AnyAsync(p => p.Id == entityId),
+            "Aktivnost" => await _context.Aktivnosti.AnyAsync(a => a.Id == entityId),
+            "SablonPodrske" => await _context.SabloniPodrske.AnyAsync(s => s.Id == entityId),
+            _ => false
+        };
+    }
+
+    private string GetBlobName(Dokument dokument)
+    {
+        var uri = new Uri(dokument.BlobUrl);
+        var path = uri.AbsolutePath.TrimStart('/');
+        var containerPrefix = $"{_containerName}/";
+
+        return path.StartsWith(containerPrefix, StringComparison.OrdinalIgnoreCase)
+            ? Uri.UnescapeDataString(path[containerPrefix.Length..])
+            : Uri.UnescapeDataString(path);
     }
 }

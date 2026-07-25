@@ -1,6 +1,8 @@
 export interface Dokument {
   id: number;
-  projekatId: number;
+  projekatId?: number | null;
+  entity: string;
+  entityId: number;
   nazivFajla: string;
   tipFajla: string;
   blobUrl: string;

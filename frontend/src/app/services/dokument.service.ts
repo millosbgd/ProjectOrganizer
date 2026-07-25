@@ -16,11 +16,19 @@ export class DokumentService {
     return this.http.get<Dokument[]>(`${this.apiUrl}/projekat/${projekatId}`);
   }
 
+  getByEntity(entity: string, entityId: number): Observable<Dokument[]> {
+    return this.http.get<Dokument[]>(`${this.apiUrl}/entity/${entity}/${entityId}`);
+  }
+
   uploadDokument(projekatId: number, file: File): Observable<Dokument> {
+    return this.uploadForEntity('Projekat', projekatId, file);
+  }
+
+  uploadForEntity(entity: string, entityId: number, file: File): Observable<Dokument> {
     const formData = new FormData();
     formData.append('file', file);
     
-    return this.http.post<Dokument>(`${this.apiUrl}/upload/${projekatId}`, formData);
+    return this.http.post<Dokument>(`${this.apiUrl}/upload/${entity}/${entityId}`, formData);
   }
 
   downloadDokument(id: number): Observable<Blob> {

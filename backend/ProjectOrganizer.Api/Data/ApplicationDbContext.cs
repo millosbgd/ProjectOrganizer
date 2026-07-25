@@ -104,6 +104,19 @@ public class ApplicationDbContext : DbContext
                 .OnDelete(DeleteBehavior.SetNull);
         });
 
+        // Dokument configuration
+        modelBuilder.Entity<Dokument>(entity =>
+        {
+            entity.ToTable("Dokumenti");
+            entity.HasIndex(e => e.ProjekatId);
+            entity.HasIndex(e => new { e.Entity, e.EntityId });
+
+            entity.HasOne(d => d.Projekat)
+                .WithMany()
+                .HasForeignKey(d => d.ProjekatId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
         // CodebookEntity configuration
         modelBuilder.Entity<CodebookEntity>(entity =>
         {

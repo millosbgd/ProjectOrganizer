@@ -7,8 +7,14 @@ public class Dokument
     [Key]
     public int Id { get; set; }
 
+    public int? ProjekatId { get; set; }
+
     [Required]
-    public int ProjekatId { get; set; }
+    [MaxLength(50)]
+    public string Entity { get; set; } = "Projekat";
+
+    [Required]
+    public int EntityId { get; set; }
 
     [Required]
     [MaxLength(500)]
