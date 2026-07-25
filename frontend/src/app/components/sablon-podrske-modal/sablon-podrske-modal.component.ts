@@ -4,6 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { SablonPodrske } from '../../models/sablon-podrske.model';
 import { Klijent } from '../../models/klijent.model';
 import { KlijentService } from '../../services/klijent.service';
+import { Dokument } from '../../models/dokument.model';
+import { DokumentService } from '../../services/dokument.service';
 
 @Component({
   selector: 'app-sablon-podrske-modal',
@@ -20,16 +22,28 @@ export class SablonPodrskeModalComponent implements OnChanges {
   @Output() delete = new EventEmitter<number>();
 
   klijenti: Klijent[] = [];
+  dokumenti: Dokument[] = [];
   validationError = '';
   isSaving = false;
+  showDokumentiSidebar = false;
+  uploadingFile = false;
 
-  constructor(private klijentService: KlijentService) {}
+  constructor(
+    private klijentService: KlijentService,
+    private dokumentService: DokumentService
+  ) {}
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['isOpen'] && this.isOpen) {
       this.validationError = '';
       this.isSaving = false;
       this.loadKlijenti();
+      if (this.sablon.id && this.sablon.id > 0) {
+        this.loadDokumenti();
+      } else {
+        this.dokumenti = [];
+        this.showDokumentiSidebar = false;
+      }
     }
   }
 
@@ -58,6 +72,7 @@ export class SablonPodrskeModalComponent implements OnChanges {
 
   onClose(): void {
     this.validationError = '';
+    this.showDokumentiSidebar = false;
     this.close.emit();
   }
 
@@ -83,6 +98,109 @@ export class SablonPodrskeModalComponent implements OnChanges {
         console.error('Error loading clients:', error);
       }
     });
+  }
+
+  loadDokumenti(): void {
+    if (!this.sablon.id || this.sablon.id <= 0) {
+      return;
+    }
+
+    this.dokumentService.getByEntity('SablonPodrske', this.sablon.id).subscribe({
+      next: (data) => {
+        this.dokumenti = data;
+      },
+      error: (error) => {
+        console.error('Error loading dokumenti:', error);
+      }
+    });
+  }
+
+  toggleDokumentiSidebar(): void {
+    if (!this.sablon.id || this.sablon.id <= 0) {
+      return;
+    }
+
+    this.showDokumentiSidebar = !this.showDokumentiSidebar;
+    if (this.showDokumentiSidebar) {
+      this.loadDokumenti();
+    }
+  }
+
+  onDokumentSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (file) {
+      this.uploadDokument(file);
+      input.value = '';
+    }
+  }
+
+  uploadDokument(file: File): void {
+    if (!this.sablon.id || this.sablon.id <= 0) {
+      return;
+    }
+
+    this.uploadingFile = true;
+    this.dokumentService.uploadForEntity('SablonPodrske', this.sablon.id, file).subscribe({
+      next: () => {
+        this.loadDokumenti();
+        this.uploadingFile = false;
+      },
+      error: (error) => {
+        console.error('Error uploading file:', error);
+        alert('Greška pri upload-u fajla');
+        this.uploadingFile = false;
+      }
+    });
+  }
+
+  downloadDokument(dokument: Dokument): void {
+    this.dokumentService.downloadDokument(dokument.id).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = dokument.nazivFajla;
+        link.click();
+        window.URL.revokeObjectURL(url);
+      },
+      error: (error) => {
+        console.error('Error downloading file:', error);
+        alert('Greška pri preuzimanju fajla');
+      }
+    });
+  }
+
+  deleteDokument(id: number): void {
+    if (confirm('Da li ste sigurni da želite da obrišete ovaj dokument?')) {
+      this.dokumentService.deleteDokument(id).subscribe({
+        next: () => {
+          this.loadDokumenti();
+        },
+        error: (error) => {
+          console.error('Error deleting dokument:', error);
+          alert('Greška pri brisanju dokumenta');
+        }
+      });
+    }
+  }
+
+  formatFileSize(bytes: number): string {
+    return this.dokumentService.formatFileSize(bytes);
+  }
+
+  getFileIcon(tipFajla: string): string {
+    const icons: { [key: string]: string } = {
+      'pdf': '📄',
+      'xls': '📊',
+      'xlsx': '📊',
+      'eml': '✉️',
+      'doc': '📝',
+      'docx': '📝',
+      'txt': '📝',
+      'md': '📝'
+    };
+    return icons[tipFajla.toLowerCase()] || '📄';
   }
 
   private getEmptySablon(): SablonPodrske {
