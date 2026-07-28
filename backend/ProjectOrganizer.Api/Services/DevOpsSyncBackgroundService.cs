@@ -2,7 +2,8 @@ namespace ProjectOrganizer.Api.Services;
 
 public class DevOpsSyncBackgroundService : BackgroundService
 {
-    private static readonly TimeOnly DailyRunAt = new(7, 0);
+    private static readonly TimeOnly FirstRunAt = new(7, 0);
+    private static readonly TimeOnly LastRunAt = new(17, 0);
 
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILogger<DevOpsSyncBackgroundService> _logger;
@@ -20,8 +21,9 @@ public class DevOpsSyncBackgroundService : BackgroundService
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         _logger.LogInformation(
-            "DevOpsSyncBackgroundService pokrenut. Dnevno osvežavanje je zakazano u {Time} ({TimeZone}).",
-            DailyRunAt,
+            "DevOpsSyncBackgroundService pokrenut. Osvežavanje je zakazano svakog sata od {FirstRunAt} do {LastRunAt} ({TimeZone}).",
+            FirstRunAt,
+            LastRunAt,
             _timeZone.Id);
 
         await RunMissedSyncIfNeededAsync(stoppingToken);
@@ -36,14 +38,14 @@ public class DevOpsSyncBackgroundService : BackgroundService
             if (stoppingToken.IsCancellationRequested)
                 break;
 
-            await RunDailySyncAsync(stoppingToken);
+            await RunScheduledSyncAsync(stoppingToken);
         }
     }
 
     private async Task RunMissedSyncIfNeededAsync(CancellationToken stoppingToken)
     {
         var utcNow = DateTimeOffset.UtcNow;
-        if (!HasTodayRunTimePassed(utcNow, out var localTodayRunUtc))
+        if (!TryGetLatestScheduledRunUtc(utcNow, out var latestScheduledRunUtc))
             return;
 
         try
@@ -51,12 +53,12 @@ public class DevOpsSyncBackgroundService : BackgroundService
             using var scope = _scopeFactory.CreateScope();
             var syncService = scope.ServiceProvider.GetRequiredService<DevOpsSyncService>();
 
-            var alreadySyncedToday = await syncService.HasLinkedTaskSyncSinceAsync(localTodayRunUtc, stoppingToken);
+            var alreadySyncedToday = await syncService.HasLinkedTaskSyncSinceAsync(latestScheduledRunUtc, stoppingToken);
             if (alreadySyncedToday)
                 return;
 
-            _logger.LogInformation("DevOps osvežavanje za danas nije zabeleženo nakon 07:00. Pokrećem catch-up sync.");
-            await RunDailySyncAsync(stoppingToken);
+            _logger.LogInformation("DevOps osvežavanje nije zabeleženo nakon poslednjeg planiranog termina. Pokrećem catch-up sync.");
+            await RunScheduledSyncAsync(stoppingToken);
         }
         catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
         {
@@ -67,7 +69,7 @@ public class DevOpsSyncBackgroundService : BackgroundService
         }
     }
 
-    private async Task RunDailySyncAsync(CancellationToken stoppingToken)
+    private async Task RunScheduledSyncAsync(CancellationToken stoppingToken)
     {
         try
         {
@@ -77,7 +79,7 @@ public class DevOpsSyncBackgroundService : BackgroundService
             var result = await syncService.RefreshAllLinkedTasksAsync(stoppingToken);
 
             _logger.LogInformation(
-                "DevOps dnevno osvežavanje završeno. Total={Total}, Refreshed={Refreshed}, Skipped={Skipped}, Failed={Failed}",
+                "DevOps osvežavanje završeno. Total={Total}, Refreshed={Refreshed}, Skipped={Skipped}, Failed={Failed}",
                 result.TotalTasks,
                 result.RefreshedTasks,
                 result.SkippedTasks,
@@ -88,36 +90,60 @@ public class DevOpsSyncBackgroundService : BackgroundService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Greška tokom dnevnog DevOps osvežavanja.");
+            _logger.LogError(ex, "Greška tokom DevOps osvežavanja.");
         }
     }
 
     private TimeSpan GetDelayUntilNextRun(DateTimeOffset utcNow)
     {
         var localNow = TimeZoneInfo.ConvertTime(utcNow, _timeZone);
-        var nextLocalRun = localNow.Date.Add(DailyRunAt.ToTimeSpan());
-
-        if (localNow.DateTime >= nextLocalRun)
-        {
-            nextLocalRun = nextLocalRun.AddDays(1);
-        }
-
+        var nextLocalRun = GetNextLocalRun(localNow.DateTime);
         var nextRunUnspecified = DateTime.SpecifyKind(nextLocalRun, DateTimeKind.Unspecified);
         var nextRunUtc = TimeZoneInfo.ConvertTimeToUtc(nextRunUnspecified, _timeZone);
 
         return nextRunUtc - utcNow.UtcDateTime;
     }
 
-    private bool HasTodayRunTimePassed(DateTimeOffset utcNow, out DateTime localTodayRunUtc)
+    private static DateTime GetNextLocalRun(DateTime localNow)
+    {
+        var firstRunToday = localNow.Date.Add(FirstRunAt.ToTimeSpan());
+        var lastRunToday = localNow.Date.Add(LastRunAt.ToTimeSpan());
+
+        if (localNow < firstRunToday)
+            return firstRunToday;
+
+        if (localNow >= lastRunToday)
+            return firstRunToday.AddDays(1);
+
+        return new DateTime(
+            localNow.Year,
+            localNow.Month,
+            localNow.Day,
+            localNow.Minute == 0 && localNow.Second == 0 && localNow.Millisecond == 0 ? localNow.Hour : localNow.Hour + 1,
+            0,
+            0);
+    }
+
+    private bool TryGetLatestScheduledRunUtc(DateTimeOffset utcNow, out DateTime latestScheduledRunUtc)
     {
         var localNow = TimeZoneInfo.ConvertTime(utcNow, _timeZone);
-        var localTodayStart = localNow.Date;
-        var todayRun = localTodayStart.Add(DailyRunAt.ToTimeSpan());
+        var firstRunToday = localNow.Date.Add(FirstRunAt.ToTimeSpan());
 
-        var todayRunUnspecified = DateTime.SpecifyKind(todayRun, DateTimeKind.Unspecified);
-        localTodayRunUtc = TimeZoneInfo.ConvertTimeToUtc(todayRunUnspecified, _timeZone);
+        if (localNow.DateTime < firstRunToday)
+        {
+            latestScheduledRunUtc = default;
+            return false;
+        }
 
-        return localNow.DateTime >= todayRun;
+        var lastRunToday = localNow.Date.Add(LastRunAt.ToTimeSpan());
+        var latestLocalRun = localNow.DateTime >= lastRunToday
+            ? lastRunToday
+            : new DateTime(localNow.Year, localNow.Month, localNow.Day, localNow.Hour, 0, 0);
+
+        var latestRunUnspecified = DateTime.SpecifyKind(latestLocalRun, DateTimeKind.Unspecified);
+        latestScheduledRunUtc = TimeZoneInfo.ConvertTimeToUtc(latestRunUnspecified, _timeZone);
+
+        return true;
     }
 
     private static TimeZoneInfo ResolveBelgradeTimeZone()
