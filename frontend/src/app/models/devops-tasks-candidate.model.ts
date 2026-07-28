@@ -4,6 +4,8 @@ export interface StatusHistoryEntry {
   roleName?: string;
   totalDurationMinutes?: number;
   isActive: boolean;
+  startedAt?: string;
+  endedAt?: string;
   lastStartedAt?: string;
 }
 
@@ -51,5 +53,6 @@ export interface FetchedDevOpsTask {
   priority?: string;
   estimation?: string;
   workItemType?: string;
+  devOpsState?: string;
   statusHistory?: StatusHistoryEntry[];
 }

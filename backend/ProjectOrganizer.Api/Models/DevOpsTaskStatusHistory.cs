@@ -20,8 +20,13 @@ public class DevOpsTaskStatusHistory
     [Required]
     public DateTime ChangedDate { get; set; }
 
+    [Required]
+    public DateTime StartedAt { get; set; }
+
+    public DateTime? EndedAt { get; set; }
+
     /// <summary>
-    /// Duration in minutes the task spent in this status (null if still active).
+    /// Duration in minutes the task spent in this status and assignee combination (null if still active).
     /// </summary>
     public int? DurationMinutes { get; set; }
 

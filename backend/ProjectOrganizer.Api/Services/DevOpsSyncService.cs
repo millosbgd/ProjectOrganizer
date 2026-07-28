@@ -146,7 +146,7 @@ public class DevOpsSyncService
                 candidate.LastDevOpsSyncStatus = "Success";
                 candidate.LastDevOpsSyncError = null;
 
-                await FetchAndSaveStatusHistoryAsync(organization, project, workItemId, candidate.Id, client, cancellationToken);
+                await FetchAndSaveStatusHistoryAsync(organization, project, workItemId, candidate.Id, client, cancellationToken, candidate.DevOpsState);
 
                 result.RefreshedTasks++;
             }
@@ -200,7 +200,8 @@ public class DevOpsSyncService
         int workItemId,
         int candidateId,
         HttpClient client,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        string? fallbackState = null)
     {
         var updatesUrl = $"https://dev.azure.com/{organization}/{project}/_apis/wit/workitems/{workItemId}/updates?api-version=7.1";
         var updatesResponse = await client.GetAsync(updatesUrl, cancellationToken);
@@ -209,11 +210,19 @@ public class DevOpsSyncService
         var updatesJson = await updatesResponse.Content.ReadAsStringAsync(cancellationToken);
         using var updatesDoc = JsonDocument.Parse(updatesJson);
 
-        var timeline = new List<(DateTime ChangedDate, string? State, string? AssignedTo)>();
-        string? currentState = null;
-        string? currentAssignedTo = null;
+        var updates = updatesDoc.RootElement.GetProperty("value").EnumerateArray().ToList();
+        var initialState = updates
+            .Select(update => TryGetUpdateFieldValue(update, "System.State", "oldValue"))
+            .FirstOrDefault(value => !string.IsNullOrWhiteSpace(value)) ?? fallbackState;
+        var initialAssignedTo = updates
+            .Select(update => TryGetUpdateFieldValue(update, "System.AssignedTo", "oldValue"))
+            .FirstOrDefault(value => value != null);
 
-        foreach (var update in updatesDoc.RootElement.GetProperty("value").EnumerateArray())
+        var timeline = new List<(DateTime StartedAt, string State, string? AssignedTo)>();
+        string? currentState = initialState;
+        string? currentAssignedTo = initialAssignedTo;
+
+        foreach (var update in updates)
         {
             if (!update.TryGetProperty("fields", out var updFields)) continue;
             if (!update.TryGetProperty("revisedDate", out var revisedDateEl)) continue;
@@ -223,9 +232,7 @@ public class DevOpsSyncService
 
             if (updFields.TryGetProperty("System.State", out var stateEl))
             {
-                var newState = stateEl.TryGetProperty("newValue", out var nv) && nv.ValueKind != JsonValueKind.Null
-                    ? nv.GetString()
-                    : null;
+                var newState = GetUpdateFieldValue(stateEl, "newValue");
 
                 if (newState != null && newState != currentState)
                 {
@@ -236,13 +243,7 @@ public class DevOpsSyncService
 
             if (updFields.TryGetProperty("System.AssignedTo", out var assignedEl))
             {
-                string? newAssigned = null;
-                if (assignedEl.TryGetProperty("newValue", out var nv2) && nv2.ValueKind != JsonValueKind.Null)
-                {
-                    newAssigned = nv2.ValueKind == JsonValueKind.Object && nv2.TryGetProperty("displayName", out var dn)
-                        ? dn.GetString()
-                        : nv2.GetString();
-                }
+                var newAssigned = GetUpdateFieldValue(assignedEl, "newValue");
 
                 if (newAssigned != currentAssignedTo)
                 {
@@ -257,17 +258,19 @@ public class DevOpsSyncService
             }
         }
 
-        var rawEntries = new List<(string Status, string? AssignedTo, DateTime ChangedDate, int? DurationMinutes)>();
+        var rawEntries = new List<(string Status, string? AssignedTo, DateTime StartedAt, DateTime? EndedAt, int? DurationMinutes)>();
         for (var i = 0; i < timeline.Count; i++)
         {
-            var (changedDate, state, assignedTo) = timeline[i];
+            var (startedAt, state, assignedTo) = timeline[i];
+            DateTime? endedAt = null;
             int? durationMinutes = null;
             if (i + 1 < timeline.Count)
             {
-                durationMinutes = (int)(timeline[i + 1].ChangedDate - changedDate).TotalMinutes;
+                endedAt = timeline[i + 1].StartedAt;
+                durationMinutes = (int)(endedAt.Value - startedAt).TotalMinutes;
             }
 
-            rawEntries.Add((state!, assignedTo, changedDate, durationMinutes));
+            rawEntries.Add((state, assignedTo, startedAt, endedAt, durationMinutes));
         }
 
         var existing = await _context.DevOpsTaskStatusHistory
@@ -280,9 +283,28 @@ public class DevOpsSyncService
             DevOpsTaskCandidateId = candidateId,
             Status = e.Status,
             AssignedTo = e.AssignedTo,
-            ChangedDate = e.ChangedDate,
+            ChangedDate = e.StartedAt,
+            StartedAt = e.StartedAt,
+            EndedAt = e.EndedAt,
             DurationMinutes = e.DurationMinutes
         }));
+    }
+
+    private static string? TryGetUpdateFieldValue(JsonElement update, string fieldName, string valueName)
+    {
+        if (!update.TryGetProperty("fields", out var fields)) return null;
+        if (!fields.TryGetProperty(fieldName, out var field)) return null;
+        return GetUpdateFieldValue(field, valueName);
+    }
+
+    private static string? GetUpdateFieldValue(JsonElement field, string valueName)
+    {
+        if (!field.TryGetProperty(valueName, out var value) || value.ValueKind == JsonValueKind.Null)
+            return null;
+
+        return value.ValueKind == JsonValueKind.Object && value.TryGetProperty("displayName", out var displayName)
+            ? displayName.GetString()
+            : value.GetString();
     }
 
     private static bool TryParseDevOpsUrl(string url, out string organization, out string project, out int workItemId)

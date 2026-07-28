@@ -90,7 +90,7 @@ public class DevOpsTasksCandidatesController : ControllerBase
                 },
                 StatusHistory = (c.StatusHistory ?? Enumerable.Empty<DevOpsTaskStatusHistory>())
                     .GroupBy(h => new { h.AssignedTo, h.Status })
-                    .OrderByDescending(g => g.Max(h => h.ChangedDate))
+                    .OrderByDescending(g => g.Max(h => h.StartedAt))
                     .Select(g => new
                     {
                         g.Key.Status,
@@ -98,7 +98,9 @@ public class DevOpsTasksCandidatesController : ControllerBase
                         RoleName = g.Key.AssignedTo != null && roleDict.TryGetValue(g.Key.AssignedTo, out var r) ? r : null,
                         TotalDurationMinutes = g.Where(h => h.DurationMinutes.HasValue).Sum(h => h.DurationMinutes),
                         IsActive = g.Any(h => !h.DurationMinutes.HasValue),
-                        LastStartedAt = g.Max(h => h.ChangedDate)
+                        StartedAt = g.Min(h => h.StartedAt),
+                        EndedAt = g.Any(h => !h.EndedAt.HasValue) ? null : g.Max(h => h.EndedAt),
+                        LastStartedAt = g.Max(h => h.StartedAt)
                     })
                     .ToList()
             });
@@ -182,7 +184,7 @@ public class DevOpsTasksCandidatesController : ControllerBase
                 },
                 StatusHistory = (c.StatusHistory ?? Enumerable.Empty<DevOpsTaskStatusHistory>())
                     .GroupBy(h => new { h.AssignedTo, h.Status })
-                    .OrderByDescending(g => g.Max(h => h.ChangedDate))
+                    .OrderByDescending(g => g.Max(h => h.StartedAt))
                     .Select(g => new
                     {
                         g.Key.Status,
@@ -190,7 +192,9 @@ public class DevOpsTasksCandidatesController : ControllerBase
                         RoleName = g.Key.AssignedTo != null && roleDict.TryGetValue(g.Key.AssignedTo, out var r) ? r : null,
                         TotalDurationMinutes = g.Where(h => h.DurationMinutes.HasValue).Sum(h => h.DurationMinutes),
                         IsActive = g.Any(h => !h.DurationMinutes.HasValue),
-                        LastStartedAt = g.Max(h => h.ChangedDate)
+                        StartedAt = g.Min(h => h.StartedAt),
+                        EndedAt = g.Any(h => !h.EndedAt.HasValue) ? null : g.Max(h => h.EndedAt),
+                        LastStartedAt = g.Max(h => h.StartedAt)
                     })
                     .ToList()
             });
@@ -404,14 +408,15 @@ public class DevOpsTasksCandidatesController : ControllerBase
                 AcceptanceCriteria = StripHtml(GetFieldString(fields, "Microsoft.VSTS.Common.AcceptanceCriteria")),
                 Priority = MapPriority(fields),
                 Estimation = MapEstimation(fields),
-                WorkItemType = GetFieldString(fields, "System.WorkItemType")
+                WorkItemType = GetFieldString(fields, "System.WorkItemType"),
+                DevOpsState = GetFieldString(fields, "System.State")
             };
 
             // Fetch status history if we have a candidateId
             if (dto.CandidateId.HasValue)
             {
                 result.StatusHistory = await FetchAndSaveStatusHistoryAsync(
-                    organization, project, workItemId, dto.CandidateId.Value, client);
+                    organization, project, workItemId, dto.CandidateId.Value, client, result.DevOpsState);
             }
 
             return Ok(result);
@@ -484,8 +489,12 @@ public class DevOpsTasksCandidatesController : ControllerBase
                     candidate.Priority = MapPriority(fields) ?? candidate.Priority;
                     candidate.Estimation = MapEstimation(fields) ?? candidate.Estimation;
 
+                    candidate.DevOpsState = GetFieldString(fields, "System.State") ?? candidate.DevOpsState;
+                    candidate.DevOpsAssignedTo = GetIdentityDisplayName(fields, "System.AssignedTo") ?? candidate.DevOpsAssignedTo;
+                    candidate.DevOpsChangedDate = GetFieldDateTime(fields, "System.ChangedDate") ?? candidate.DevOpsChangedDate;
+
                     var statusHistory = await FetchAndSaveStatusHistoryAsync(
-                        organization, project, workItemId, candidate.Id, client);
+                        organization, project, workItemId, candidate.Id, client, candidate.DevOpsState);
 
                     if (statusHistory.Any(h => h.IsActive && h.Status == "Ready"))
                         result.ReadyTasks++;
@@ -522,7 +531,7 @@ public class DevOpsTasksCandidatesController : ControllerBase
     }
 
     private async Task<List<StatusHistoryEntryDto>> FetchAndSaveStatusHistoryAsync(
-        string organization, string project, int workItemId, int candidateId, HttpClient client)
+        string organization, string project, int workItemId, int candidateId, HttpClient client, string? fallbackState = null)
     {
         try
         {
@@ -533,12 +542,19 @@ public class DevOpsTasksCandidatesController : ControllerBase
             var updatesJson = await updatesResponse.Content.ReadAsStringAsync();
             using var updatesDoc = JsonDocument.Parse(updatesJson);
 
-            // Build timeline: list of (changedDate, state, assignedTo) from each revision
-            var timeline = new List<(DateTime ChangedDate, string? State, string? AssignedTo)>();
-            string? currentState = null;
-            string? currentAssignedTo = null;
+            var updates = updatesDoc.RootElement.GetProperty("value").EnumerateArray().ToList();
+            var initialState = updates
+                .Select(update => TryGetUpdateFieldValue(update, "System.State", "oldValue"))
+                .FirstOrDefault(value => !string.IsNullOrWhiteSpace(value)) ?? fallbackState;
+            var initialAssignedTo = updates
+                .Select(update => TryGetUpdateFieldValue(update, "System.AssignedTo", "oldValue"))
+                .FirstOrDefault(value => value != null);
 
-            foreach (var update in updatesDoc.RootElement.GetProperty("value").EnumerateArray())
+            var timeline = new List<(DateTime StartedAt, string State, string? AssignedTo)>();
+            string? currentState = initialState;
+            string? currentAssignedTo = initialAssignedTo;
+
+            foreach (var update in updates)
             {
                 if (!update.TryGetProperty("fields", out var updFields)) continue;
                 if (!update.TryGetProperty("revisedDate", out var revisedDateEl)) continue;
@@ -548,8 +564,7 @@ public class DevOpsTasksCandidatesController : ControllerBase
 
                 if (updFields.TryGetProperty("System.State", out var stateEl))
                 {
-                    var newState = stateEl.TryGetProperty("newValue", out var nv) && nv.ValueKind != JsonValueKind.Null
-                        ? nv.GetString() : null;
+                    var newState = GetUpdateFieldValue(stateEl, "newValue");
                     if (newState != null && newState != currentState)
                     {
                         currentState = newState;
@@ -559,12 +574,7 @@ public class DevOpsTasksCandidatesController : ControllerBase
 
                 if (updFields.TryGetProperty("System.AssignedTo", out var assignedEl))
                 {
-                    string? newAssigned = null;
-                    if (assignedEl.TryGetProperty("newValue", out var nv2) && nv2.ValueKind != JsonValueKind.Null)
-                    {
-                        newAssigned = nv2.ValueKind == JsonValueKind.Object && nv2.TryGetProperty("displayName", out var dn)
-                            ? dn.GetString() : nv2.GetString();
-                    }
+                    var newAssigned = GetUpdateFieldValue(assignedEl, "newValue");
                     if (newAssigned != currentAssignedTo)
                     {
                         currentAssignedTo = newAssigned;
@@ -576,16 +586,19 @@ public class DevOpsTasksCandidatesController : ControllerBase
                     timeline.Add((revisedDate, currentState, currentAssignedTo));
             }
 
-            // Calculate duration for each raw entry
-            var rawEntries = new List<(string Status, string? AssignedTo, DateTime ChangedDate, int? DurationMinutes)>();
+            var rawEntries = new List<(string Status, string? AssignedTo, DateTime StartedAt, DateTime? EndedAt, int? DurationMinutes)>();
             for (int i = 0; i < timeline.Count; i++)
             {
-                var (changedDate, state, assignedTo) = timeline[i];
+                var (startedAt, state, assignedTo) = timeline[i];
+                DateTime? endedAt = null;
                 int? durationMinutes = null;
                 if (i + 1 < timeline.Count)
-                    durationMinutes = (int)(timeline[i + 1].ChangedDate - changedDate).TotalMinutes;
+                {
+                    endedAt = timeline[i + 1].StartedAt;
+                    durationMinutes = (int)(endedAt.Value - startedAt).TotalMinutes;
+                }
 
-                rawEntries.Add((state!, assignedTo, changedDate, durationMinutes));
+                rawEntries.Add((state, assignedTo, startedAt, endedAt, durationMinutes));
             }
 
             // Save raw entries to DB
@@ -597,7 +610,9 @@ public class DevOpsTasksCandidatesController : ControllerBase
                 DevOpsTaskCandidateId = candidateId,
                 Status = e.Status,
                 AssignedTo = e.AssignedTo,
-                ChangedDate = e.ChangedDate,
+                ChangedDate = e.StartedAt,
+                StartedAt = e.StartedAt,
+                EndedAt = e.EndedAt,
                 DurationMinutes = e.DurationMinutes
             }));
 
@@ -614,7 +629,7 @@ public class DevOpsTasksCandidatesController : ControllerBase
             // Return grouped by (AssignedTo, Status)
             return rawEntries
                 .GroupBy(e => new { e.AssignedTo, e.Status })
-                .OrderByDescending(g => g.Max(e => e.ChangedDate))
+                .OrderByDescending(g => g.Max(e => e.StartedAt))
                 .Select(g => new StatusHistoryEntryDto
                 {
                     Status = g.Key.Status,
@@ -622,7 +637,9 @@ public class DevOpsTasksCandidatesController : ControllerBase
                     RoleName = g.Key.AssignedTo != null && roleDict.TryGetValue(g.Key.AssignedTo, out var r) ? r : null,
                     TotalDurationMinutes = g.Where(e => e.DurationMinutes.HasValue).Sum(e => (int?)e.DurationMinutes),
                     IsActive = g.Any(e => !e.DurationMinutes.HasValue),
-                    LastStartedAt = g.Max(e => e.ChangedDate)
+                    StartedAt = g.Min(e => e.StartedAt),
+                    EndedAt = g.Any(e => !e.EndedAt.HasValue) ? null : g.Max(e => e.EndedAt),
+                    LastStartedAt = g.Max(e => e.StartedAt)
                 })
                 .ToList();
         }
@@ -631,6 +648,23 @@ public class DevOpsTasksCandidatesController : ControllerBase
             _logger.LogWarning(ex, "Failed to fetch status history for work item {WorkItemId}", workItemId);
             return new List<StatusHistoryEntryDto>();
         }
+    }
+
+    private static string? TryGetUpdateFieldValue(JsonElement update, string fieldName, string valueName)
+    {
+        if (!update.TryGetProperty("fields", out var fields)) return null;
+        if (!fields.TryGetProperty(fieldName, out var field)) return null;
+        return GetUpdateFieldValue(field, valueName);
+    }
+
+    private static string? GetUpdateFieldValue(JsonElement field, string valueName)
+    {
+        if (!field.TryGetProperty(valueName, out var value) || value.ValueKind == JsonValueKind.Null)
+            return null;
+
+        return value.ValueKind == JsonValueKind.Object && value.TryGetProperty("displayName", out var displayName)
+            ? displayName.GetString()
+            : value.GetString();
     }
 
     // POST: api/devopstaskscandidates/sync-users
@@ -859,6 +893,27 @@ public class DevOpsTasksCandidatesController : ControllerBase
         return null;
     }
 
+    private static DateTime? GetFieldDateTime(JsonElement fields, string fieldName)
+    {
+        var value = GetFieldString(fields, fieldName);
+        return DateTime.TryParse(value, out var dateTime) ? dateTime : null;
+    }
+
+    private static string? GetIdentityDisplayName(JsonElement fields, string fieldName)
+    {
+        if (!fields.TryGetProperty(fieldName, out var element) || element.ValueKind == JsonValueKind.Null)
+            return null;
+
+        if (element.ValueKind == JsonValueKind.Object &&
+            element.TryGetProperty("displayName", out var displayName) &&
+            displayName.ValueKind == JsonValueKind.String)
+        {
+            return displayName.GetString();
+        }
+
+        return element.ValueKind == JsonValueKind.String ? element.GetString() : null;
+    }
+
     private static string? MapPriority(JsonElement fields)
     {
         if (fields.TryGetProperty("Microsoft.VSTS.Common.Priority", out var el) && el.ValueKind != JsonValueKind.Null)
@@ -943,6 +998,7 @@ public class FetchedDevOpsTaskDto
     public string? Priority { get; set; }
     public string? Estimation { get; set; }
     public string? WorkItemType { get; set; }
+    public string? DevOpsState { get; set; }
     public List<StatusHistoryEntryDto> StatusHistory { get; set; } = new();
 }
 
@@ -953,6 +1009,8 @@ public class StatusHistoryEntryDto
     public string? RoleName { get; set; }
     public int? TotalDurationMinutes { get; set; }
     public bool IsActive { get; set; }
+    public DateTime? StartedAt { get; set; }
+    public DateTime? EndedAt { get; set; }
     public DateTime? LastStartedAt { get; set; }
 }
 
