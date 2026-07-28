@@ -546,12 +546,9 @@ public class DevOpsTasksCandidatesController : ControllerBase
                 .Select(update => new
                 {
                     Update = update,
-                    RevisedDate = update.TryGetProperty("revisedDate", out var revisedDateEl)
-                        && DateTime.TryParse(revisedDateEl.GetString(), out var revisedDate)
-                        ? revisedDate
-                        : (DateTime?)null
+                    RevisedDate = GetEffectiveUpdateDate(update)
                 })
-                .Where(update => update.RevisedDate.HasValue && update.RevisedDate.Value.Year < 9999)
+                .Where(update => update.RevisedDate.HasValue)
                 .OrderBy(update => update.RevisedDate)
                 .ToList();
             var initialState = updates
@@ -674,6 +671,21 @@ public class DevOpsTasksCandidatesController : ControllerBase
         if (!update.TryGetProperty("fields", out var fields)) return null;
         if (!fields.TryGetProperty(fieldName, out var field)) return null;
         return GetUpdateFieldValue(field, valueName);
+    }
+
+    private static DateTime? GetEffectiveUpdateDate(JsonElement update)
+    {
+        if (!update.TryGetProperty("revisedDate", out var revisedDateEl))
+            return null;
+
+        if (!DateTime.TryParse(revisedDateEl.GetString(), out var revisedDate))
+            return null;
+
+        if (revisedDate.Year < 9999)
+            return revisedDate;
+
+        var changedDate = TryGetUpdateFieldValue(update, "System.ChangedDate", "newValue");
+        return DateTime.TryParse(changedDate, out var effectiveDate) ? effectiveDate : null;
     }
 
     private static string? GetUpdateFieldValue(JsonElement field, string valueName)
