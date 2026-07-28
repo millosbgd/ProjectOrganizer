@@ -223,8 +223,8 @@ public class DevOpsSyncService
             .Select(update => TryGetUpdateFieldValue(update.Update, "System.State", "oldValue"))
             .FirstOrDefault(value => !string.IsNullOrWhiteSpace(value)) ?? fallbackState;
         var initialAssignedTo = updates
-            .Select(update => TryGetUpdateFieldValue(update.Update, "System.AssignedTo", "oldValue"))
-            .FirstOrDefault(value => value != null);
+            .Select(update => TryGetUpdateFieldChange(update.Update, "System.AssignedTo"))
+            .FirstOrDefault(change => change.HasValue)?.OldValue;
 
         var timeline = new List<(DateTime StartedAt, string State, string? AssignedTo)>();
         string? currentState = initialState;
@@ -233,7 +233,7 @@ public class DevOpsSyncService
         foreach (var updateInfo in updates)
         {
             var update = updateInfo.Update;
-            var revisedDate = updateInfo.RevisedDate.Value;
+            var revisedDate = updateInfo.RevisedDate.GetValueOrDefault();
             if (!update.TryGetProperty("fields", out var updFields)) continue;
 
             if (timeline.Count == 0 && currentState != null)
@@ -286,7 +286,10 @@ public class DevOpsSyncService
                 }
             }
 
-            rawEntries.Add((state, assignedTo, startedAt, endedAt, durationMinutes));
+            if (!endedAt.HasValue || endedAt > startedAt)
+            {
+                rawEntries.Add((state, assignedTo, startedAt, endedAt, durationMinutes));
+            }
         }
 
         var existing = await _context.DevOpsTaskStatusHistory
@@ -311,6 +314,13 @@ public class DevOpsSyncService
         if (!update.TryGetProperty("fields", out var fields)) return null;
         if (!fields.TryGetProperty(fieldName, out var field)) return null;
         return GetUpdateFieldValue(field, valueName);
+    }
+
+    private static (string? OldValue, string? NewValue)? TryGetUpdateFieldChange(JsonElement update, string fieldName)
+    {
+        if (!update.TryGetProperty("fields", out var fields)) return null;
+        if (!fields.TryGetProperty(fieldName, out var field)) return null;
+        return (GetUpdateFieldValue(field, "oldValue"), GetUpdateFieldValue(field, "newValue"));
     }
 
     private static DateTime? GetEffectiveUpdateDate(JsonElement update)

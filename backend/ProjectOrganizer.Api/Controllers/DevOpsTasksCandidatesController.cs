@@ -89,18 +89,16 @@ public class DevOpsTasksCandidatesController : ControllerBase
                     c.User.Name
                 },
                 StatusHistory = (c.StatusHistory ?? Enumerable.Empty<DevOpsTaskStatusHistory>())
-                    .GroupBy(h => new { h.AssignedTo, h.Status })
-                    .OrderByDescending(g => g.Max(h => h.StartedAt))
-                    .Select(g => new
+                    .OrderByDescending(h => h.StartedAt)
+                    .Select(h => new
                     {
-                        g.Key.Status,
-                        g.Key.AssignedTo,
-                        RoleName = g.Key.AssignedTo != null && roleDict.TryGetValue(g.Key.AssignedTo, out var r) ? r : null,
-                        TotalDurationMinutes = g.Where(h => h.DurationMinutes.HasValue).Sum(h => h.DurationMinutes),
-                        IsActive = g.Any(h => !h.DurationMinutes.HasValue),
-                        StartedAt = g.Min(h => h.StartedAt),
-                        EndedAt = g.Any(h => !h.EndedAt.HasValue) ? null : g.Max(h => h.EndedAt),
-                        LastStartedAt = g.Max(h => h.StartedAt)
+                        h.Status,
+                        h.AssignedTo,
+                        RoleName = h.AssignedTo != null && roleDict.TryGetValue(h.AssignedTo, out var r) ? r : null,
+                        TotalDurationMinutes = h.DurationMinutes,
+                        IsActive = !h.EndedAt.HasValue,
+                        h.StartedAt,
+                        h.EndedAt
                     })
                     .ToList()
             });
@@ -183,18 +181,16 @@ public class DevOpsTasksCandidatesController : ControllerBase
                     c.User.Name
                 },
                 StatusHistory = (c.StatusHistory ?? Enumerable.Empty<DevOpsTaskStatusHistory>())
-                    .GroupBy(h => new { h.AssignedTo, h.Status })
-                    .OrderByDescending(g => g.Max(h => h.StartedAt))
-                    .Select(g => new
+                    .OrderByDescending(h => h.StartedAt)
+                    .Select(h => new
                     {
-                        g.Key.Status,
-                        g.Key.AssignedTo,
-                        RoleName = g.Key.AssignedTo != null && roleDict.TryGetValue(g.Key.AssignedTo, out var r) ? r : null,
-                        TotalDurationMinutes = g.Where(h => h.DurationMinutes.HasValue).Sum(h => h.DurationMinutes),
-                        IsActive = g.Any(h => !h.DurationMinutes.HasValue),
-                        StartedAt = g.Min(h => h.StartedAt),
-                        EndedAt = g.Any(h => !h.EndedAt.HasValue) ? null : g.Max(h => h.EndedAt),
-                        LastStartedAt = g.Max(h => h.StartedAt)
+                        h.Status,
+                        h.AssignedTo,
+                        RoleName = h.AssignedTo != null && roleDict.TryGetValue(h.AssignedTo, out var r) ? r : null,
+                        TotalDurationMinutes = h.DurationMinutes,
+                        IsActive = !h.EndedAt.HasValue,
+                        h.StartedAt,
+                        h.EndedAt
                     })
                     .ToList()
             });
@@ -555,8 +551,8 @@ public class DevOpsTasksCandidatesController : ControllerBase
                 .Select(update => TryGetUpdateFieldValue(update.Update, "System.State", "oldValue"))
                 .FirstOrDefault(value => !string.IsNullOrWhiteSpace(value)) ?? fallbackState;
             var initialAssignedTo = updates
-                .Select(update => TryGetUpdateFieldValue(update.Update, "System.AssignedTo", "oldValue"))
-                .FirstOrDefault(value => value != null);
+                .Select(update => TryGetUpdateFieldChange(update.Update, "System.AssignedTo"))
+                .FirstOrDefault(change => change.HasValue)?.OldValue;
 
             var timeline = new List<(DateTime StartedAt, string State, string? AssignedTo)>();
             string? currentState = initialState;
@@ -565,7 +561,7 @@ public class DevOpsTasksCandidatesController : ControllerBase
             foreach (var updateInfo in updates)
             {
                 var update = updateInfo.Update;
-                var revisedDate = updateInfo.RevisedDate.Value;
+                var revisedDate = updateInfo.RevisedDate.GetValueOrDefault();
                 if (!update.TryGetProperty("fields", out var updFields)) continue;
 
                 if (timeline.Count == 0 && currentState != null)
@@ -614,7 +610,10 @@ public class DevOpsTasksCandidatesController : ControllerBase
                     }
                 }
 
-                rawEntries.Add((state, assignedTo, startedAt, endedAt, durationMinutes));
+                if (!endedAt.HasValue || endedAt > startedAt)
+                {
+                    rawEntries.Add((state, assignedTo, startedAt, endedAt, durationMinutes));
+                }
             }
 
             // Save raw entries to DB
@@ -642,20 +641,18 @@ public class DevOpsTasksCandidatesController : ControllerBase
                 .Select(g => new { DisplayName = g.Key, RoleName = g.First().Value })
                 .ToDictionaryAsync(x => x.DisplayName, x => x.RoleName);
 
-            // Return grouped by (AssignedTo, Status)
+            // Return raw intervals, matching persisted rows.
             return rawEntries
-                .GroupBy(e => new { e.AssignedTo, e.Status })
-                .OrderByDescending(g => g.Max(e => e.StartedAt))
-                .Select(g => new StatusHistoryEntryDto
+                .OrderByDescending(e => e.StartedAt)
+                .Select(e => new StatusHistoryEntryDto
                 {
-                    Status = g.Key.Status,
-                    AssignedTo = g.Key.AssignedTo,
-                    RoleName = g.Key.AssignedTo != null && roleDict.TryGetValue(g.Key.AssignedTo, out var r) ? r : null,
-                    TotalDurationMinutes = g.Where(e => e.DurationMinutes.HasValue).Sum(e => (int?)e.DurationMinutes),
-                    IsActive = g.Any(e => !e.DurationMinutes.HasValue),
-                    StartedAt = g.Min(e => e.StartedAt),
-                    EndedAt = g.Any(e => !e.EndedAt.HasValue) ? null : g.Max(e => e.EndedAt),
-                    LastStartedAt = g.Max(e => e.StartedAt)
+                    Status = e.Status,
+                    AssignedTo = e.AssignedTo,
+                    RoleName = e.AssignedTo != null && roleDict.TryGetValue(e.AssignedTo, out var r) ? r : null,
+                    TotalDurationMinutes = e.DurationMinutes,
+                    IsActive = !e.EndedAt.HasValue,
+                    StartedAt = e.StartedAt,
+                    EndedAt = e.EndedAt
                 })
                 .ToList();
         }
@@ -671,6 +668,13 @@ public class DevOpsTasksCandidatesController : ControllerBase
         if (!update.TryGetProperty("fields", out var fields)) return null;
         if (!fields.TryGetProperty(fieldName, out var field)) return null;
         return GetUpdateFieldValue(field, valueName);
+    }
+
+    private static (string? OldValue, string? NewValue)? TryGetUpdateFieldChange(JsonElement update, string fieldName)
+    {
+        if (!update.TryGetProperty("fields", out var fields)) return null;
+        if (!fields.TryGetProperty(fieldName, out var field)) return null;
+        return (GetUpdateFieldValue(field, "oldValue"), GetUpdateFieldValue(field, "newValue"));
     }
 
     private static DateTime? GetEffectiveUpdateDate(JsonElement update)

@@ -115,8 +115,9 @@
             <th>Status</th>
             <th>Dodeljeno</th>
             <th>Uloga</th>
-            <th>Poslednji početak</th>
-            <th>Ukupno trajanje</th>
+            <th>StartedAt</th>
+            <th>EndedAt</th>
+            <th>Trajanje</th>
           </tr>
         </thead>
         <tbody>
@@ -124,7 +125,8 @@
             <td><span class="status-badge">{{ entry.status }}</span></td>
             <td>{{ entry.assignedTo || '—' }}</td>
             <td>{{ entry.roleName || '—' }}</td>
-            <td class="duration">{{ entry.lastStartedAt ? formatDate(entry.lastStartedAt) : '—' }}</td>
+            <td class="duration">{{ entry.startedAt ? formatDate(entry.startedAt) : '—' }}</td>
+            <td class="duration">{{ entry.endedAt ? formatDate(entry.endedAt) : '—' }}</td>
             <td class="duration">{{ formatDuration(entry.totalDurationMinutes, entry.isActive) }}</td>
           </tr>
         </tbody>
