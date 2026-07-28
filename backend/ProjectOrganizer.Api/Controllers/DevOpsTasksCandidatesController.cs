@@ -559,6 +559,7 @@ public class DevOpsTasksCandidatesController : ControllerBase
                 if (!update.TryGetProperty("fields", out var updFields)) continue;
                 if (!update.TryGetProperty("revisedDate", out var revisedDateEl)) continue;
                 if (!DateTime.TryParse(revisedDateEl.GetString(), out var revisedDate)) continue;
+                if (revisedDate.Year >= 9999) continue;
 
                 bool changed = false;
 
@@ -595,7 +596,10 @@ public class DevOpsTasksCandidatesController : ControllerBase
                 if (i + 1 < timeline.Count)
                 {
                     endedAt = timeline[i + 1].StartedAt;
-                    durationMinutes = (int)(endedAt.Value - startedAt).TotalMinutes;
+                    if (endedAt > startedAt)
+                    {
+                        durationMinutes = (int)(endedAt.Value - startedAt).TotalMinutes;
+                    }
                 }
 
                 rawEntries.Add((state, assignedTo, startedAt, endedAt, durationMinutes));
