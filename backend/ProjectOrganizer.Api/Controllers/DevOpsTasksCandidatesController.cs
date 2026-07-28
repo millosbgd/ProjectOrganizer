@@ -542,24 +542,39 @@ public class DevOpsTasksCandidatesController : ControllerBase
             var updatesJson = await updatesResponse.Content.ReadAsStringAsync();
             using var updatesDoc = JsonDocument.Parse(updatesJson);
 
-            var updates = updatesDoc.RootElement.GetProperty("value").EnumerateArray().ToList();
+            var updates = updatesDoc.RootElement.GetProperty("value").EnumerateArray()
+                .Select(update => new
+                {
+                    Update = update,
+                    RevisedDate = update.TryGetProperty("revisedDate", out var revisedDateEl)
+                        && DateTime.TryParse(revisedDateEl.GetString(), out var revisedDate)
+                        ? revisedDate
+                        : (DateTime?)null
+                })
+                .Where(update => update.RevisedDate.HasValue && update.RevisedDate.Value.Year < 9999)
+                .OrderBy(update => update.RevisedDate)
+                .ToList();
             var initialState = updates
-                .Select(update => TryGetUpdateFieldValue(update, "System.State", "oldValue"))
+                .Select(update => TryGetUpdateFieldValue(update.Update, "System.State", "oldValue"))
                 .FirstOrDefault(value => !string.IsNullOrWhiteSpace(value)) ?? fallbackState;
             var initialAssignedTo = updates
-                .Select(update => TryGetUpdateFieldValue(update, "System.AssignedTo", "oldValue"))
+                .Select(update => TryGetUpdateFieldValue(update.Update, "System.AssignedTo", "oldValue"))
                 .FirstOrDefault(value => value != null);
 
             var timeline = new List<(DateTime StartedAt, string State, string? AssignedTo)>();
             string? currentState = initialState;
             string? currentAssignedTo = initialAssignedTo;
 
-            foreach (var update in updates)
+            foreach (var updateInfo in updates)
             {
+                var update = updateInfo.Update;
+                var revisedDate = updateInfo.RevisedDate.Value;
                 if (!update.TryGetProperty("fields", out var updFields)) continue;
-                if (!update.TryGetProperty("revisedDate", out var revisedDateEl)) continue;
-                if (!DateTime.TryParse(revisedDateEl.GetString(), out var revisedDate)) continue;
-                if (revisedDate.Year >= 9999) continue;
+
+                if (timeline.Count == 0 && currentState != null)
+                {
+                    timeline.Add((revisedDate, currentState, currentAssignedTo));
+                }
 
                 bool changed = false;
 
