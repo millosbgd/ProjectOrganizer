@@ -675,6 +675,10 @@ public class DevOpsTasksCandidatesController : ControllerBase
 
     private static DateTime? GetEffectiveUpdateDate(JsonElement update)
     {
+        var changedDate = TryGetUpdateFieldValue(update, "System.ChangedDate", "newValue");
+        if (DateTime.TryParse(changedDate, out var effectiveDate))
+            return effectiveDate;
+
         if (!update.TryGetProperty("revisedDate", out var revisedDateEl))
             return null;
 
@@ -684,8 +688,7 @@ public class DevOpsTasksCandidatesController : ControllerBase
         if (revisedDate.Year < 9999)
             return revisedDate;
 
-        var changedDate = TryGetUpdateFieldValue(update, "System.ChangedDate", "newValue");
-        return DateTime.TryParse(changedDate, out var effectiveDate) ? effectiveDate : null;
+        return null;
     }
 
     private static string? GetUpdateFieldValue(JsonElement field, string valueName)
