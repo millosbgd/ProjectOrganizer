@@ -1,6 +1,6 @@
 import { Injectable, OnDestroy } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, firstValueFrom, Observable } from 'rxjs';
 import * as signalR from '@microsoft/signalr';
 import { AuthService } from '@auth0/auth0-angular';
 import { environment } from '../../environments/environment';
@@ -38,10 +38,10 @@ export class NotificationService implements OnDestroy {
     }
 
     this.auth.getAccessTokenSilently().subscribe({
-      next: token => {
+      next: () => {
         this.hubConnection = new signalR.HubConnectionBuilder()
           .withUrl(`${this.hubUrl}/hubs/notifications`, {
-            accessTokenFactory: () => token
+            accessTokenFactory: () => firstValueFrom(this.auth.getAccessTokenSilently())
           })
           .withAutomaticReconnect()
           .configureLogging(signalR.LogLevel.Warning)
